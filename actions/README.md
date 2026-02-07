@@ -18,3 +18,11 @@ python actions/action_call_queue.py --mode apply --vars '{"location_id":"Y2lzY29
 ```
 
 Cada script escribe logs de inicio/fin por paso API e incluye notas de pre y post pasos para identificar si la acción es directa o requiere middle-steps.
+
+## Ayuda de variables por script
+Cada script ahora muestra en `--help` qué variables de `--vars` son:
+
+- **Required (apply mode)**: obligatorias para ejecutar `--mode apply`.
+- **Optional (probe-only)**: solo útiles para `--mode probe`.
+
+Además, se incluye un mapeo consolidado en `actions/vars_mapping.md` con el detalle por script, endpoint y estado de paridad (script vs SDK 1.27 vs especificación oficial).
