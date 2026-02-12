@@ -87,7 +87,7 @@ MODULE_SPECS: list[ModuleSpec] = [
                lambda row: {'location_id': row.get('location_id'), 'auto_attendant_id': row.get('id')}),
     ModuleSpec('virtual_lines', 'telephony.virtual_lines.list', 'telephony.virtual_lines.details', 'id', {}, default_calling_row,
                lambda row: {'virtual_line_id': row.get('id')}),
-    ModuleSpec('virtual_extensions', 'telephony.virtual_extensions.list', None, 'id', {}, default_calling_row,
+    ModuleSpec('virtual_extensions', 'telephony.virtual_extensions.list_range', None, 'id', {}, default_calling_row,
                lambda row: {}),
     ModuleSpec('devices', 'devices.list', 'devices.details', 'id', {}, default_calling_row,
                lambda row: {'device_id': row.get('id')}),
