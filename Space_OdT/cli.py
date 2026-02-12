@@ -17,6 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--no-cache', action='store_true')
     parser.add_argument('--skip-group-members', action='store_true')
     parser.add_argument('--open-report', action='store_true', help='Open generated static HTML report in browser')
+    parser.add_argument('--token', default=None, help='Explicit Webex access token (overrides .env and WEBEX_ACCESS_TOKEN)')
     return parser
 
 
@@ -28,7 +29,7 @@ def inventory_run(args) -> int:
         write_report=not args.no_report,
     )
     try:
-        api = create_api()
+        api = create_api(token=args.token)
     except MissingTokenError as exc:
         print(str(exc))
         return 2

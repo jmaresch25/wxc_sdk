@@ -14,14 +14,16 @@ class MissingTokenError(RuntimeError):
     pass
 
 
-def create_api() -> 'WebexSimpleApi':
+def create_api(token: str | None = None) -> 'WebexSimpleApi':
     from wxc_sdk import WebexSimpleApi
 
-    _load_token_from_dotenv()
-    token = os.getenv('WEBEX_ACCESS_TOKEN')
-    if not token:
-        raise MissingTokenError('WEBEX_ACCESS_TOKEN is required')
-    return WebexSimpleApi(tokens=token)
+    selected_token = token
+    if selected_token is None:
+        _load_token_from_dotenv()
+        selected_token = os.getenv('WEBEX_ACCESS_TOKEN')
+    if not selected_token:
+        raise MissingTokenError('WEBEX_ACCESS_TOKEN is required (or pass --token)')
+    return WebexSimpleApi(tokens=selected_token)
 
 
 def _load_token_from_dotenv() -> None:
