@@ -4,6 +4,7 @@ Auto attendant data types and API
 from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Optional, List
+from urllib.parse import quote
 
 from pydantic import Field, TypeAdapter
 
@@ -306,9 +307,9 @@ class AutoAttendantApi(ApiChild, base='telephony/config/autoAttendants'):
         if location_id is None:
             return self.session.ep('telephony/config/autoAttendants')
         else:
-            ep = self.session.ep(f'telephony/config/locations/{location_id}/autoAttendants')
+            ep = self.session.ep(f'telephony/config/locations/{quote(location_id, safe="")}/autoAttendants')
             if auto_attendant_id:
-                ep = f'{ep}/{auto_attendant_id}'
+                ep = f'{ep}/{quote(auto_attendant_id, safe="")}'
             if path:
                 ep = f'{ep}/{path}'
             return ep
@@ -593,7 +594,8 @@ class AutoAttendantApi(ApiChild, base='telephony/config/autoAttendants'):
         if org_id is not None:
             params['orgId'] = org_id
         url = self.session.ep(
-            f'telephony/config/locations/{location_id}/autoAttendants/{auto_attendant_id}/announcements')
+            f'telephony/config/locations/{quote(location_id, safe="")}/autoAttendants/'
+            f'{quote(auto_attendant_id, safe="")}/announcements')
         data = super().get(url, params=params)
         r = TypeAdapter(list[AnnAudioFile]).validate_python(data['announcements'])
         return r
@@ -624,5 +626,6 @@ class AutoAttendantApi(ApiChild, base='telephony/config/autoAttendants'):
         if org_id is not None:
             params['orgId'] = org_id
         url = self.session.ep(
-            f'telephony/config/locations/{location_id}/autoAttendants/{auto_attendant_id}/announcements/{file_name}')
+            f'telephony/config/locations/{quote(location_id, safe="")}/autoAttendants/'
+            f'{quote(auto_attendant_id, safe="")}/announcements/{quote(file_name, safe="")}')
         super().delete(url, params=params)
