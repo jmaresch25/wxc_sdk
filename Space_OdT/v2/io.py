@@ -7,6 +7,76 @@ from typing import Any
 
 from .models import ChangeEntry, FailureEntry, InputRecord
 
+V2_INPUT_HEADERS = [
+    'user_email',
+    'calling_license_id',
+    'location_id',
+    'location_name',
+    'extension',
+    'phone_number',
+    'cf_always_enabled',
+    'voicemail_enabled',
+    'intercept_enabled',
+    'incoming_permissions_json',
+    'outgoing_permissions_json',
+    'call_queue_ids',
+    'call_queue_names',
+    'join_enabled',
+]
+
+
+def bootstrap_v2_inputs(v2_dir: Path) -> list[Path]:
+    """Create minimal V2 input templates when missing."""
+    v2_dir.mkdir(parents=True, exist_ok=True)
+    created: list[Path] = []
+
+    input_csv = v2_dir / 'input_softphones.csv'
+    if not input_csv.exists():
+        with input_csv.open('w', encoding='utf-8', newline='') as handle:
+            writer = csv.writer(handle)
+            writer.writerow(V2_INPUT_HEADERS)
+        created.append(input_csv)
+
+    static_policy = v2_dir / 'static_policy.json'
+    if not static_policy.exists():
+        static_policy.write_text(
+            json.dumps(
+                {
+                    'forwarding_defaults': {},
+                    'voicemail_defaults': {},
+                    'intercept_defaults': {},
+                    'incoming_permissions_defaults': {},
+                    'outgoing_permissions_defaults': {},
+                },
+                indent=2,
+                ensure_ascii=False,
+            ) + '\n',
+            encoding='utf-8',
+        )
+        created.append(static_policy)
+
+    decisions = v2_dir / 'decisions.sample.json'
+    if not decisions.exists():
+        decisions.write_text(
+            json.dumps(
+                {
+                    'assign_calling_license': 'yes',
+                    'apply_numbers_update': 'yes',
+                    'apply_forwarding': 'yes',
+                    'apply_voicemail': 'yes',
+                    'apply_call_intercept': 'yes',
+                    'apply_permissions_in_out': 'yes',
+                    'apply_call_queue_memberships': 'yes',
+                },
+                indent=2,
+                ensure_ascii=False,
+            ) + '\n',
+            encoding='utf-8',
+        )
+        created.append(decisions)
+
+    return created
+
 
 def load_policy(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding='utf-8'))
