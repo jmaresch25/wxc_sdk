@@ -85,3 +85,11 @@ def test_inventory_run_passes_token_to_create_api(monkeypatch) -> None:
 
     assert code == 0
     assert captured['token'] == 'from_arg'
+
+
+def test_virtual_extensions_module_uses_list_range() -> None:
+    from Space_OdT.modules.catalog import MODULE_SPECS
+
+    spec = next(m for m in MODULE_SPECS if m.name == 'virtual_extensions')
+
+    assert spec.list_path == 'telephony.virtual_extensions.list_range'

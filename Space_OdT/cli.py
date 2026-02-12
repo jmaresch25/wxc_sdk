@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import webbrowser
 from pathlib import Path
 
-from .config import Settings
-from .export_runner import run_exports
-from .sdk_client import MissingTokenError, create_api
+if __package__ in (None, ''):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from Space_OdT.config import Settings
+    from Space_OdT.export_runner import run_exports
+    from Space_OdT.sdk_client import MissingTokenError, create_api
+else:
+    from .config import Settings
+    from .export_runner import run_exports
+    from .sdk_client import MissingTokenError, create_api
 
 
 def build_parser() -> argparse.ArgumentParser:
