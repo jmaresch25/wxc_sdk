@@ -23,7 +23,6 @@ from .io import (
     append_failures,
     load_input_records,
     load_policy,
-    bootstrap_v2_inputs,
     load_run_state,
     load_stage_overrides,
     load_v1_maps,
@@ -83,23 +82,10 @@ class V2Runner:
 
     async def run(self, *, only_failures: bool = False) -> dict[str, Any]:
         v2_dir = self.out_dir / 'v2'
-        created = bootstrap_v2_inputs(v2_dir)
-        if created:
-            created_names = ', '.join(p.name for p in created)
-            raise FileNotFoundError(
-                f'Missing required V2 inputs. Created templates in {v2_dir}: {created_names}. '
-                'Fill them and rerun v2_bulk_run.'
-            )
-
+        v2_dir.mkdir(parents=True, exist_ok=True)
         policy = load_policy(v2_dir / 'static_policy.json')
         records = load_input_records(v2_dir / 'input_softphones.csv')
-
-        v1_inventory_dir = self.out_dir / 'v1_inventory'
-        if not v1_inventory_dir.exists():
-            raise FileNotFoundError(
-                f'Missing V1 inventory directory: {v1_inventory_dir}. Run inventory_run (V1) first.'
-            )
-        resolvers = load_v1_maps(v1_inventory_dir)
+        resolvers = load_v1_maps(self.out_dir / 'v1_inventory')
 
         state_path = v2_dir / 'run_state.json'
         failures_path = v2_dir / 'failures.csv'

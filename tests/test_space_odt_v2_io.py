@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from Space_OdT.v2.io import bootstrap_v2_inputs, load_input_records, load_stage_overrides, load_v1_maps
+from Space_OdT.v2.io import load_input_records, load_stage_overrides, load_v1_maps
 
 
 def test_load_input_records_validates_required_columns(tmp_path: Path) -> None:
@@ -50,26 +50,3 @@ def test_load_v1_maps_reads_csv_inventory(tmp_path: Path) -> None:
     assert maps['email_to_person_id']['u@example.com'] == 'p-1'
     assert maps['location_name_to_id']['madrid'] == 'l-1'
     assert maps['queue_name_to_id']['q1'] == 'q-1'
-
-
-def test_bootstrap_v2_inputs_creates_templates(tmp_path: Path) -> None:
-    v2 = tmp_path / 'v2'
-
-    created = bootstrap_v2_inputs(v2)
-
-    assert {p.name for p in created} == {
-        'input_softphones.csv',
-        'static_policy.json',
-        'decisions.sample.json',
-    }
-    assert (v2 / 'input_softphones.csv').exists()
-    assert (v2 / 'static_policy.json').exists()
-
-
-def test_bootstrap_v2_inputs_is_idempotent(tmp_path: Path) -> None:
-    v2 = tmp_path / 'v2'
-    bootstrap_v2_inputs(v2)
-
-    created = bootstrap_v2_inputs(v2)
-
-    assert created == []

@@ -47,8 +47,6 @@ V2 adds an async bulk runner for provisioning existing users as softphones using
 - `.artifacts/v2/input_softphones.csv` with at least: `user_email`, `calling_license_id`, (`location_id` or `location_name`), (`extension` or `phone_number`).
 - `.artifacts/v2/static_policy.json` with global defaults for optional calling features.
 
-Si faltan `input_softphones.csv` o `static_policy.json`, V2 los crea automáticamente como plantillas y termina con mensaje para que los completes.
-
 ### Run
 
 ```bash
@@ -76,5 +74,3 @@ En modo normal, antes de cada etapa se solicita confirmación:
 - `.artifacts/v2/report.html` (estado anterior/actual por acción)
 - `.artifacts/v2/changes.log` (detallado técnico en JSON lines)
 - `.artifacts/v2/http.har` (only with `--debug-har`)
-
-`v1_inventory` **no** se autogenera en V2: debe venir persistido desde `inventory_run` (V1).
