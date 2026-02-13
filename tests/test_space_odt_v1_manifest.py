@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from Space_OdT.config import Settings
 from Space_OdT.modules.v1_manifest import (
     ArtifactSpec,
     ParamSource,
