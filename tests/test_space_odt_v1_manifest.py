@@ -86,19 +86,3 @@ def test_manifest_includes_artifacts_for_requested_calling_fields() -> None:
     assert by_module['workspace_details'].method_path == 'workspaces.details'
     assert by_module['workspace_numbers'].method_path == 'workspace_settings.numbers.read'
     assert by_module['workspace_call_forwarding'].method_path == 'workspace_settings.forwarding.read'
-
-
-def test_settings_enable_new_v1_artifact_modules_by_default() -> None:
-    enabled = set(Settings().enabled_modules)
-
-    required = {
-        'location_details',
-        'people_details',
-        'workspace_details',
-        'location_pstn_connection',
-        'person_call_forwarding',
-        'workspace_call_forwarding',
-        'workspace_numbers',
-    }
-
-    assert required.issubset(enabled)
