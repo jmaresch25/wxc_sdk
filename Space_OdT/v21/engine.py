@@ -1,20 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
+import json
 import uuid
 from pathlib import Path
 from typing import Any
 
-from .io import (
-    bootstrap_v21_inputs,
-    load_locations,
-    load_policy,
-    load_users,
-    load_workspaces,
-    save_json,
-    write_plan_csv,
-)
-from .models import EntityType, PlannedAction, RunSummary, Stage
+from wxc_sdk.as_api import AsLocationsApi, AsWebexSimpleApi
+
+from .io import bootstrap_v21_inputs, load_locations, save_json, write_plan_csv
+from .models import EntityType, LocationInput, PlannedAction, RunSummary, Stage
 
 
 class MissingV21InputsError(RuntimeError):
@@ -41,11 +37,8 @@ class V21Runner:
 
     def load_plan_rows(self) -> list[dict[str, Any]]:
         self._ensure_inputs()
-        policy = load_policy(self.v21_dir / 'static_policy.json')
         locations = load_locations(self.v21_dir / 'input_locations.csv')
-        users = load_users(self.v21_dir / 'input_users.csv')
-        workspaces = load_workspaces(self.v21_dir / 'input_workspaces.csv')
-        actions = self._build_plan(locations=locations, users=users, workspaces=workspaces, policy=policy)
+        actions = self._build_plan(locations=locations)
         return [
             {
                 'action_id': idx,
@@ -89,78 +82,155 @@ class V21Runner:
         )
         return summary.__dict__
 
-    def run_single_action(self, action_id: int, *, apply: bool) -> dict[str, Any]:
-        plan_rows = self.load_plan_rows()
-        if action_id < 0 or action_id >= len(plan_rows):
-            raise ValueError(f'action_id out of range: {action_id}')
+    async def run_locations_async(self, rows: list[LocationInput], *, apply: bool = True, max_concurrency: int = 20) -> dict[str, Any]:
+        log_path = self.v21_dir / 'changes.log'
+        sem = asyncio.Semaphore(max_concurrency)
+        snapshots: list[dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
 
-        action = plan_rows[action_id]
-        state_path = self.v21_dir / 'action_state.json'
-        if state_path.exists():
-            import json
-            action_state = json.loads(state_path.read_text(encoding='utf-8'))
-        else:
-            action_state = {'items': {}}
+        async with AsWebexSimpleApi(tokens=self.token, concurrent_requests=max_concurrency) as api:
+            locations_api = AsLocationsApi(session=api.session)
+            await api.people.me()
 
-        key = str(action_id)
-        before = action_state['items'].get(key, {'status': 'pending', 'last_executed_at': None, 'notes': ''})
-        after = {
-            'status': 'applied' if apply else 'previewed',
-            'last_executed_at': dt.datetime.now(dt.timezone.utc).isoformat(),
-            'notes': f"{action['stage']} sobre {action['entity_key']}",
-        }
-        action_state['items'][key] = after
-        save_json(state_path, action_state)
+            async def worker(row: LocationInput) -> None:
+                async with sem:
+                    result = await self._upsert_location(locations_api, row, apply=apply)
+                    results.append(result)
+                    self._append_jsonl(log_path, result)
+                    if result.get('remote_id'):
+                        try:
+                            details = await locations_api.details(result['remote_id'], org_id=row.org_id)
+                        except Exception:
+                            details = await locations_api.by_name(row.location_name, org_id=row.org_id)
+                        if details is not None:
+                            snapshots.append(self._to_jsonable_location(details))
+
+            await asyncio.gather(*(worker(row) for row in rows), return_exceptions=False)
+
+        snapshot_payload = {'items': snapshots}
+        save_json(self.v21_dir / 'results_locations.json', snapshot_payload)
 
         return {
-            'action': action,
-            'before': before,
-            'after': after,
-            'changed': before != after,
+            'summary': {
+                'total': len(rows),
+                'success': sum(1 for r in results if r['status'] == 'success'),
+                'pending': sum(1 for r in results if r['status'] == 'pending'),
+                'rejected': sum(1 for r in results if r['status'] == 'rejected'),
+            },
+            'items': results,
+            'snapshot': snapshot_payload,
         }
 
-    def _build_plan(self, *, locations, users, workspaces, policy: dict[str, Any]) -> list[PlannedAction]:
-        actions: list[PlannedAction] = []
+    async def _upsert_location(self, locations_api: AsLocationsApi, row: LocationInput, *, apply: bool) -> dict[str, Any]:
+        location_key = row.location_id or row.location_name
+        try:
+            existing = await locations_api.by_name(row.location_name, org_id=row.org_id)
+            if not apply:
+                return {
+                    'row_number': row.row_number,
+                    'location_key': location_key,
+                    'status': 'pending',
+                    'remote_id': existing.location_id if existing else None,
+                    'error_type': None,
+                    'error': None,
+                }
 
+            remote_id: str | None = None
+            if existing is None:
+                self._validate_required_fields(row)
+                remote_id = await locations_api.create(
+                    name=row.location_name,
+                    time_zone=row.payload.get('time_zone') or '',
+                    preferred_language=row.payload.get('preferred_language') or '',
+                    announcement_language=row.payload.get('announcement_language') or '',
+                    address1=row.payload.get('address1') or '',
+                    address2=row.payload.get('address2') or None,
+                    city=row.payload.get('city') or '',
+                    state=row.payload.get('state') or '',
+                    postal_code=row.payload.get('postal_code') or '',
+                    country=row.payload.get('country') or '',
+                    org_id=row.org_id,
+                )
+            else:
+                settings = await locations_api.details(existing.location_id, org_id=row.org_id)
+                if row.payload.get('time_zone'):
+                    settings.time_zone = row.payload.get('time_zone')
+                if row.payload.get('preferred_language'):
+                    settings.preferred_language = row.payload.get('preferred_language')
+                if row.payload.get('announcement_language'):
+                    settings.announcement_language = row.payload.get('announcement_language')
+                if settings.address is not None:
+                    if row.payload.get('address1'):
+                        settings.address.address1 = row.payload.get('address1')
+                    if row.payload.get('address2'):
+                        settings.address.address2 = row.payload.get('address2')
+                    if row.payload.get('city'):
+                        settings.address.city = row.payload.get('city')
+                    if row.payload.get('state'):
+                        settings.address.state = row.payload.get('state')
+                    if row.payload.get('postal_code'):
+                        settings.address.postal_code = row.payload.get('postal_code')
+                    if row.payload.get('country'):
+                        settings.address.country = row.payload.get('country')
+                await locations_api.update(existing.location_id, settings=settings, org_id=row.org_id)
+                remote_id = existing.location_id
+
+            return {
+                'row_number': row.row_number,
+                'location_key': location_key,
+                'status': 'success',
+                'remote_id': remote_id,
+                'error_type': None,
+                'error': None,
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {
+                'row_number': row.row_number,
+                'location_key': location_key,
+                'status': 'rejected',
+                'remote_id': None,
+                'error_type': type(exc).__name__,
+                'error': str(exc),
+            }
+
+    @staticmethod
+    def _to_jsonable_location(location: Any) -> dict[str, Any]:
+        if hasattr(location, 'model_dump'):
+            return location.model_dump(mode='json', by_alias=True, exclude_none=True)
+        return dict(location)
+
+    @staticmethod
+    def _append_jsonl(path: Path, result: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        line = {
+            'row_number': result.get('row_number'),
+            'location_key': result.get('location_key'),
+            'status': result.get('status'),
+            'remote_id': result.get('remote_id'),
+            'error_type': result.get('error_type'),
+            'error': result.get('error'),
+        }
+        with path.open('a', encoding='utf-8') as handle:
+            handle.write(json.dumps(line, ensure_ascii=False) + '\n')
+
+    @staticmethod
+    def _validate_required_fields(row: LocationInput) -> None:
+        required = ('time_zone', 'preferred_language', 'announcement_language', 'address1', 'city', 'state', 'postal_code', 'country')
+        missing = [field for field in required if not (row.payload.get(field) or '').strip()]
+        if missing:
+            raise ValueError(f"row {row.row_number}: missing required fields for create: {', '.join(missing)}")
+
+    def _build_plan(self, *, locations: list[LocationInput]) -> list[PlannedAction]:
+        actions: list[PlannedAction] = []
         for location in locations:
             location_key = location.location_id or location.location_name
-            outgoing = location.default_outgoing_profile or policy.get('default_outgoing_profile') or 'profile_2'
-            actions.extend(
-                [
-                    PlannedAction(EntityType.LOCATION, location_key, Stage.LOCATION_CREATE_AND_ACTIVATE, 'manual_closure', 'Crear/activar sede y preparar Webex Calling'),
-                    PlannedAction(EntityType.LOCATION, location_key, Stage.LOCATION_ROUTE_GROUP_RESOLVE, 'manual_closure', 'Resolver routeGroupId requerido para PSTN'),
-                    PlannedAction(EntityType.LOCATION, location_key, Stage.LOCATION_PSTN_CONFIGURE, 'manual_closure', 'Configurar PSTN en sede'),
-                    PlannedAction(EntityType.LOCATION, location_key, Stage.LOCATION_NUMBERS_ADD_DISABLED, 'manual_closure', 'Alta de DDI en estado desactivado'),
-                    PlannedAction(EntityType.LOCATION, location_key, Stage.LOCATION_MAIN_DDI_ASSIGN, 'manual_closure', 'Asignar DDI cabecera a la sede'),
-                    PlannedAction(EntityType.LOCATION, location_key, Stage.LOCATION_INTERNAL_CALLING_CONFIG, 'manual_closure', 'Configurar llamadas internas'),
-                    PlannedAction(EntityType.LOCATION, location_key, Stage.LOCATION_OUTGOING_PERMISSION_DEFAULT, 'manual_closure', f'Aplicar perfil saliente por defecto: {outgoing}'),
-                ]
-            )
-
-        for user in users:
-            user_key = user.user_id or user.user_email
-            actions.extend(
-                [
-                    PlannedAction(EntityType.USER, user_key, Stage.USER_LEGACY_INTERCOM_SECONDARY, 'manual_closure', 'Agregar intercom legacy secundario'),
-                    PlannedAction(EntityType.USER, user_key, Stage.USER_LEGACY_FORWARD_PREFIX_53, 'manual_closure', 'Configurar desvío legacy con prefijo 53'),
-                ]
-            )
-            if user.outgoing_profile:
-                actions.append(
-                    PlannedAction(EntityType.USER, user_key, Stage.USER_OUTGOING_PERMISSION_OVERRIDE, 'manual_closure', f'Aplicar perfil saliente no-default: {user.outgoing_profile}')
+            actions.append(
+                PlannedAction(
+                    EntityType.LOCATION,
+                    location_key,
+                    Stage.LOCATION_CREATE_AND_ACTIVATE,
+                    'manual_closure',
+                    'Alta/actualización determinista de sede',
                 )
-
-        for workspace in workspaces:
-            workspace_key = workspace.workspace_id or workspace.workspace_name
-            actions.extend(
-                [
-                    PlannedAction(EntityType.WORKSPACE, workspace_key, Stage.WORKSPACE_LEGACY_INTERCOM_SECONDARY, 'manual_closure', 'Agregar intercom legacy secundario'),
-                    PlannedAction(EntityType.WORKSPACE, workspace_key, Stage.WORKSPACE_LEGACY_FORWARD_PREFIX_53, 'manual_closure', 'Configurar desvío legacy con prefijo 53'),
-                ]
             )
-            if workspace.outgoing_profile:
-                actions.append(
-                    PlannedAction(EntityType.WORKSPACE, workspace_key, Stage.WORKSPACE_OUTGOING_PERMISSION_OVERRIDE, 'manual_closure', f'Aplicar perfil saliente no-default: {workspace.outgoing_profile}')
-                )
-
         return actions

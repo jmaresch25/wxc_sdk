@@ -8,20 +8,33 @@ from typing import Any
 from .models import LocationInput, UserInput, WorkspaceInput
 
 LOCATION_HEADERS = [
-    'location_name',
+    'name',
     'location_id',
     'org_id',
-    'country_code',
     'time_zone',
-    'language_code',
-    'address_line1',
-    'address_line2',
+    'preferred_language',
+    'announcement_language',
+    'address1',
+    'address2',
     'city',
     'state',
     'postal_code',
+    'country',
     'route_group_id',
     'main_number',
     'default_outgoing_profile',
+]
+
+LOCATION_REQUIRED_CREATE_FIELDS = [
+    'name',
+    'time_zone',
+    'preferred_language',
+    'announcement_language',
+    'address1',
+    'city',
+    'state',
+    'postal_code',
+    'country',
 ]
 
 USER_HEADERS = [
@@ -138,26 +151,46 @@ def _normalize_phone(value: str | None) -> str | None:
     raise ValueError(f'invalid phone number: {value}')
 
 
+def _pick(row: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        value = row.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def location_input_from_row(row: dict[str, Any], *, row_number: int) -> LocationInput:
+    location_name = _pick(row, 'name', 'location_name')
+    if not location_name:
+        raise ValueError(f'row {row_number}: name is required')
+    payload = {k: (v.strip() if isinstance(v, str) else v) for k, v in row.items()}
+    payload.setdefault('name', location_name)
+    payload.setdefault('time_zone', _pick(row, 'time_zone'))
+    payload.setdefault('preferred_language', _pick(row, 'preferred_language', 'language_code'))
+    payload.setdefault('announcement_language', _pick(row, 'announcement_language', 'language_code'))
+    payload.setdefault('address1', _pick(row, 'address1', 'address_line1'))
+    payload.setdefault('address2', _pick(row, 'address2', 'address_line2'))
+    payload.setdefault('country', _pick(row, 'country', 'country_code'))
+
+    return LocationInput(
+        row_number=row_number,
+        location_name=location_name,
+        location_id=_pick(row, 'location_id') or None,
+        org_id=_pick(row, 'org_id') or None,
+        route_group_id=_pick(row, 'route_group_id') or None,
+        main_number=_normalize_phone(_pick(row, 'main_number') or None),
+        default_outgoing_profile=_pick(row, 'default_outgoing_profile') or None,
+        payload=payload,
+    )
+
+
 def load_locations(path: Path) -> list[LocationInput]:
     rows = _read_csv(path)
-    data: list[LocationInput] = []
-    for row_number, row in enumerate(rows, start=2):
-        location_name = (row.get('location_name') or '').strip()
-        if not location_name:
-            raise ValueError(f'row {row_number}: location_name is required')
-        data.append(
-            LocationInput(
-                row_number=row_number,
-                location_name=location_name,
-                location_id=(row.get('location_id') or '').strip() or None,
-                org_id=(row.get('org_id') or '').strip() or None,
-                route_group_id=(row.get('route_group_id') or '').strip() or None,
-                main_number=_normalize_phone(row.get('main_number')),
-                default_outgoing_profile=(row.get('default_outgoing_profile') or '').strip() or None,
-                payload={k: (v.strip() if isinstance(v, str) else v) for k, v in row.items()},
-            )
-        )
-    return data
+    return [location_input_from_row(row, row_number=row_number) for row_number, row in enumerate(rows, start=2)]
+
+
+def load_locations_from_json(payload: list[dict[str, Any]]) -> list[LocationInput]:
+    return [location_input_from_row(row, row_number=index + 1) for index, row in enumerate(payload)]
 
 
 def load_users(path: Path) -> list[UserInput]:
