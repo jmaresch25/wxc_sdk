@@ -13,18 +13,6 @@ class EntityType(str, Enum):
 
 class Stage(str, Enum):
     LOCATION_CREATE_AND_ACTIVATE = 'location_create_and_activate'
-    LOCATION_ROUTE_GROUP_RESOLVE = 'location_route_group_resolve'
-    LOCATION_PSTN_CONFIGURE = 'location_pstn_configure'
-    LOCATION_NUMBERS_ADD_DISABLED = 'location_numbers_add_disabled'
-    LOCATION_MAIN_DDI_ASSIGN = 'location_main_ddi_assign'
-    LOCATION_INTERNAL_CALLING_CONFIG = 'location_internal_calling_config'
-    LOCATION_OUTGOING_PERMISSION_DEFAULT = 'location_outgoing_permission_default'
-    USER_LEGACY_INTERCOM_SECONDARY = 'user_legacy_intercom_secondary'
-    USER_LEGACY_FORWARD_PREFIX_53 = 'user_legacy_forward_prefix_53'
-    USER_OUTGOING_PERMISSION_OVERRIDE = 'user_outgoing_permission_override'
-    WORKSPACE_LEGACY_INTERCOM_SECONDARY = 'workspace_legacy_intercom_secondary'
-    WORKSPACE_LEGACY_FORWARD_PREFIX_53 = 'workspace_legacy_forward_prefix_53'
-    WORKSPACE_OUTGOING_PERMISSION_OVERRIDE = 'workspace_outgoing_permission_override'
 
 
 @dataclass(frozen=True)
