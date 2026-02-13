@@ -11,17 +11,18 @@ from wxc_sdk.common import AcdCustomization, AlternateNumber, AnnAudioFile, Anno
     BacklightTimer, BacklightTimer68XX78XX, BluetoothMode, BluetoothSetting, CallForwardExpandedSoftKey, \
     CallHistoryMethod, CallParkExtension, CommonDeviceCustomization, Customer, DectCustomization, \
     DeviceCustomization, DeviceCustomizations, DevicePlatform, DeviceType, DialPatternStatus, DialPatternValidate, \
-    DirectoryMethod, DisplayCallqueueAgentSoftkey, DisplayNameSelection, EnabledAndValue, EnhancedMulticast, \
-    Greeting, HttpProxy, HttpProxyMode, IdAndName, IdOnly, LineKeyLabelSelection, LineKeyLedPattern, LinkRelation, \
-    LoggingLevel, MaintenanceMode, MeGroupMember, MeGroupSettings, MediaFile, MediaFileType, MonitoredMember, \
-    MppCustomization, MppVlanDevice, Multicast, NoiseCancellation, NumberOwner, NumberState, OwnerType, \
-    PatternAction, PersonPlaceAgent, PhoneLanguage, PrimaryOrSecondary, PrimaryOrShared, PskObject, RingPattern, \
-    RoomType, RouteIdentity, RouteType, SetOrClear, SoftKeyLayout, SoftKeyMenu, StorageType, UsbPortsObject, \
-    UserBase, UserLicenseType, UserNumber, UserType, ValidateExtensionStatus, ValidateExtensionStatusState, \
-    ValidateExtensionsResponse, ValidatePhoneNumberStatus, ValidatePhoneNumberStatusState, \
-    ValidatePhoneNumbersResponse, ValidationStatus, VlanSetting, VoicemailCopyOfMessage, VoicemailEnabled, \
-    VoicemailFax, VoicemailMessageStorage, VoicemailNotifications, VoicemailTransferToNumber, VolumeSettings, \
-    WifiAuthenticationMethod, WifiCustomization, WifiNetwork
+    DirectLineCallerIdName, DirectLineCallerIdNameSelection, DirectoryMethod, DisplayCallqueueAgentSoftkey, \
+    DisplayNameSelection, EnabledAndValue, EnhancedMulticast, Greeting, HttpProxy, HttpProxyMode, IdAndName, \
+    IdOnly, LineKeyLabelSelection, LineKeyLedPattern, LinkRelation, LoggingLevel, MaintenanceMode, MeGroupMember, \
+    MeGroupSettings, MediaFile, MediaFileType, MonitoredMember, MppCustomization, MppVlanDevice, Multicast, \
+    NoiseCancellation, NumberOwner, NumberState, OwnerType, PatternAction, PersonPlaceAgent, PhoneLanguage, \
+    PrimaryOrSecondary, PrimaryOrShared, PskObject, RingPattern, RoomType, RouteIdentity, RouteType, SetOrClear, \
+    SoftKeyLayout, SoftKeyMenu, StorageType, UsageType, UsbPortsObject, UserBase, UserLicenseType, UserNumber, \
+    UserType, ValidateExtensionStatus, ValidateExtensionStatusState, ValidateExtensionsResponse, \
+    ValidatePhoneNumberStatus, ValidatePhoneNumberStatusState, ValidatePhoneNumbersResponse, ValidationStatus, \
+    VlanSetting, VoicemailCopyOfMessage, VoicemailEnabled, VoicemailFax, VoicemailMessageStorage, \
+    VoicemailNotifications, VoicemailTransferToNumber, VolumeSettings, WifiAuthenticationMethod, \
+    WifiCustomization, WifiNetwork
 from wxc_sdk.common.schedules import Event, RecurWeekly, RecurYearlyByDate, RecurYearlyByDay, Recurrence, \
     Schedule, ScheduleApiBase, ScheduleDay, ScheduleLevel, ScheduleMonth, ScheduleType, ScheduleTypeOrStr, \
     ScheduleWeek
@@ -46,10 +47,7 @@ from wxc_sdk.me.callblock import CallBlockNumber
 from wxc_sdk.me.callcenter import AgentACDState, MeCallCenterSettings, MeCallQueue
 from wxc_sdk.me.callerid import MeCallerIdSettings, MeSelectedCallerId
 from wxc_sdk.me.endpoints import EndpointType, MeEndpoint, MeHost, MeMobility, MeSecondaryLine
-from wxc_sdk.me.executive import AssignedAssistants, AssistantSettings, ExecAlert, ExecAlertClidNameMode, \
-    ExecAlertClidPhoneNumberMode, ExecAlertRolloverAction, ExecAlertingMode, ExecCallFilterType, \
-    ExecCallFiltering, ExecCallFilteringCriteria, ExecCallFilteringCriteriaItem, ExecCallFilteringScheduleLevel, \
-    ExecCallFilteringToNumber, ExecOrAssistant, ExecScreening, ExecScreeningAlertType
+from wxc_sdk.me.executive import AssignedAssistants
 from wxc_sdk.me.recording import MeRecordingSettings, MeRecordingVendor
 from wxc_sdk.me.snr import MeSNRSettings
 from wxc_sdk.meetings import AnswerCondition, ApprovalQuestion, ApprovalRule, AttendeePrivileges, \
@@ -104,6 +102,10 @@ from wxc_sdk.person_settings.ecbn import ECBNDefault, ECBNDependencies, ECBNEffe
     ECBNLocationEffectiveLevel, ECBNLocationMember, ECBNQuality, ECBNSelection, PersonECBN, PersonECBNDirectLine, \
     SelectedECBN
 from wxc_sdk.person_settings.exec_assistant import ExecAssistantType, _Helper
+from wxc_sdk.person_settings.executive import AssistantSettings, ExecAlert, ExecAlertClidNameMode, \
+    ExecAlertClidPhoneNumberMode, ExecAlertRolloverAction, ExecAlertingMode, ExecCallFilterType, \
+    ExecCallFiltering, ExecCallFilteringCriteria, ExecCallFilteringCriteriaItem, ExecCallFilteringScheduleLevel, \
+    ExecCallFilteringToNumber, ExecOrAssistant, ExecScreening, ExecScreeningAlertType
 from wxc_sdk.person_settings.feature_access import FeatureAccessLevel, FeatureAccessSettings, \
     UserFeatureAccessSettings
 from wxc_sdk.person_settings.forwarding import CallForwardingAlways, CallForwardingCommon, CallForwardingNoAnswer, \
@@ -177,9 +179,9 @@ from wxc_sdk.telephony.callqueue.agents import AgentCallQueueSetting, CallQueueA
 from wxc_sdk.telephony.callqueue.announcement import Announcement
 from wxc_sdk.telephony.callqueue.policies import AnnouncementMode, CPActionType, CQHolidaySchedule, ForcedForward, \
     HolidayService, NightService, StrandedCalls, StrandedCallsAction
-from wxc_sdk.telephony.calls import CallHistoryRecord, CallInfo, CallState, CallType, DialResponse, HistoryType, \
-    Personality, Recall, RecallType, RecordingState, RedirectReason, Redirection, RejectAction, TelephonyCall, \
-    TelephonyEvent, TelephonyEventData, TelephonyParty
+from wxc_sdk.telephony.calls import CallHistoryRecord, CallInfo, CallState, CallType, DialResponse, \
+    ExternalVoicemailMwiAction, HistoryType, Personality, Recall, RecallType, RecordingState, RedirectReason, \
+    Redirection, RejectAction, TelephonyCall, TelephonyEvent, TelephonyEventData, TelephonyParty
 from wxc_sdk.telephony.conference import ConferenceDetails, ConferenceParticipant, ConferenceState, \
     ConferenceTypeEnum
 from wxc_sdk.telephony.cx_essentials import ScreenPopConfiguration
@@ -187,8 +189,7 @@ from wxc_sdk.telephony.cx_essentials.wrapup_reasons import AvailableQueue, Queue
     WrapUpReason, WrapUpReasonDetails, WrapupReasonQueue
 from wxc_sdk.telephony.dect_devices import AddDECTHandset, AddDECTHandsetBulkError, AddDECTHandsetBulkResponse, \
     AddDECTHandsetBulkResult, BaseStationDetail, BaseStationResponse, BaseStationResult, BaseStationsResponse, \
-    DECTHandsetItem, DECTHandsetLine, DECTHandsetList, DECTNetworkDetail, DECTNetworkModel, DectDevice, Handset, \
-    UsageType
+    DECTHandsetItem, DECTHandsetLine, DECTHandsetList, DECTNetworkDetail, DECTNetworkModel, DectDevice, Handset
 from wxc_sdk.telephony.devices import ActivationState, AvailableMember, BackgroundImage, BackgroundImages, \
     DeleteDeviceBackgroundImagesResponse, DeleteImageRequestObject, DeleteImageResponseSuccessObject, \
     DeleteImageResponseSuccessObjectResult, DeviceLayout, DeviceManagedBy, DeviceManufacturer, DeviceMember, \
@@ -323,7 +324,8 @@ __all__ = ['AcdCustomization', 'Action', 'ActionToBePerformed', 'ActionToBePerfo
            'DeviceMember', 'DeviceMembersResponse', 'DeviceOwner', 'DevicePlatform', 'DevicePutItem',
            'DeviceSettings', 'DeviceSettingsConfiguration', 'DeviceSettingsGroupTag', 'DeviceStatus', 'DeviceTag',
            'DeviceType', 'DialPatternStatus', 'DialPatternValidate', 'DialPatternValidationResult', 'DialPlan',
-           'DialResponse', 'Dialing', 'DifferentHoursDaily', 'DigitPattern', 'DigitPatterns', 'DirectoryMethod',
+           'DialResponse', 'Dialing', 'DifferentHoursDaily', 'DigitPattern', 'DigitPatterns',
+           'DirectLineCallerIdName', 'DirectLineCallerIdNameSelection', 'DirectoryMethod',
            'DisableCallingLocationCounts', 'DisableCallingLocationJobStatus', 'DisplayCallqueueAgentSoftkey',
            'DisplayNameSelection', 'DistinctiveRing', 'DynamicSettingsGroups', 'DynamicSettingsUpdateJobItem',
            'ECBNDefault', 'ECBNDependencies', 'ECBNEffectiveLevel', 'ECBNLocationEffectiveLevel',
@@ -335,7 +337,7 @@ __all__ = ['AcdCustomization', 'Action', 'ActionToBePerformed', 'ActionToBePerfo
            'ExecCallFiltering', 'ExecCallFilteringCriteria', 'ExecCallFilteringCriteriaItem',
            'ExecCallFilteringScheduleLevel', 'ExecCallFilteringToNumber', 'ExecOrAssistant', 'ExecScreening',
            'ExecScreeningAlertType', 'ExecuteCommandResponse', 'ExpirePasscode', 'ExternalCallerIdNamePolicy',
-           'ExternalTransfer', 'FailedAttempts', 'FailureBehavior', 'FeatureAccessCode',
+           'ExternalTransfer', 'ExternalVoicemailMwiAction', 'FailedAttempts', 'FailureBehavior', 'FeatureAccessCode',
            'FeatureAccessCodeDestination', 'FeatureAccessLevel', 'FeatureAccessSettings', 'FeatureReference',
            'FeatureSelector', 'FeatureType', 'Floor', 'ForcedForward', 'ForwardCallsTo', 'ForwardFromSelection',
            'ForwardOperatingModes', 'ForwardOperatingModesException', 'ForwardTo', 'ForwardToSelection',

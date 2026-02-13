@@ -28,7 +28,8 @@ __all__ = ['UserType', 'UserBase', 'RingPattern', 'AlternateNumber', 'Greeting',
            'BluetoothSetting', 'NoiseCancellation', 'SoftKeyLayout', 'SoftKeyMenu', 'PskObject', 'BackgroundImageColor',
            'BacklightTimer68XX78XX', 'DectCustomization', 'OwnerType', 'NumberOwner', 'ApplyLineKeyTemplateAction',
            'AssignedDectNetwork', 'DevicePlatform', 'Multicast', 'EnhancedMulticast', 'DeviceType', 'UserLicenseType',
-           'MaintenanceMode', 'SetOrClear', 'MeGroupSettings', 'MeGroupMember', 'PrimaryOrSecondary', 'MediaFile']
+           'MaintenanceMode', 'SetOrClear', 'MeGroupSettings', 'MeGroupMember', 'PrimaryOrSecondary', 'MediaFile',
+           'UsageType', 'DirectLineCallerIdName', 'DirectLineCallerIdNameSelection']
 
 
 class IdOnly(ApiModel):
@@ -1238,3 +1239,27 @@ class PrimaryOrSecondary(str, Enum):
     primary = 'PRIMARY'
     #: Secondary number to call, if available.
     secondary = 'SECONDARY'
+
+
+class UsageType(str, Enum):
+    device_owner = 'DEVICE_OWNER'
+    shared_line = 'SHARED_LINE'
+
+
+class DirectLineCallerIdNameSelection(str, Enum):
+    #: When this option is selected, `customName` is to be shown for this user.
+    custom_name = 'CUSTOM_NAME'
+    #: When this option is selected, `firstName` and `lastName` are to be shown for this user.
+    first_name_last_name = 'FIRST_NAME_LAST_NAME'
+    #: When this option is selected, `lastName` and `firstName` are to be shown for this user.
+    last_name_first_name = 'LAST_NAME_FIRST_NAME'
+    #: When this option is selected, `displayName` is to be shown for this user.
+    display_name = 'DISPLAY_NAME'
+
+
+class DirectLineCallerIdName(ApiModel):
+    #: The selection of the direct line caller ID name.
+    selection: Optional[DirectLineCallerIdNameSelection] = None
+    #: Sets or clears the custom direct line caller ID name.  To clear the `customName`, the attribute must be set to
+    #: null or empty string. Required if `selection` is set to `CUSTOM_NAME`.
+    custom_name: Optional[str] = None

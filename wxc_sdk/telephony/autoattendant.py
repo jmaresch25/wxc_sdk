@@ -12,7 +12,7 @@ from .forwarding import ForwardingApi, FeatureSelector
 from ..api_child import ApiChild
 from ..base import ApiModel, to_camel
 from ..base import SafeEnum as Enum
-from ..common import Greeting, AlternateNumber, MediaFileType, AnnAudioFile
+from ..common import Greeting, AlternateNumber, MediaFileType, AnnAudioFile, DirectLineCallerIdName
 from ..person_settings.available_numbers import AvailableNumber
 from ..rest import RestSession
 
@@ -189,9 +189,11 @@ class AutoAttendant(ApiModel):
     esn: Optional[str] = None
     #: Flag to indicate if auto attendant number is toll-free number.
     toll_free_number: Optional[bool] = None
-    #: First name defined for an auto attendant. (only returned by details())
+    #: First name defined for an auto attendant. This field has been deprecated. Please use `directLineCallerIdName`
+    #: and `dialByName` instead.
     first_name: Optional[str] = None
-    #: Last name defined for an auto attendant. (only returned by details())
+    #: Last name defined for an auto attendant. This field has been deprecated. Please use `directLineCallerIdName` and
+    #: `dialByName` instead.
     last_name: Optional[str] = None
     #: Alternate numbers defined for the auto attendant. (only returned by details())
     alternate_numbers: Optional[list[AlternateNumber]] = None
@@ -213,6 +215,10 @@ class AutoAttendant(ApiModel):
     business_hours_menu: Optional[AutoAttendantMenu] = None
     #: After hours menu defined for the auto attendant.
     after_hours_menu: Optional[AutoAttendantMenu] = None
+    #: Settings for the direct line caller ID name to be shown for this auto attendant.
+    direct_line_caller_id_name: Optional[DirectLineCallerIdName] = None
+    #: The name to be used for dial by name functions.
+    dial_by_name: Optional[str] = None
 
     def create_or_update(self) -> str:
         """
@@ -390,8 +396,14 @@ class AutoAttendantApi(ApiChild, base='telephony/config/autoAttendants'):
         Auto attendants play customized prompts and provide callers with menu options for routing their calls through
         your system.
 
-        Creating an auto attendant requires a full administrator auth token with a scope
-        of spark-admin:telephony_config_write.
+        Creating an auto attendant requires a full administrator or location administrator auth token with a scope of
+        `spark-admin:telephony_config_write`.
+
+        The fields
+        `directLineCallerIdName.selection`, `directLineCallerIdName.customName`, and `dialByName` are not supported in
+        Webex for Government (FedRAMP). Instead, administrators must use the `firstName` and `lastName` fields to
+        configure and view both caller ID and dial-by-name settings
+
 
         :param location_id: Create the auto attendant for this location.
         :type location_id: str
