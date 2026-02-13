@@ -302,9 +302,30 @@ def _html_page() -> str:
         document.getElementById('finalConfig').textContent = data.error;
         return;
       }}
-      document.getElementById('finalConfig').textContent = JSON.stringify(data, null, 2);
+      const simplified = toStatusAndApiResponse(data);
+      document.getElementById('finalConfig').textContent = JSON.stringify(simplified, null, 2);
       const errors = data.totals?.rejected || 0;
       document.getElementById('errorSummary').innerHTML = `Errores rechazados: <b>${{errors}}</b>`;
+    }}
+
+    function toStatusAndApiResponse(payload) {{
+      if (!payload || typeof payload !== 'object') return payload;
+      if (Array.isArray(payload)) return payload.map(item => toStatusAndApiResponse(item));
+
+      if (payload.status) {{
+        const apiResponse = payload.api_response ?? payload.apiResponse ?? payload.response ?? payload.after ?? payload.result ?? null;
+        return {{
+          status: payload.status,
+          api_response: toStatusAndApiResponse(apiResponse),
+        }};
+      }}
+
+      const out = {{}};
+      Object.entries(payload).forEach(([key, value]) => {{
+        if (key === 'before' || key === 'after' || key === 'changed' || key === 'action') return;
+        out[key] = toStatusAndApiResponse(value);
+      }});
+      return out;
     }}
 
     function renderJob(job) {{
