@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from Space_OdT.config import Settings
 from Space_OdT.modules.v1_manifest import (
     ArtifactSpec,
     ParamSource,
     _iter_kwargs,
     run_artifact,
+    V1_ARTIFACT_SPECS,
 )
 
 
@@ -69,3 +71,34 @@ def test_run_artifact_skips_resterror_4003() -> None:
     assert result.count == 1
     assert result.rows[0]['id'] == 'row-good'
     assert result.rows[0]['source_method'] == 'person_settings.permissions_in.read'
+
+
+def test_manifest_includes_artifacts_for_requested_calling_fields() -> None:
+    by_module = {spec.module: spec for spec in V1_ARTIFACT_SPECS}
+
+    assert by_module['location_details'].method_path == 'locations.details'
+    assert by_module['calling_locations_details'].method_path == 'telephony.locations.details'
+    assert by_module['location_pstn_connection'].method_path == 'telephony.pstn.read'
+    assert by_module['people_details'].method_path == 'people.details'
+    assert by_module['person_numbers'].method_path == 'person_settings.numbers.read'
+    assert by_module['person_permissions_out'].method_path == 'person_settings.permissions_out.read'
+    assert by_module['person_call_forwarding'].method_path == 'person_settings.forwarding.read'
+    assert by_module['workspace_details'].method_path == 'workspaces.details'
+    assert by_module['workspace_numbers'].method_path == 'workspace_settings.numbers.read'
+    assert by_module['workspace_call_forwarding'].method_path == 'workspace_settings.forwarding.read'
+
+
+def test_settings_enable_new_v1_artifact_modules_by_default() -> None:
+    enabled = set(Settings().enabled_modules)
+
+    required = {
+        'location_details',
+        'people_details',
+        'workspace_details',
+        'location_pstn_connection',
+        'person_call_forwarding',
+        'workspace_call_forwarding',
+        'workspace_numbers',
+    }
+
+    assert required.issubset(enabled)
