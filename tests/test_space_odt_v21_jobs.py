@@ -91,3 +91,17 @@ def test_v21_verbose_log_writer_creates_jsonl(tmp_path: Path):
     content = log_path.read_text(encoding='utf-8')
     assert '"event": "request"' in content
     assert '"method": "api.people.me"' in content
+
+
+def test_create_location_job_supports_wbxc_entity(tmp_path: Path):
+    runner = V21Runner(token='token', out_dir=tmp_path)
+    job = runner.create_location_job(rows=[{'location_name': 'Valencia'}], entity_type='location_webex_calling')
+    assert job.entity_type == 'location_webex_calling'
+
+
+def test_html_contains_sidebar_and_wbxc_menu():
+    from Space_OdT.v21.ui import _html_page
+
+    html = _html_page()
+    assert 'Alta_Sedes+WBXC' in html
+    assert 'POST /telephony/config/locations' in html

@@ -152,8 +152,8 @@ class V21Runner:
         return summary.__dict__
 
     def create_location_job(self, *, rows: list[dict[str, Any]], entity_type: str = 'location') -> LocationBulkJob:
-        if entity_type != 'location':
-            raise ValueError('entity_type no soportado en v21 (usar location)')
+        if entity_type not in {'location', 'location_webex_calling'}:
+            raise ValueError('entity_type no soportado en v21 (usar location o location_webex_calling)')
         job_id = str(uuid.uuid4())
         created_at = dt.datetime.now(dt.timezone.utc).isoformat()
         job_dir = self.jobs_dir / job_id
@@ -229,8 +229,8 @@ class V21Runner:
 
     async def process_location_job(self, job_id: str, *, chunk_size: int = 200, max_concurrency: int = 20) -> dict[str, Any]:
         job = self.get_job(job_id)
-        if job.entity_type != 'location':
-            raise ValueError('Solo location está habilitado en v21')
+        if job.entity_type not in {'location', 'location_webex_calling'}:
+            raise ValueError('Solo location/location_webex_calling está habilitado en v21')
         if job.status == 'running':
             return job.to_dict()
 
@@ -256,12 +256,21 @@ class V21Runner:
             offset = start_offset
             while offset < len(rows):
                 chunk = rows[offset : offset + chunk_size]
-                chunk_results = await self._process_chunk(
-                    locations_api=locations_api,
-                    rows=chunk,
-                    max_concurrency=max_concurrency,
-                    snapshots=snapshots,
-                )
+                if job.entity_type == 'location':
+                    chunk_results = await self._process_chunk(
+                        locations_api=locations_api,
+                        rows=chunk,
+                        max_concurrency=max_concurrency,
+                        snapshots=snapshots,
+                    )
+                else:
+                    chunk_results = await self._process_chunk_enable_wbxc(
+                        api=api,
+                        locations_api=locations_api,
+                        rows=chunk,
+                        max_concurrency=max_concurrency,
+                        snapshots=snapshots,
+                    )
                 self._append_results(rows=chunk_results, results_csv=results_csv, pending_csv=pending_csv, rejected_csv=rejected_csv)
                 self._update_totals(job, chunk_results)
                 offset += len(chunk)
@@ -317,6 +326,94 @@ class V21Runner:
                 )
             except Exception:
                 return None
+
+    async def _process_chunk_enable_wbxc(
+        self,
+        *,
+        api: AsWebexSimpleApi,
+        locations_api: AsLocationsApi,
+        rows: list[LocationInput],
+        max_concurrency: int,
+        snapshots: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        sem = asyncio.Semaphore(max_concurrency)
+
+        async def worker(row: LocationInput) -> dict[str, Any]:
+            async with sem:
+                result = await self._enable_location_for_webex_calling_direct(
+                    api=api,
+                    locations_api=locations_api,
+                    row=row,
+                )
+                if result.get('remote_id'):
+                    details = await self._safe_fetch_details(locations_api, result['remote_id'], row)
+                    if details is not None:
+                        snapshots.append(self._to_jsonable_location(details))
+                return result
+
+        return await asyncio.gather(*(worker(row) for row in rows), return_exceptions=False)
+
+    async def _enable_location_for_webex_calling_direct(
+        self,
+        *,
+        api: AsWebexSimpleApi,
+        locations_api: AsLocationsApi,
+        row: LocationInput,
+    ) -> dict[str, Any]:
+        location_key = self._stable_location_key(row)
+        try:
+            location_id = row.location_id
+            if not location_id:
+                existing = await self._call_logged('locations_api.by_name', locations_api.by_name(row.location_name, org_id=row.org_id))
+                if existing is None:
+                    raise ValueError(f'row {row.row_number}: location no existe para habilitar Webex Calling')
+                location_id = existing.location_id
+
+            self._validate_required_fields(row)
+            body = {
+                'id': location_id,
+                'name': row.location_name,
+                'timeZone': row.payload.get('time_zone'),
+                'preferredLanguage': row.payload.get('preferred_language'),
+                'announcementLanguage': row.payload.get('announcement_language'),
+                'address': {
+                    'address1': row.payload.get('address1'),
+                    'address2': row.payload.get('address2') or None,
+                    'city': row.payload.get('city'),
+                    'state': row.payload.get('state'),
+                    'postalCode': row.payload.get('postal_code'),
+                    'country': row.payload.get('country'),
+                },
+            }
+            params = row.org_id and {'orgId': row.org_id} or None
+            url = api.session.ep('telephony/config/locations')
+            enabled_location_id = await self._call_logged(
+                'direct_api.enable_location_for_webex_calling',
+                api.session.rest_post(url=url, json=body, params=params),
+            )
+            remote_id = location_id
+            if isinstance(enabled_location_id, dict):
+                remote_id = str(enabled_location_id.get('id') or location_id)
+
+            return {
+                'row_number': row.row_number,
+                'location_key': location_key,
+                'status': 'success',
+                'remote_id': remote_id,
+                'error_classification': None,
+                'error_type': None,
+                'error': None,
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {
+                'row_number': row.row_number,
+                'location_key': location_key,
+                'status': 'rejected',
+                'remote_id': None,
+                'error_classification': self._classify_error(exc),
+                'error_type': type(exc).__name__,
+                'error': str(exc),
+            }
 
     def _update_totals(self, job: LocationBulkJob, results: list[dict[str, Any]]) -> None:
         job.totals['processed'] = int(job.totals.get('processed', 0)) + len(results)

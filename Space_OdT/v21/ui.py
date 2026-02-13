@@ -68,10 +68,11 @@ def launch_v21_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
 
         def do_POST(self) -> None:  # noqa: N802
             parsed = urlparse(self.path)
-            if parsed.path == '/api/location-jobs':
+            if parsed.path in {'/api/location-jobs', '/api/location-wbxc-jobs'}:
                 try:
                     rows, preview = self._parse_upload()
-                    job = runner.create_location_job(rows=rows, entity_type='location')
+                    entity_type = 'location' if parsed.path == '/api/location-jobs' else 'location_webex_calling'
+                    job = runner.create_location_job(rows=rows, entity_type=entity_type)
                     self._send({'job': job.to_dict(), 'count': len(rows), 'preview': preview})
                 except Exception as exc:  # noqa: BLE001
                     self._send({'error': str(exc)}, status=400)
@@ -181,45 +182,31 @@ def _html_page() -> str:
   <title>Space_OdT v2.1 location changes</title>
   <style>
     :root {{
-      --bg: #0b5f2a;
-      --bg-dark: #08491f;
-      --card: #0f6b31;
-      --card-2: #0d5b2a;
+      --bg: #083f1f;
+      --panel: #0f6b31;
+      --panel-2: #0d5b2a;
       --line: #2ea15a;
       --text: #f3fff6;
       --muted: #c9f5d8;
       --accent: #ffde59;
       --danger: #ffd2d2;
       --progress: #31d46f;
+      --sidebar: #052d15;
+      --sidebar-active: #1a8e43;
     }}
     * {{ box-sizing: border-box; }}
-    body {{
-      font-family: Inter, Arial, sans-serif;
-      margin: 0;
-      background: linear-gradient(180deg, var(--bg) 0%, var(--bg-dark) 100%);
-      color: var(--text);
-    }}
-    .wrap {{ max-width: 1080px; margin: 0 auto; padding: 20px; }}
-    h1 {{ margin-top: 0; color: var(--accent); letter-spacing: .3px; }}
+    body {{ font-family: Inter, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); }}
+    .layout {{ display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }}
+    .sidebar {{ background: var(--sidebar); border-right: 1px solid #176a35; padding: 16px 12px; }}
+    .brand {{ color: var(--accent); margin: 0 0 14px; font-size: 18px; }}
+    .menu button {{ display:block; width:100%; text-align:left; margin: 0 0 8px; border:1px solid #176a35; background:#0a4a24; color:var(--text); border-radius:8px; padding:10px; cursor:pointer; font-weight:600; }}
+    .menu button.active {{ background: var(--sidebar-active); }}
+    .content {{ padding: 20px; }}
+    .card {{ background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 14px; }}
+    h1 {{ margin-top: 0; color: var(--accent); }}
     p.lead {{ color: var(--muted); margin-top: -6px; }}
-    .card {{
-      background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 14px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
-    }}
     .actions {{ display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }}
-    button {{
-      border: 1px solid #1d8e45;
-      background: #18863f;
-      color: #fff;
-      border-radius: 8px;
-      padding: 9px 12px;
-      cursor: pointer;
-      font-weight: 600;
-    }}
+    button {{ border: 1px solid #1d8e45; background: #18863f; color: #fff; border-radius: 8px; padding: 9px 12px; cursor: pointer; font-weight: 600; }}
     button.secondary {{ background: #126e34; }}
     button.warning {{ background: #8d6b00; border-color: #a37c00; color: #fff8d2; }}
     input[type=file] {{ color: var(--muted); }}
@@ -230,49 +217,89 @@ def _html_page() -> str:
     th {{ background: #0f592b; }}
     pre {{ background: #072f17; color: #d9ffe6; padding: 10px; border-radius: 8px; overflow-x: auto; max-height: 280px; border: 1px solid #1e8842; }}
     .error {{ color: var(--danger); }}
+    .hidden {{ display: none; }}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Space_OdT v2.1 · Cambios de sedes</h1>
-    <p class="lead">UI enfocada solo en aplicar cambios: cargar archivo, ejecutar y revisar estado + respuesta de API.</p>
+  <div class="layout">
+    <aside class="sidebar">
+      <h2 class="brand">Space_OdT v2.1</h2>
+      <nav class="menu">
+        <button id="menu-alta" class="active" onclick="selectAction('alta_sedes')">Alta_Sedes</button>
+        <button id="menu-wbxc" onclick="selectAction('alta_sedes_wbxc')">Alta_Sedes+WBXC</button>
+      </nav>
+    </aside>
+    <main class="content">
+      <h1 id="screenTitle">Space_OdT v2.1 · Cambios de sedes</h1>
+      <p class="lead" id="screenLead">UI enfocada en alta/actualización de sedes mediante CSV/JSON.</p>
 
-    <div class="card">
-      <h3>1) Cargar archivo de cambios</h3>
-      <input id="file" type="file" accept=".csv,.json" />
-      <div class="actions">
-        <button onclick="createJob()">Crear job</button>
+      <div class="card">
+        <h3>1) Cargar archivo de cambios</h3>
+        <input id="file" type="file" accept=".csv,.json" />
+        <div class="actions">
+          <button onclick="createJob()">Crear job</button>
+        </div>
+        <div id="uploadInfo"></div>
+        <div id="preview"></div>
       </div>
-      <div id="uploadInfo"></div>
-      <div id="preview"></div>
-    </div>
 
-    <div class="card">
-      <h3>2) Ejecutar cambio</h3>
-      <div class="actions">
-        <button onclick="startJob()">Aplicar cambios</button>
-        <button class="secondary" onclick="refreshJob()">Actualizar estado</button>
-        <button class="warning" onclick="showFinalConfig()">Ver respuesta API</button>
+      <div class="card">
+        <h3>2) Ejecutar cambio</h3>
+        <div class="actions">
+          <button onclick="startJob()">Aplicar cambios</button>
+          <button class="secondary" onclick="refreshJob()">Actualizar estado</button>
+          <button class="warning" onclick="showFinalConfig()">Ver respuesta API</button>
+        </div>
+        <div id="jobStatus"></div>
+        <div class="progress"><div id="bar"></div></div>
+        <div id="errorSummary"></div>
+        <pre id="finalConfig"></pre>
       </div>
-      <div id="jobStatus"></div>
-      <div class="progress"><div id="bar"></div></div>
-      <div id="errorSummary"></div>
-      <pre id="finalConfig"></pre>
-    </div>
 
-    <div class="card">
-      <h3>Campos esperados</h3>
-      <ul>{required}</ul>
-    </div>
+      <div class="card">
+        <h3>Campos esperados</h3>
+        <p class="lead">Alta_Sedes+WBXC usa el mismo CSV/JSON que Alta_Sedes (incluyendo <code>location_id</code> cuando exista).</p>
+        <ul>{required}</ul>
+      </div>
+    </main>
   </div>
 
   <script>
     let currentJobId = null;
+    let currentAction = 'alta_sedes';
 
     window.addEventListener('DOMContentLoaded', () => {{
       const output = document.getElementById('finalConfig');
       output.textContent = 'Aquí se verá únicamente: status + api_response';
     }});
+
+    function selectAction(action) {{
+      currentAction = action;
+      currentJobId = null;
+      document.getElementById('uploadInfo').innerHTML = '';
+      document.getElementById('preview').innerHTML = '';
+      document.getElementById('jobStatus').innerHTML = '';
+      document.getElementById('bar').style.width = '0%';
+      document.getElementById('errorSummary').innerHTML = '';
+      document.getElementById('finalConfig').textContent = 'Aquí se verá únicamente: status + api_response';
+
+      document.getElementById('menu-alta').classList.toggle('active', action === 'alta_sedes');
+      document.getElementById('menu-wbxc').classList.toggle('active', action === 'alta_sedes_wbxc');
+
+      const title = document.getElementById('screenTitle');
+      const lead = document.getElementById('screenLead');
+      if (action === 'alta_sedes_wbxc') {{
+        title.textContent = 'Space_OdT v2.1 · Alta_Sedes+WBXC';
+        lead.textContent = 'Habilita sedes existentes para Webex Calling usando API oficial (POST /telephony/config/locations).';
+      }} else {{
+        title.textContent = 'Space_OdT v2.1 · Cambios de sedes';
+        lead.textContent = 'UI enfocada en alta/actualización de sedes mediante CSV/JSON.';
+      }}
+    }}
+
+    function currentCreateEndpoint() {{
+      return currentAction === 'alta_sedes_wbxc' ? '/api/location-wbxc-jobs' : '/api/location-jobs';
+    }}
 
     async function createJob() {{
       const fileEl = document.getElementById('file');
@@ -282,7 +309,7 @@ def _html_page() -> str:
       }}
       const fd = new FormData();
       fd.append('file', fileEl.files[0]);
-      const r = await fetch('/api/location-jobs', {{ method: 'POST', body: fd }});
+      const r = await fetch(currentCreateEndpoint(), {{ method: 'POST', body: fd }});
       const data = await r.json();
       if (data.error) {{
         document.getElementById('uploadInfo').innerHTML = '<span class="error">' + data.error + '</span>';
@@ -336,10 +363,7 @@ def _html_page() -> str:
     function toStatusAndApiResponse(payload) {{
       const status = payload?.job?.status || payload?.status || 'unknown';
       const apiResponse = payload?.remote_final_state?.items || payload?.api_response || [];
-      return {{
-        status,
-        api_response: sanitizeApiResponse(apiResponse),
-      }};
+      return {{ status, api_response: sanitizeApiResponse(apiResponse) }};
     }}
 
     function sanitizeApiResponse(payload) {{
@@ -380,4 +404,3 @@ def _html_page() -> str:
 </body>
 </html>
 """
-
