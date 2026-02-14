@@ -150,6 +150,10 @@ Se añadieron acciones desacopladas en `Space_OdT/v21/transformacion/`:
 - `ubicacion_alta_numeraciones_desactivadas.py`
 - `ubicacion_actualizar_cabecera.py`
 - `launcher_prueba_real.py` (ejecución secuencial real contra API)
+- `ubicacion_configurar_llamadas_internas.py`
+- `ubicacion_configurar_permisos_salientes_defecto.py`
+- `usuarios_alta_people.py`
+- `launcher_tester_api_remota.py` (tester que recibe acciones desde API remota)
 
 Todos los scripts hacen `load_dotenv()` al iniciar y escriben log propio en:
 
@@ -159,6 +163,13 @@ Ejemplo launcher real:
 
 ```bash
 python -m Space_OdT.v21.transformacion.launcher_prueba_real   --location-id <LOCATION_ID>   --premise-route-id <ROUTE_GROUP_ID>   --phone-number +34910000001   --phone-number +34910000002   --header-phone-number +34910000001
+```
+
+Ejemplo launcher tester API remota:
+
+```bash
+python -m Space_OdT.v21.transformacion.launcher_tester_api_remota \
+  --remote-url http://127.0.0.1:8080/v21/actions
 ```
 
 ### ¿De qué archivos sale la configuración de cada caso en v2.1?

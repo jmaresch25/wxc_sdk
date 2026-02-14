@@ -54,7 +54,10 @@ def action_logger(script_name: str):
 
 def model_to_dict(value: Any) -> Any:
     if hasattr(value, 'model_dump'):
-        return value.model_dump(mode='json', by_alias=True, exclude_none=True)
+        try:
+            return value.model_dump(mode='json', by_alias=True, exclude_none=True)
+        except TypeError:
+            return value.model_dump()
     if isinstance(value, list):
         return [model_to_dict(item) for item in value]
     return value
