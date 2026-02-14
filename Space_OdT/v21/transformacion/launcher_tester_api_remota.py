@@ -1,0 +1,57 @@
+from __future__ import annotations
+
+import argparse
+import json
+from typing import Any, Callable
+from urllib.request import Request, urlopen
+
+from .common import get_token, load_runtime_env
+from .ubicacion_configurar_llamadas_internas import configurar_llamadas_internas_ubicacion
+from .ubicacion_configurar_permisos_salientes_defecto import configurar_permisos_salientes_defecto_ubicacion
+from .usuarios_alta_people import alta_usuario_people
+
+ActionFn = Callable[..., dict[str, Any]]
+
+
+def _load_remote_payload(remote_url: str, timeout_s: float) -> dict[str, Any]:
+    request = Request(remote_url, headers={'Accept': 'application/json'})
+    with urlopen(request, timeout=timeout_s) as response:
+        raw = response.read().decode('utf-8')
+    return json.loads(raw)
+
+
+def _execute_actions(*, token: str, payload: dict[str, Any]) -> dict[str, Any]:
+    handlers: dict[str, ActionFn] = {
+        'ubicacion_configurar_llamadas_internas': configurar_llamadas_internas_ubicacion,
+        'ubicacion_configurar_permisos_salientes_defecto': configurar_permisos_salientes_defecto_ubicacion,
+        'usuarios_alta_people': alta_usuario_people,
+    }
+
+    report: dict[str, Any] = {'source': payload.get('meta', {}), 'results': []}
+    for action in payload.get('acciones', []):
+        action_name = action['action']
+        params = dict(action.get('params', {}))
+        if action_name not in handlers:
+            report['results'].append({'action': action_name, 'status': 'rejected', 'reason': 'unsupported_action'})
+            continue
+        result = handlers[action_name](token=token, **params)
+        report['results'].append({'action': action_name, 'result': result})
+    return report
+
+
+def main() -> None:
+    load_runtime_env()
+    parser = argparse.ArgumentParser(description='Launcher tester para consumir acciones desde API remota')
+    parser.add_argument('--token', default=None)
+    parser.add_argument('--remote-url', required=True, help='Endpoint que devuelve JSON con acciones a ejecutar')
+    parser.add_argument('--timeout-s', type=float, default=10.0)
+    args = parser.parse_args()
+
+    token = get_token(args.token)
+    payload = _load_remote_payload(args.remote_url, timeout_s=args.timeout_s)
+    report = _execute_actions(token=token, payload=payload)
+    print(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True))
+
+
+if __name__ == '__main__':
+    main()
