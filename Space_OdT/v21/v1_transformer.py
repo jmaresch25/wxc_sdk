@@ -12,10 +12,12 @@ from wxc_sdk import WebexSimpleApi
 
 
 def _norm(s: str) -> str:
+    # Normalización simple para matching tolerante de cabeceras entre versiones.
     return str(s).strip().lower()
 
 
 def main(argv: list[str]) -> int:
+    # Conversor utilitario v1->v21 orientado a compatibilidad de columnas.
     # Usage: script.py map.yaml file_in.xlsx file_out.xlsx
     if len(argv) != 3:
         print("Usage: script.py map.yaml file_in.xlsx file_out.xlsx", file=sys.stderr)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Script v21 de transformación: incluye comentarios guía en secciones críticas."""
+
 import datetime as dt
 import json
 import os
@@ -11,6 +13,7 @@ from wxc_sdk import WebexSimpleApi
 
 
 def load_runtime_env() -> None:
+    # Busca .env en cwd y padres para soportar ejecución desde distintos entrypoints.
     cwd = Path.cwd()
     package_root = Path(__file__).resolve().parents[3]
     env_candidates = [cwd / '.env', *[parent / '.env' for parent in cwd.parents], package_root / '.env']
@@ -36,6 +39,7 @@ def create_api(token: str) -> WebexSimpleApi:
 
 
 def action_logger(script_name: str):
+    # Logger JSONL por script para auditoría de requests/responses funcionales.
     log_file = Path(__file__).resolve().parent / 'logs' / f'{script_name}.log'
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -53,6 +57,7 @@ def action_logger(script_name: str):
 
 
 def model_to_dict(value: Any) -> Any:
+    # Serialización defensiva compatible con modelos pydantic y listas anidadas.
     if hasattr(value, 'model_dump'):
         try:
             return value.model_dump(mode='json', by_alias=True, exclude_none=True)

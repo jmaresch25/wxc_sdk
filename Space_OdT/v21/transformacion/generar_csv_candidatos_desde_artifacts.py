@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Script v21 de transformación: incluye comentarios guía en secciones críticas."""
+
 import argparse
 import csv
 import json
@@ -50,6 +52,7 @@ def _first_non_empty(rows: list[dict[str, str]], field: str) -> str | None:
 
 
 def _build_params(lookups: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    # Construye params sugeridos por script usando artefactos previos como fuente de verdad.
     now = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
     first_license = lookups.get('license_ids', [])[:1]
     second_license = lookups.get('license_ids', [])[1:2]
@@ -163,6 +166,7 @@ def _is_missing(value: Any) -> bool:
 
 
 def build_candidate_rows(exports_dir: Path) -> list[dict[str, str]]:
+    # Evalúa dependencias mínimas y marca cada script como ready/missing_dependencies.
     locations = _read_csv(exports_dir / 'locations.csv')
     people = _read_csv(exports_dir / 'people.csv')
     workspaces = _read_csv(exports_dir / 'workspaces.csv')
@@ -201,6 +205,7 @@ def build_candidate_rows(exports_dir: Path) -> list[dict[str, str]]:
 
 
 def main() -> None:
+    # Entrada CLI: carga entorno, parsea argumentos y ejecuta la acción.
     parser = argparse.ArgumentParser(description='Genera CSV de candidatos v21 en base a .artifacts/exports')
     parser.add_argument('--exports-dir', type=Path, default=EXPORTS_DIR)
     parser.add_argument('--output', type=Path, default=DEFAULT_OUTPUT)

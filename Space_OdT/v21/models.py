@@ -17,6 +17,7 @@ class Stage(str, Enum):
 
 @dataclass(frozen=True)
 class LocationInput:
+    # Entidad de entrada para sedes: conserva payload crudo + campos clave normalizados.
     row_number: int
     location_name: str
     location_id: str | None
@@ -57,6 +58,7 @@ class WorkspaceInput:
 
 @dataclass
 class PlannedAction:
+    # Acción atómica del plan v21 (qué entidad, en qué etapa y con qué modo).
     entity_type: EntityType
     entity_key: str
     stage: Stage
@@ -66,6 +68,7 @@ class PlannedAction:
 
 @dataclass
 class RunSummary:
+    # Resumen serializable que consumen UI/CLI y artefactos de reporting.
     run_id: str
     mode: str
     completed_count: int

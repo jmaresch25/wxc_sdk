@@ -16,6 +16,7 @@ from .io import load_locations_from_json
 
 
 def launch_v21_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: int = 8765) -> None:
+    # Micro-UI HTTP para operadores: inspección de jobs y disparo de endpoints v21.
     runner = V21Runner(token=token, out_dir=out_dir)
     running_jobs: dict[str, threading.Thread] = {}
 
@@ -144,6 +145,7 @@ def launch_v21_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
 
 
 def _run_job_background(runner: V21Runner, job_id: str) -> None:
+    # Bridge sync->async para tareas lanzadas desde Thread en http.server.
     import asyncio
 
     try:
@@ -171,6 +173,7 @@ def _run_async(awaitable):
 
 
 def _rows_from_multipart(raw: bytes, boundary: bytes) -> list[dict]:
+    # Parser CSV multipart mínimo (sin dependencias web externas).
     parts = raw.split(b'--' + boundary)
     file_name = ''
     file_bytes = b''
