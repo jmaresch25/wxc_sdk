@@ -1,8 +1,8 @@
-# Space_OdT v2.1 — Próxima evolutiva
-## Development Term Specification Sheet (SDK + UI)
+# Space_OdT v2.1 — Development Term Specification Sheet
+## Próxima evolutiva backend (Webex SDK-first)
 
 **Documento**: DTS-21-WEBEX-TRANSFORMACION  
-**Versión**: 1.2  
+**Versión**: 1.0  
 **Estado**: Draft listo para implementación  
 **Ámbito**: Automatización de acciones de Ubicación, Usuarios y Workspaces mediante `wxc_sdk`  
 **Ruta objetivo de scripts**: `Space_OdT/v21/transformacion/`  
@@ -10,127 +10,99 @@
 
 ---
 
-## 1) Define what we are building
+## 1) Definición de lo que se construye
 
 ### 1.1 Qué es
-Una evolución funcional única (backend + UI operativa) para ejecutar acciones de provisión/configuración en Webex Calling con patrón **1 acción = 1 script** y trazabilidad por log.
+Evolutiva backend basada en **scripts desacoplados por acción** para ejecutar operaciones de provisión y configuración en Webex Calling usando `wxc_sdk`.
 
 ### 1.2 Para quién es
-Para el equipo responsable de ejecutar y supervisar las transformaciones técnicas de telefonía.
+Equipos técnicos de implantación/operación (PRE/PRO), con necesidad de ejecutar tareas repetibles, auditables y con salida rica en datos reales de API.
 
 ### 1.3 Problema que resuelve
-Evita flujos manuales dispersos, reduce inconsistencias entre acciones y permite ejecución repetible con salida técnica detallada de SDK.
+Centraliza y estandariza acciones hoy dispersas (PSTN, numeraciones, permisos, licencias, forwarding, etc.) con foco en:
+- mínimo boilerplate,
+- alta mantenibilidad,
+- escalabilidad por crecimiento de acciones,
+- verbosidad útil en outputs con payload/response reales del SDK.
 
-### 1.4 Cómo va a funcionar
-- Menú UI por secciones (Ubicación, Usuarios, Workspaces).
-- Cada acción abre su pantalla dedicada.
-- Cada pantalla dispara su script correspondiente en `v21/transformacion`.
-- Cada ejecución persiste su log en archivo dedicado en `v21/transformacion/logs`.
+### 1.4 Cómo funcionará
+Cada acción vive en **su propio script** dentro de `v21/transformacion`, con patrón uniforme:
+1. leer estado actual (`read/list/details`),
+2. aplicar cambio (`configure/update/create/add`),
+3. emitir salida técnica detallada,
+4. registrar trazas en **archivo de log dedicado por acción**.
 
-### 1.5 Conceptos principales
+### 1.5 Modelo conceptual (distilled)
 - **Entidad**: `Location`, `Person`, `Workspace`.
-- **Acción**: unidad ejecutable independiente.
-- **Submétodo SDK**: lectura, escritura o variación complementaria.
-- **Evidencia**: output SDK + log técnico por acción.
+- **Acción**: script unitario idempotente por capacidad SDK.
+- **Contrato entrada**: parámetros obligatorios mínimos por acción.
+- **Contrato salida**: resultado técnico verboso + resumen ejecutivo corto.
+- **Trazabilidad**: 1 acción = 1 log file rotado por ejecución/fecha.
 
 ---
 
-## 2) Design the user experience
+## 2) Diseño de experiencia operativa (UX técnica)
 
-## 2.1 Menú de navegación obligatorio
-- **Ubicación**
-  - Configurar PSTN de Ubicación
-  - Alta numeraciones en ubicación (estado desactivado)
-  - Añadir cabecera de Ubicación
-  - Configuración llamadas internas
-  - Configurar Permisos de Llamadas Salientes por Defecto
-- **Usuarios**
-  - Alta usuario
-  - Modificación de licencias en usuarios
-  - Añadir Número de Intercomunicación Legacy (Secundario)
-  - Configurar Desvío a Plataforma Antigua (Prefijo 53)
-  - Configurar Perfil de Llamadas Salientes (si difiere del defecto)
-- **Workspaces**
-  - Alta de Workspace
-  - Añadir Número de Intercomunicación Legacy (Secundario)
-  - Configurar Desvío a Plataforma Antigua (Prefijo 53)
-  - Configurar Perfil de Llamadas Salientes (si difiere del defecto)
+### 2.1 Historias de usuario (happy path)
+1. Operador ejecuta script de acción con parámetros.
+2. El script imprime contexto, request normalizado y respuesta real del SDK.
+3. Se guarda log técnico en fichero propio.
+4. Operador encadena siguiente script del flujo funcional.
 
-## 2.2 Layout base de pantalla (común)
-1. **Formulario** (obligatorios + opcionales)
-2. **Botonera de acción** (leer/validar, aplicar, refrescar salida)
-3. **Panel de resultados**
-   - Tab 1: Output SDK (JSON técnico)
-   - Tab 2: Log técnico de archivo
-   - Tab 3: Resumen legible de ejecución
+### 2.2 Flujos alternativos
+- Ejecución solo lectura para validación previa (sin escritura).
+- Re-ejecución con mismos parámetros para contraste de estado (pre/post).
+- Diferenciación de comportamiento por tipo de entidad (location/person/workspace).
 
-## 2.3 Diseño frontend por acción (diferenciado)
-> Requisito explícito: no se reutiliza exactamente la misma UI para todas las acciones.
-
-| Sección | Acción | Qué se muestra | Botones | Espacio de logs/salida |
-| --- | --- | --- | --- | --- |
-| Ubicación | Configurar PSTN | `location_id`, selector `TRUNK/ROUTE_GROUP`, `premiseRouteId`, estado PSTN actual | `Leer PSTN actual`, `Configurar PSTN`, `Releer estado` | Comparativa pre/post + log de `pstn.list` y `pstn.configure` |
-| Ubicación | Alta numeraciones | Cargador de lista DDIs/TNs, tipo número, estado deseado (`INACTIVE`), numeración existente | `Consultar numeraciones`, `Prevalidar bloque`, `Añadir bloque` | Tabla aceptadas/rechazadas por TN + log por número |
-| Ubicación | Añadir cabecera | `location_id`, DDI cabecera propuesta, cabecera actual | `Leer detalle ubicación`, `Actualizar cabecera` | Bloque diff `calling_line_id` (antes/después) + log de update |
-| Ubicación | Llamadas internas | Política actual de marcación, target route group | `Leer política`, `Aplicar política` | Diff política y log de `internal_dialing.read/configure` |
-| Ubicación | Permisos salientes por defecto | Perfil actual y categorías editables | `Leer permisos`, `Aplicar perfil por defecto` | Resumen de categorías cambiadas + log técnico |
-| Usuarios | Alta usuario | Formulario personas (email, display_name, etc.), vista modo People vs SCIM | `Crear con People API`, `Crear con SCIM` | Resultado de alta + id creado + log del método elegido |
-| Usuarios | Modificar licencias | Usuario objetivo, licencias actuales, selección add/remove | `Leer licencias`, `Aplicar cambios licencias` | Resultado por usuario + log de `assigned_users` y `assign_licenses...` |
-| Usuarios | Intercom legacy secundario | Números actuales, input DDI secundario | `Leer números`, `Añadir secundario` | Lista final de números + log `numbers.read/update` |
-| Usuarios | Desvío prefijo 53 | Estado forwarding actual, extensión destino | `Leer desvío`, `Activar desvío 53+ext` | Estado always antes/después + log forwarding |
-| Usuarios | Perfil saliente custom | Perfil actual, toggles custom y categorías | `Leer perfil`, `Aplicar perfil custom` | Diff por categoría + log permissions |
-| Workspaces | Alta workspace | `display_name`, `location_id`, tipo, calling; chequeo duplicados | `Buscar duplicados`, `Crear workspace` | Resultado de creación + id + log |
-| Workspaces | Intercom legacy secundario | Números workspace actuales + input DDI secundario | `Leer números`, `Añadir secundario` | Lista final + log `workspace_settings.numbers` |
-| Workspaces | Desvío prefijo 53 | Forwarding actual + extensión destino | `Leer desvío`, `Activar desvío 53+ext` | Estado before/after + log forwarding |
-| Workspaces | Perfil saliente custom | Permisos actuales + configuración custom | `Leer perfil`, `Aplicar perfil custom` | Cambios aplicados + log permissions |
-
-## 2.4 Wireframe funcional
-```text
-┌────────────────────────────────────────────────────────────────────┐
-│ Menú lateral                                                      │
-│  Ubicación / Usuarios / Workspaces                               │
-├────────────────────────────────────────────────────────────────────┤
-│ Encabezado acción + descripción corta + script asociado          │
-├────────────────────────────────────────────────────────────────────┤
-│ Formulario específico de acción                                   │
-│ [botón leer/validar] [botón aplicar] [botón refrescar]           │
-├────────────────────────────────────────────────────────────────────┤
-│ Tabs: Output SDK | Log técnico (archivo) | Resumen ejecución      │
-└────────────────────────────────────────────────────────────────────┘
-```
-
-## 2.5 User stories
-### Happy flow
-1. Seleccionar sección y acción.
-2. Completar obligatorios.
-3. Leer estado actual.
-4. Aplicar cambio.
-5. Validar output + log.
-
-### Alternative flows
-- Solo lectura (auditoría/precheck).
-- Reintento con otro submétodo SDK cuando existen variantes para la misma acción funcional.
+### 2.3 Principios UX
+- salida clara, útil y sin ocultar campos relevantes de API,
+- estructura homogénea entre scripts,
+- cero acoplamiento innecesario entre acciones.
 
 ---
 
-## 3) Understand technical needs
+## 3) Necesidades técnicas
 
-## 3.1 Convenciones de implementación
+## 3.1 Convenciones de implementación (obligatorias)
+
+### Estructura de carpetas
+
 ```text
 Space_OdT/v21/transformacion/
-  <accion>.py
-  logs/<accion>.log
+  ubicacion_configurar_pstn.py
+  ubicacion_alta_numeraciones_desactivadas.py
+  ubicacion_actualizar_cabecera.py
+  ubicacion_configurar_llamadas_internas.py
+  ubicacion_configurar_permisos_salientes_defecto.py
+  usuarios_alta_people.py
+  usuarios_alta_scim.py
+  usuarios_modificar_licencias.py
+  usuarios_anadir_intercom_legacy.py
+  usuarios_configurar_desvio_prefijo53.py
+  usuarios_configurar_perfil_saliente_custom.py
+  workspaces_alta.py
+  workspaces_anadir_intercom_legacy.py
+  workspaces_configurar_desvio_prefijo53.py
+  workspaces_configurar_perfil_saliente_custom.py
+  logs/
 ```
 
-- Cada acción en su script independiente.
-- Cada script escribe en su log dedicado.
-- Funciones pequeñas, sin sobre-ingeniería.
-- Separar creación del cliente SDK de la ejecución de la acción.
+### Logging por acción
+- Cada script debe escribir en su propio fichero:
+  - `logs/<nombre_script>.log`
+- Formato recomendado:
+  - timestamp, action_id, entidad, parámetros de entrada relevantes, request SDK, response SDK.
+- No es prioridad en esta fase gestión avanzada de errores/mensajería ejecutiva interna.
 
-## 3.2 Versatilidad por acciones con mismo nombre
-Hay acciones con mismo nombre funcional porque se catalogaron múltiples métodos del SDK que ayudan a completar la tarea (lectura + escritura + variantes). Esto es intencional. La implementación debe seleccionar dinámicamente el método más adecuado según necesidad operativa.
+### Estilo técnico
+- Preferir funciones pequeñas sobre clases.
+- Separar creación del cliente SDK del uso del cliente.
+- Reutilizar helpers mínimos comunes solo si reducen boilerplate real.
+- Evitar sobre-ingeniería y lógica transversal no esencial.
 
-## 3.3 Matriz funcional oficial (SDK reference sheet)
+---
+
+## 3.2 Matriz funcional oficial (SDK reference sheet)
 
 | Sección | Acción | Subtareas / paso (visión SDK) | Campos obligatorios (SDK) | Referencia SDK | Documentación SDK | Método SDK |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -167,46 +139,60 @@ Hay acciones con mismo nombre funcional porque se catalogaron múltiples método
 
 ## 4) Implement testing and security measures
 
-### 4.1 Testing
-- Unit tests de normalización de entradas por acción.
-- Smoke tests de composición read→write (mock SDK).
-- Tests UI por acción: formulario correcto, botones correctos, log tab enlazado a archivo correcto.
-- E2E básico: sección → acción → ejecutar → visualizar output/log.
+### 4.1 Testing (objetivo MVP)
+- Unit tests para normalización de entrada por script.
+- Smoke tests de composición request/response (mock SDK).
+- Validación de contrato de salida (estructura y campos verbosos esperados).
 
-### 4.2 Seguridad
-- Enmascarado de tokens/secretos en output y logs.
-- No persistir credenciales.
-- Validación estricta de campos obligatorios.
+### 4.2 Side-effects
+- Riesgo de configuraciones inconsistentes si se altera el orden lógico read→write.
+- Riesgo funcional por versionado SDK entre 1.26.x y 1.27.x.
+
+### 4.3 Seguridad de salida y logs
+- Enmascarar secretos/tokens.
+- Guardar solo parámetros funcionales.
+- Evitar incluir credenciales en command-line history.
 
 ---
 
-## 5) Plan the work
+## 5) Plan de trabajo
 
 ### 5.1 Estimación
-6–8 días hábiles.
+- 5–7 días hábiles (MVP técnico).
 
 ### 5.2 Milestones
-1. Base común scripts + logging.
-2. Menú UI y routing por acción.
-3. Frontend diferenciado por cada acción.
-4. Integración SDK por acción.
-5. QA y documentación final.
+1. **Base común mínima** (0.5–1 día): utilidades de cliente SDK + logger por script.
+2. **Ubicación** (1.5–2 días): PSTN, numeraciones, cabecera, internas, permisos.
+3. **Usuarios** (1.5–2 días): alta, licencias, números legacy, forwarding, permisos.
+4. **Workspaces** (1.5–2 días): alta, números legacy, forwarding, permisos.
+5. **Hardening documental** (0.5 día): ejemplos de ejecución y outputs.
 
-### 5.3 DoD
-- Menú por secciones + acciones operativo.
-- Cada acción con pantalla específica (formulario, botones y logs adaptados).
-- Cada acción ejecuta su script y escribe su log dedicado.
-- Output SDK verboso disponible para operación.
-
----
-
-## 6) Identify ripple effects
-- Actualizar runbook operativo (acciones, parámetros, orden recomendado).
-- Comunicar cambios de navegación UI.
-- Actualizar documentación de soporte.
+### 5.3 Definition of Done
+- Cada acción implementada en script independiente bajo `v21/transformacion`.
+- Cada script con su log dedicado en `v21/transformacion/logs`.
+- Output verboso útil con información real devuelta por SDK.
+- Boilerplate minimizado y helpers comunes estrictamente necesarios.
 
 ---
 
-## 7) Broader context
-- MVP prioriza versatilidad y mantenibilidad.
-- Fase posterior: orquestación declarativa multi-acción, idempotencia fuerte y observabilidad consolidada.
+## 6) Ripple effects
+
+- Actualizar documentación operativa de ejecución por lotes.
+- Alinear naming y orden de ejecución con equipos PRE/PRO.
+- Publicar catálogo de scripts y parámetros obligatorios en runbook.
+
+---
+
+## 7) Contexto amplio y evolución
+
+### 7.1 Limitaciones actuales
+- Sin capa de orquestación global unificada (intencional en MVP).
+- Sin framework avanzado de recuperación/errores en primera fase.
+
+### 7.2 Evoluciones recomendadas
+- Motor de pipeline declarativo (YAML/JSON) que encadene scripts.
+- Idempotencia fuerte por hash de entrada y estado remoto.
+- Report consolidado multi-acción por entidad.
+
+### 7.3 Moonshot
+- Control plane de transformaciones con scheduling, dry-run integral y diff automático pre/post sobre estado Webex.
