@@ -9,6 +9,9 @@ from .common import get_token, load_runtime_env
 from .ubicacion_configurar_llamadas_internas import configurar_llamadas_internas_ubicacion
 from .ubicacion_configurar_permisos_salientes_defecto import configurar_permisos_salientes_defecto_ubicacion
 from .usuarios_alta_people import alta_usuario_people
+from .usuarios_alta_scim import alta_usuario_scim
+from .usuarios_anadir_intercom_legacy import anadir_intercom_legacy_usuario
+from .usuarios_modificar_licencias import modificar_licencias_usuario
 
 ActionFn = Callable[..., dict[str, Any]]
 
@@ -25,6 +28,9 @@ def _execute_actions(*, token: str, payload: dict[str, Any]) -> dict[str, Any]:
         'ubicacion_configurar_llamadas_internas': configurar_llamadas_internas_ubicacion,
         'ubicacion_configurar_permisos_salientes_defecto': configurar_permisos_salientes_defecto_ubicacion,
         'usuarios_alta_people': alta_usuario_people,
+        'usuarios_alta_scim': alta_usuario_scim,
+        'usuarios_modificar_licencias': modificar_licencias_usuario,
+        'usuarios_anadir_intercom_legacy': anadir_intercom_legacy_usuario,
     }
 
     report: dict[str, Any] = {'source': payload.get('meta', {}), 'results': []}
