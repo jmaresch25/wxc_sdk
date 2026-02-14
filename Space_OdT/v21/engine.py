@@ -76,6 +76,7 @@ class V21Runner:
         return self.v21_dir / 'api_verbose.log'
 
     def _log_verbose(self, *, event: str, method: str, payload: dict[str, Any] | None = None) -> None:
+        # Bitácora estructurada por línea (JSONL) para depuración de integraciones.
         entry = {
             'ts': dt.datetime.now(dt.timezone.utc).isoformat(),
             'event': event,
@@ -87,6 +88,7 @@ class V21Runner:
             handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + '\n')
 
     async def _call_logged(self, method_name: str, awaitable):
+        # Envoltorio común para centralizar logs de request/response en métodos async.
         self._log_verbose(event='request', method=method_name)
         try:
             result = await awaitable
@@ -101,6 +103,7 @@ class V21Runner:
             raise
 
     def _ensure_inputs(self) -> None:
+        # Crea templates faltantes y corta ejecución para evitar corridas con datos incompletos.
         created = bootstrap_v21_inputs(self.v21_dir)
         if created:
             created_lines = '\n'.join(f'  - {path}' for path in created)
@@ -110,6 +113,7 @@ class V21Runner:
             )
 
     def load_plan_rows(self) -> list[dict[str, Any]]:
+        # Traducimos inputs de ubicación a un plan serializable (CSV/JSON) para operar por etapas.
         self._ensure_inputs()
         locations = load_locations(self.v21_dir / 'input_locations.csv')
         actions = self._build_plan(locations=locations)
@@ -126,12 +130,14 @@ class V21Runner:
         ]
 
     async def run(self, *, dry_run: bool = True) -> dict[str, Any]:
+        # Ejecución base: no provisiona recursos, pero deja artefactos auditables.
         plan_rows = self.load_plan_rows()
         now = dt.datetime.now(dt.timezone.utc).isoformat()
         run_id = str(uuid.uuid4())
         mode = 'dry_run' if dry_run else 'apply'
 
         write_plan_csv(self.v21_dir / 'plan.csv', plan_rows)
+        # Estado de corrida consumible por UI/CLI para seguimiento.
         run_state = {
             'run_id': run_id,
             'executed_at': now,
@@ -162,6 +168,7 @@ class V21Runner:
         if not normalized_org_id:
             raise ValueError('orgId es obligatorio')
 
+        # Lookup de sedes del tenant para alimentar dependencias de scripts de transformación.
         api = WebexSimpleApi(tokens=self.token)
         locations_api = LocationsApi(session=api.session)
         self._log_verbose(event='request', method='locations_api.list')
@@ -534,7 +541,7 @@ class V21Runner:
         )
 
     async def run_locations_async(self, rows: list[LocationInput], *, apply: bool = True, max_concurrency: int = 20) -> dict[str, Any]:
-        # compat entrypoint, now writes to the same unified artifacts
+        # Entrada de compatibilidad: redirige al flujo unificado de jobs + artifacts.
         raw_rows = [row.payload for row in rows]
         job = self.create_location_job(rows=raw_rows, entity_type='location')
         if not apply:
@@ -552,6 +559,7 @@ class V21Runner:
         }
 
     async def _upsert_location(self, locations_api: AsLocationsApi, row: LocationInput, *, apply: bool) -> dict[str, Any]:
+        # Upsert idempotente por nombre de sede para permitir reintentos seguros.
         location_key = self._stable_location_key(row)
         try:
             existing = await self._call_logged(

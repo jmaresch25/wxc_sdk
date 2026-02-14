@@ -73,6 +73,7 @@ def _confirm(script_name: str, auto_confirm: bool) -> bool:
 
 
 def _run_row(*, row: dict[str, str], token: str, auto_confirm: bool, dry_run: bool) -> dict[str, Any]:
+    # Orquestador por fila: valida prerequisitos, confirma ejecución y captura errores.
     script_name = row['script_name']
     if script_name not in HANDLERS:
         return {'script_name': script_name, 'status': 'rejected', 'reason': 'unsupported_script'}

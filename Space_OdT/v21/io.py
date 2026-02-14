@@ -61,6 +61,7 @@ WORKSPACE_HEADERS = [
 
 
 def bootstrap_v21_inputs(v21_dir: Path) -> list[Path]:
+    # Bootstrap idempotente: crea plantillas mínimas para empezar el flujo v21.
     v21_dir.mkdir(parents=True, exist_ok=True)
     created: list[Path] = []
 
@@ -141,6 +142,7 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
 
 
 def _normalize_phone(value: str | None) -> str | None:
+    # Normaliza números a formato +E164 simplificado usado en artifacts/plan.
     raw = (value or '').strip()
     if not raw:
         return None
@@ -160,6 +162,7 @@ def _pick(row: dict[str, Any], *keys: str) -> str:
 
 
 def location_input_from_row(row: dict[str, Any], *, row_number: int) -> LocationInput:
+    # Conversión tolerante de columnas legacy -> modelo canónico LocationInput.
     location_name = _pick(row, 'name', 'location_name')
     if not location_name:
         raise ValueError(f'row {row_number}: name is required')
@@ -185,6 +188,7 @@ def location_input_from_row(row: dict[str, Any], *, row_number: int) -> Location
 
 
 def load_locations(path: Path) -> list[LocationInput]:
+    # Carga CSV y preserva row_number real para diagnósticos precisos.
     rows = _read_csv(path)
     return [location_input_from_row(row, row_number=row_number) for row_number, row in enumerate(rows, start=2)]
 
@@ -194,6 +198,7 @@ def load_locations_from_json(payload: list[dict[str, Any]]) -> list[LocationInpu
 
 
 def load_users(path: Path) -> list[UserInput]:
+    # Parser liviano orientado a operaciones por lote (sin side effects de red).
     rows = _read_csv(path)
     data: list[UserInput] = []
     for row_number, row in enumerate(rows, start=2):
@@ -218,6 +223,7 @@ def load_users(path: Path) -> list[UserInput]:
 
 
 def load_workspaces(path: Path) -> list[WorkspaceInput]:
+    # Parser equivalente a usuarios para mantener simetría del pipeline.
     rows = _read_csv(path)
     data: list[WorkspaceInput] = []
     for row_number, row in enumerate(rows, start=2):
@@ -247,6 +253,7 @@ def save_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def write_plan_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    # Exporta plan tabular para revisión humana antes de aplicar cambios.
     path.parent.mkdir(parents=True, exist_ok=True)
     if not rows:
         path.write_text('', encoding='utf-8')

@@ -36,6 +36,7 @@ def _load_remote_payload(remote_url: str, timeout_s: float) -> dict[str, Any]:
 
 
 def _execute_actions(*, token: str, payload: dict[str, Any]) -> dict[str, Any]:
+    # Dispatcher remoto: mapea action->handler local y agrega reporte consolidado.
     handlers: dict[str, ActionFn] = {
         'ubicacion_configurar_pstn': configurar_pstn_ubicacion,
         'ubicacion_alta_numeraciones_desactivadas': alta_numeraciones_desactivadas,

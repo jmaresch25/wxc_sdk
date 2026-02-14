@@ -30,6 +30,7 @@ def main() -> None:
 
     token = get_token(args.token)
 
+    # Secuencia explícita de pasos del flujo de ubicación para pruebas controladas.
     report = {
         'configurar_pstn': configurar_pstn_ubicacion(
             token=token,
