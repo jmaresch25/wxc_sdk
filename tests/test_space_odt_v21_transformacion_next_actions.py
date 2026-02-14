@@ -249,3 +249,51 @@ def test_launcher_tester_api_remota_executes_supported_and_rejects_unknown(monke
     assert report['results'][0]['result']['kind'] == 'internal'
     assert report['results'][1]['result']['kind'] == 'licenses'
     assert report['results'][2]['status'] == 'rejected'
+
+
+def test_launcher_tester_api_remota_supports_first_three_location_actions(monkeypatch):
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.launcher_tester_api_remota.configurar_pstn_ubicacion',
+        lambda token, **kwargs: {'status': 'success', 'kind': 'pstn'},
+    )
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.launcher_tester_api_remota.alta_numeraciones_desactivadas',
+        lambda token, **kwargs: {'status': 'success', 'kind': 'numbers'},
+    )
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.launcher_tester_api_remota.actualizar_cabecera_ubicacion',
+        lambda token, **kwargs: {'status': 'success', 'kind': 'header'},
+    )
+
+    payload = {
+        'acciones': [
+            {
+                'action': 'ubicacion_configurar_pstn',
+                'params': {
+                    'location_id': 'loc1',
+                    'premise_route_type': 'ROUTE_GROUP',
+                    'premise_route_id': 'rg1',
+                },
+            },
+            {
+                'action': 'ubicacion_alta_numeraciones_desactivadas',
+                'params': {
+                    'location_id': 'loc1',
+                    'phone_numbers': ['+34910000001'],
+                },
+            },
+            {
+                'action': 'ubicacion_actualizar_cabecera',
+                'params': {
+                    'location_id': 'loc1',
+                    'phone_number': '+34910000001',
+                },
+            },
+        ]
+    }
+
+    report = _execute_actions(token='tkn', payload=payload)
+
+    assert report['results'][0]['result']['kind'] == 'pstn'
+    assert report['results'][1]['result']['kind'] == 'numbers'
+    assert report['results'][2]['result']['kind'] == 'header'
