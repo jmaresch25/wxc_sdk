@@ -9,6 +9,10 @@ from Space_OdT.v21.transformacion.ubicacion_configurar_permisos_salientes_defect
 )
 from Space_OdT.v21.transformacion.usuarios_alta_people import alta_usuario_people
 
+from Space_OdT.v21.transformacion.usuarios_alta_scim import alta_usuario_scim
+from Space_OdT.v21.transformacion.usuarios_anadir_intercom_legacy import anadir_intercom_legacy_usuario
+from Space_OdT.v21.transformacion.usuarios_modificar_licencias import modificar_licencias_usuario
+
 
 class _Model:
     def __init__(self, payload):
@@ -123,6 +127,101 @@ def test_usuarios_alta_people_creates_or_skips(monkeypatch):
     assert skipped['status'] == 'skipped'
 
 
+
+def test_usuarios_alta_scim_creates_or_skips(monkeypatch):
+    class ScimUsersApi:
+        def __init__(self):
+            self.created = None
+            self.resources = []
+
+        def search(self, org_id, filter, count=1):
+            return SimpleNamespace(resources=self.resources)
+
+        def create(self, org_id, user):
+            self.created = (org_id, user)
+            return _Model({'id': 'scim-1', 'userName': user.user_name})
+
+    users_api = ScimUsersApi()
+    fake_api = SimpleNamespace(scim=SimpleNamespace(users=users_api))
+    monkeypatch.setattr('Space_OdT.v21.transformacion.usuarios_alta_scim.create_api', lambda token: fake_api)
+
+    created = alta_usuario_scim(
+        token='tkn',
+        org_id='org1',
+        email='scim@example.com',
+        first_name='Scim',
+        last_name='User',
+    )
+    assert created['status'] == 'success'
+    assert users_api.created[0] == 'org1'
+
+    users_api.resources = [_Model({'id': 'exists'})]
+    skipped = alta_usuario_scim(
+        token='tkn',
+        org_id='org1',
+        email='scim@example.com',
+        first_name='Scim',
+        last_name='User',
+    )
+    assert skipped['status'] == 'skipped'
+
+
+def test_usuarios_modificar_licencias_calls_assign(monkeypatch):
+    class LicensesApi:
+        def __init__(self):
+            self.last = None
+
+        def assign_licenses_to_users(self, person_id=None, licenses=None, org_id=None):
+            self.last = (person_id, licenses, org_id)
+            return _Model({'personId': person_id, 'licenses': ['l1']})
+
+    licenses = LicensesApi()
+    fake_api = SimpleNamespace(licenses=licenses)
+    monkeypatch.setattr('Space_OdT.v21.transformacion.usuarios_modificar_licencias.create_api', lambda token: fake_api)
+
+    result = modificar_licencias_usuario(
+        token='tkn',
+        person_id='person-1',
+        add_license_ids=['lic-a'],
+        org_id='org1',
+    )
+
+    assert result['status'] == 'success'
+    assert licenses.last[0] == 'person-1'
+
+
+def test_usuarios_anadir_intercom_legacy_updates_or_skips(monkeypatch):
+    class NumbersApi:
+        def __init__(self):
+            self.last_update = None
+            self._existing = []
+
+        def read(self, person_id, org_id=None):
+            return _Model({'distinctiveRingEnabled': False, 'phoneNumbers': list(self._existing)})
+
+        def update(self, person_id, update, org_id=None):
+            self.last_update = (person_id, update, org_id)
+
+    numbers = NumbersApi()
+    fake_api = SimpleNamespace(person_settings=SimpleNamespace(numbers=numbers))
+    monkeypatch.setattr('Space_OdT.v21.transformacion.usuarios_anadir_intercom_legacy.create_api', lambda token: fake_api)
+
+    updated = anadir_intercom_legacy_usuario(
+        token='tkn',
+        person_id='person-1',
+        legacy_phone_number='+34910000099',
+    )
+    assert updated['status'] == 'success'
+    assert numbers.last_update[0] == 'person-1'
+
+    numbers._existing = [{'directNumber': '+34910000099'}]
+    skipped = anadir_intercom_legacy_usuario(
+        token='tkn',
+        person_id='person-1',
+        legacy_phone_number='+34910000099',
+    )
+    assert skipped['status'] == 'skipped'
+
 def test_launcher_tester_api_remota_executes_supported_and_rejects_unknown(monkeypatch):
     monkeypatch.setattr(
         'Space_OdT.v21.transformacion.launcher_tester_api_remota.configurar_llamadas_internas_ubicacion',
@@ -132,10 +231,15 @@ def test_launcher_tester_api_remota_executes_supported_and_rejects_unknown(monke
         'Space_OdT.v21.transformacion.launcher_tester_api_remota.configurar_permisos_salientes_defecto_ubicacion',
         lambda token, **kwargs: {'status': 'success', 'kind': 'permissions'},
     )
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.launcher_tester_api_remota.modificar_licencias_usuario',
+        lambda token, **kwargs: {'status': 'success', 'kind': 'licenses'},
+    )
 
     payload = {
         'acciones': [
             {'action': 'ubicacion_configurar_llamadas_internas', 'params': {'location_id': 'loc1', 'enable_unknown_extension_route_policy': False}},
+            {'action': 'usuarios_modificar_licencias', 'params': {'person_id': 'p1', 'add_license_ids': ['lic-a']}},
             {'action': 'desconocida', 'params': {}},
         ]
     }
@@ -143,4 +247,5 @@ def test_launcher_tester_api_remota_executes_supported_and_rejects_unknown(monke
     report = _execute_actions(token='tkn', payload=payload)
 
     assert report['results'][0]['result']['kind'] == 'internal'
-    assert report['results'][1]['status'] == 'rejected'
+    assert report['results'][1]['result']['kind'] == 'licenses'
+    assert report['results'][2]['status'] == 'rejected'
