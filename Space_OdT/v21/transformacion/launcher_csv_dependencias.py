@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Launcher v21 que consume un CSV de parámetros (parametro,valor)."""
+"""Launcher v21 que consume un CSV con columnas=parámetros."""
 
 import argparse
 import csv
@@ -127,25 +127,17 @@ def _is_missing_value(value: Any) -> bool:
 
 
 def _read_parameter_map(csv_path: Path) -> dict[str, Any]:
+    """Lee CSV generado por `generar_csv_candidatos_desde_artifacts`: headers=parámetros, 1 fila de datos."""
     with csv_path.open('r', encoding='utf-8', newline='') as handle:
         rows = list(csv.DictReader(handle))
 
     if not rows:
         return {}
 
-    headers = set(rows[0].keys())
-    if {'parametro', 'valor'}.issubset(headers):
-        return {
-            (row.get('parametro') or '').strip(): _parse_param_value(row.get('valor') or '')
-            for row in rows
-            if (row.get('parametro') or '').strip()
-        }
-
-    # Compatibilidad mínima con CSV anterior (1 fila con columnas=parámetros).
-    legacy_row = rows[0]
+    first_row = rows[0]
     return {
         key: _parse_param_value(value)
-        for key, value in legacy_row.items()
+        for key, value in first_row.items()
         if key != 'script_name' and (value or '').strip() != ''
     }
 

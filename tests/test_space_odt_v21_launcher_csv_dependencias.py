@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -51,14 +50,15 @@ def test_invoke_with_retry_after_does_not_retry_without_header(monkeypatch):
         launcher._invoke_with_retry_after(handler=handler, token='tkn', params={})
 
 
-def test_read_parameter_map_from_parametro_valor_csv(tmp_path):
+def test_read_parameter_map_from_columns_csv(tmp_path):
     csv_path = tmp_path / 'params.csv'
-    csv_path.write_text('parametro,valor\nlocation_id,loc-1\nadd_license_ids,"[""lic-a""]"\n', encoding='utf-8')
+    csv_path.write_text('location_id,add_license_ids,person_id\nloc-1,"[""lic-a""]",person-1\n', encoding='utf-8')
 
     parameter_map = launcher._read_parameter_map(csv_path)
 
     assert parameter_map['location_id'] == 'loc-1'
     assert parameter_map['add_license_ids'] == ['lic-a']
+    assert parameter_map['person_id'] == 'person-1'
 
 
 def test_run_script_skips_when_required_dependency_is_missing():
