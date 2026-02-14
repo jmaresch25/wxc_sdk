@@ -162,7 +162,7 @@ Se añadieron acciones desacopladas en `Space_OdT/v21/transformacion/`:
 - `workspaces_anadir_intercom_legacy.py`
 - `workspaces_configurar_desvio_prefijo53.py`
 - `workspaces_configurar_perfil_saliente_custom.py`
-- `launcher_tester_api_remota.py` (tester que recibe acciones desde API remota)
+- `launcher_tester_api_remota.py` (tester que recibe acciones desde API remota, incluyendo las 3 acciones iniciales de Ubicación + resto de acciones backend)
 
 Todos los scripts hacen `load_dotenv()` al iniciar y escriben log propio en:
 

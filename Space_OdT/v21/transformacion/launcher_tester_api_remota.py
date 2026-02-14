@@ -6,6 +6,9 @@ from typing import Any, Callable
 from urllib.request import Request, urlopen
 
 from .common import get_token, load_runtime_env
+from .ubicacion_actualizar_cabecera import actualizar_cabecera_ubicacion
+from .ubicacion_alta_numeraciones_desactivadas import alta_numeraciones_desactivadas
+from .ubicacion_configurar_pstn import configurar_pstn_ubicacion
 from .ubicacion_configurar_llamadas_internas import configurar_llamadas_internas_ubicacion
 from .ubicacion_configurar_permisos_salientes_defecto import configurar_permisos_salientes_defecto_ubicacion
 from .usuarios_alta_people import alta_usuario_people
@@ -31,6 +34,9 @@ def _load_remote_payload(remote_url: str, timeout_s: float) -> dict[str, Any]:
 
 def _execute_actions(*, token: str, payload: dict[str, Any]) -> dict[str, Any]:
     handlers: dict[str, ActionFn] = {
+        'ubicacion_configurar_pstn': configurar_pstn_ubicacion,
+        'ubicacion_alta_numeraciones_desactivadas': alta_numeraciones_desactivadas,
+        'ubicacion_actualizar_cabecera': actualizar_cabecera_ubicacion,
         'ubicacion_configurar_llamadas_internas': configurar_llamadas_internas_ubicacion,
         'ubicacion_configurar_permisos_salientes_defecto': configurar_permisos_salientes_defecto_ubicacion,
         'usuarios_alta_people': alta_usuario_people,
