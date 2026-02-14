@@ -4,6 +4,7 @@ import argparse
 import csv
 import json
 import logging
+import traceback
 from pathlib import Path
 from typing import Any, Callable
 
@@ -46,6 +47,9 @@ HANDLERS: dict[str, ActionFn] = {
 }
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 def _setup_debug_logging() -> None:
     logging.basicConfig(
         level=logging.DEBUG,
@@ -80,14 +84,34 @@ def _run_row(*, row: dict[str, str], token: str, auto_confirm: bool, dry_run: bo
         }
 
     params = json.loads(row['params_json'])
+    invocation_payload = {
+        'script_name': script_name,
+        'method': HANDLERS[script_name].__name__,
+        'kwargs': {'token': '***' if token else '', **params},
+    }
+    LOGGER.info('Invocación preparada:\n%s', json.dumps(invocation_payload, indent=2, ensure_ascii=False, sort_keys=True))
+
     if not _confirm(script_name, auto_confirm=auto_confirm):
         return {'script_name': script_name, 'status': 'skipped', 'reason': 'user_cancelled'}
 
     if dry_run:
-        return {'script_name': script_name, 'status': 'dry_run', 'params': params}
+        return {'script_name': script_name, 'status': 'dry_run', 'params': params, 'invocation': invocation_payload}
 
-    result = HANDLERS[script_name](token=token, **params)
-    return {'script_name': script_name, 'status': 'executed', 'result': result}
+    try:
+        result = HANDLERS[script_name](token=token, **params)
+    except Exception as exc:  # noqa: BLE001 - El launcher debe continuar con la siguiente fila.
+        LOGGER.exception('Fallo ejecutando %s con params=%s', script_name, json.dumps(params, ensure_ascii=False, sort_keys=True))
+        return {
+            'script_name': script_name,
+            'status': 'error',
+            'error_type': type(exc).__name__,
+            'error': str(exc),
+            'params': params,
+            'invocation': invocation_payload,
+            'traceback': traceback.format_exc(),
+        }
+
+    return {'script_name': script_name, 'status': 'executed', 'result': result, 'invocation': invocation_payload}
 
 
 def main() -> None:
