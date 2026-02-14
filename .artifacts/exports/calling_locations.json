@@ -1,0 +1,15 @@
+[
+  {
+    "id": "",
+    "name": "Site1",
+    "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+    "person_id": "",
+    "workspace_id": "",
+    "license_id": "",
+    "virtual_line_id": "",
+    "group_id": "",
+    "source_method": "telephony.locations.list",
+    "raw_keys": "calling_line_id,e911_setup_required,enforce_outside_dial_digit,location_id,name",
+    "raw_json": "{\"calling_line_id\": {}, \"e911_setup_required\": false, \"enforce_outside_dial_digit\": false, \"location_id\": \"Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA\", \"name\": \"Site1\"}"
+  }
+]

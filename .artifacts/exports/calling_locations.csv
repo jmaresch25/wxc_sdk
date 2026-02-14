@@ -1,0 +1,2 @@
+id,name,location_id,person_id,workspace_id,license_id,virtual_line_id,group_id,source_method,raw_keys,raw_json
+,Site1,Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA,,,,,,telephony.locations.list,"calling_line_id,e911_setup_required,enforce_outside_dial_digit,location_id,name","{""calling_line_id"": {}, ""e911_setup_required"": false, ""enforce_outside_dial_digit"": false, ""location_id"": ""Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA"", ""name"": ""Site1""}"
