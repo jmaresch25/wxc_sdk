@@ -59,12 +59,10 @@ def _read_rows(csv_path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
-def _confirm(script_name: str, params: dict[str, Any], auto_confirm: bool) -> bool:
-    params_pretty = json.dumps(params, ensure_ascii=False, sort_keys=True, indent=2)
-    print(f'\nParámetros para {script_name}:\n{params_pretty}')
+def _confirm(script_name: str, auto_confirm: bool) -> bool:
     if auto_confirm:
         return True
-    answer = input(f'¿Ejecutar {script_name} con estos parámetros? [y/N]: ').strip().lower()
+    answer = input(f'¿Ejecutar {script_name}? [y/N]: ').strip().lower()
     return answer in {'y', 'yes', 's', 'si'}
 
 
@@ -81,33 +79,14 @@ def _run_row(*, row: dict[str, str], token: str, auto_confirm: bool, dry_run: bo
             'missing_dependencies': row.get('missing_dependencies', ''),
         }
 
-    try:
-        params = json.loads(row['params_json'])
-    except json.JSONDecodeError as exc:
-        return {
-            'script_name': script_name,
-            'status': 'error',
-            'reason': 'invalid_params_json',
-            'error': str(exc),
-        }
-
-    if not _confirm(script_name, params=params, auto_confirm=auto_confirm):
+    params = json.loads(row['params_json'])
+    if not _confirm(script_name, auto_confirm=auto_confirm):
         return {'script_name': script_name, 'status': 'skipped', 'reason': 'user_cancelled'}
 
     if dry_run:
         return {'script_name': script_name, 'status': 'dry_run', 'params': params}
 
-    try:
-        result = HANDLERS[script_name](token=token, **params)
-    except Exception as exc:
-        logging.exception('Error ejecutando %s. Se continuará con el siguiente script.', script_name)
-        return {
-            'script_name': script_name,
-            'status': 'error',
-            'reason': 'execution_failed',
-            'error': str(exc),
-            'params': params,
-        }
+    result = HANDLERS[script_name](token=token, **params)
     return {'script_name': script_name, 'status': 'executed', 'result': result}
 
 
