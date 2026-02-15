@@ -203,22 +203,29 @@ La estructura quedó así para que cada configuración sea simple de modificar:
 
 Regla de diseño: **modificas CSV/política, no código**, salvo que quieras introducir una etapa nueva.
 
-### UI HTML5 por botón (acción unitaria)
+### UI HTML5 v2.1.1 (Space_OdT.cli v211_softphone_ui)
 
-Ahora existe una UI local HTML5 para ejecutar una acción cada vez:
+Nueva versión orientada a operación técnica experta con **planta principal + menú de dos niveles**.
 
 ```bash
-python -m Space_OdT.cli v21_softphone_ui --out-dir .artifacts
+python -m Space_OdT.cli v211_softphone_ui --v21-ui-port 8771
 ```
 
-- Abre: `http://127.0.0.1:8765`
-- Cada tarjeta muestra una acción con botones:
-  - **Preview**: muestra before/after de la acción antes de aplicar.
-  - **Apply**: ejecuta la acción (en esta base, flujo controlado de estado para cierre manual).
-- Resultado visible en JSON con:
-  - `action`
-  - `before`
-  - `after`
-  - `changed`
+- Abre: `http://127.0.0.1:8771`.
+- Planta principal (antes de entrar en menús):
+  - carga de 3 CSV maestros exclusivamente vía upload de archivo (`Ubicaciones`, `Usuarios`, `Numeraciones`).
+- El mapeo de campos canónicos (`location_id`, `phone_number`, `person_id`, etc.) se configura en el panel operativo de acciones.
+- Menú nivel 1: `Carga`, `Ubicación`, `Usuarios`, `Workspaces` (barra lateral fija).
+- Menú nivel 2: acciones desacopladas por script (matriz 3.2), visibles dentro de cada sección del nivel 1. En `Carga` se concentra la subida de CSV; en el resto se muestran acciones de ejecución.
+  - botón **Preview parámetros**,
+  - botón **Aplicar**,
+  - box de parámetros preparados,
+  - box de respuesta API.
+- Reglas de visualización:
+  - si hay más de 5 registros se muestra head de 10 filas,
+  - en pantalla se muestra resumen de ejecución por fila (`status` + `http_status`),
+  - el detalle técnico completo (request/response/error) queda en `Space_OdT/v21/transformacion/logs/<accion>.log`.
 
-Esto deja claro qué está a punto de cambiar y qué cambió después.
+Notas operativas:
+- esta UI reutiliza los scripts de `Space_OdT/v21/transformacion` como backend real;
+- `.artifacts` se mantiene para salidas de run legacy, mientras que la traza de ejecución de acciones UI queda en `transformacion/logs`.
