@@ -42,6 +42,7 @@ def default_calling_row(item: dict) -> dict:
 
 def people_row(item: dict) -> dict:
     calling_data = item.get('calling_data') or item.get('callingData') or {}
+    location_id = _value(calling_data, 'location_id', 'locationId') if isinstance(calling_data, dict) else ''
     return {
         'person_id': _value(item, 'person_id', 'id'),
         'email': (item.get('emails') or [''])[0] if isinstance(item.get('emails'), list) else item.get('email', ''),
@@ -49,7 +50,8 @@ def people_row(item: dict) -> dict:
         'status': _value(item, 'status'),
         'roles': ';'.join(item.get('roles', []) or []),
         'licenses': ';'.join(item.get('licenses', []) or []),
-        'location_id': _value(calling_data, 'location_id', 'locationId') if isinstance(calling_data, dict) else '',
+        'location_id': location_id,
+        'webex_calling_enabled': bool(location_id),
     }
 
 
@@ -58,16 +60,38 @@ def groups_row(item: dict) -> dict:
 
 
 def locations_row(item: dict) -> dict:
+    address = item.get('address') if isinstance(item.get('address'), dict) else {}
     return {
         'location_id': _value(item, 'location_id', 'id'),
         'name': _value(item, 'name'),
         'org_id': _value(item, 'org_id', 'orgId'),
         'timezone': _value(item, 'time_zone', 'timeZone'),
+        'language': _value(item, 'preferred_language', 'preferredLanguage'),
+        'address_1': _value(item, 'address_1', 'address1') or _value(address, 'address1'),
+        'city': _value(item, 'city') or _value(address, 'city'),
+        'state': _value(item, 'state') or _value(address, 'state'),
+        'postal_code': _value(item, 'postal_code', 'postalCode') or _value(address, 'postalCode'),
+        'country': _value(item, 'country') or _value(address, 'country'),
     }
 
 
 def licenses_row(item: dict) -> dict:
-    return {'license_id': _value(item, 'license_id', 'id'), 'sku_or_name': _value(item, 'name', 'display_name', 'displayName')}
+    return {'license_id': _value(item, 'license_id', 'id'), 'sku_or_name': _value(item, 'name', 'display_name', 'displayName', 'sku')}
+
+
+def workspaces_row(item: dict) -> dict:
+    calling = item.get('calling') if isinstance(item.get('calling'), dict) else {}
+    location_id = _value(item, 'location_id', 'locationId') or _value(calling, 'location_id', 'locationId')
+    return {
+        'id': _value(item, 'id', 'workspace_id'),
+        'workspace_id': _value(item, 'id', 'workspace_id'),
+        'name': _value(item, 'display_name', 'displayName', 'name'),
+        'location_id': location_id,
+        'extension': _value(calling, 'extension', 'extensionNumber') or _value(item, 'extension', 'extensionNumber'),
+        'phone_number': _value(calling, 'phone_number', 'phoneNumber') or _value(item, 'phone_number', 'phoneNumber'),
+        'webex_calling_enabled': bool(location_id),
+        'raw_keys': '',
+    }
 
 
 MODULE_SPECS: list[ModuleSpec] = [
@@ -91,7 +115,7 @@ MODULE_SPECS: list[ModuleSpec] = [
                lambda row: {}),
     ModuleSpec('devices', 'devices.list', 'devices.details', 'id', {}, default_calling_row,
                lambda row: {'device_id': row.get('id')}),
-    ModuleSpec('workspaces', 'workspaces.list', 'workspaces.details', 'id', {}, default_calling_row,
+    ModuleSpec('workspaces', 'workspaces.list', 'workspaces.details', 'id', {}, workspaces_row,
                lambda row: {'workspace_id': row.get('id')}),
 ]
 
