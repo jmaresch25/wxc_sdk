@@ -15,10 +15,11 @@ from .status import StatusRecord, StatusRecorder, classify_exception, timed_call
 
 
 EXPORT_COLUMNS = {
-    'people': ['person_id', 'email', 'display_name', 'status', 'roles', 'licenses', 'location_id'],
+    'people': ['person_id', 'email', 'display_name', 'status', 'roles', 'licenses', 'location_id', 'webex_calling_enabled'],
     'groups': ['group_id', 'name'],
-    'locations': ['location_id', 'name', 'org_id', 'timezone'],
+    'locations': ['location_id', 'name', 'org_id', 'timezone', 'language', 'address_1', 'city', 'state', 'postal_code', 'country'],
     'licenses': ['license_id', 'sku_or_name'],
+    'workspaces': ['id', 'workspace_id', 'name', 'location_id', 'extension', 'phone_number', 'webex_calling_enabled'],
     'status': ['module', 'method', 'result', 'http_status', 'error', 'count', 'elapsed_ms'],
 }
 
@@ -241,6 +242,8 @@ def _write_report_if_enabled(settings: Settings, status_rows: list[dict], module
     report_file.parent.mkdir(parents=True, exist_ok=True)
     report_file.write_text(html, encoding='utf-8')
     return report_file
+
+
 
 
 def run_exports(api, settings: Settings) -> dict:
