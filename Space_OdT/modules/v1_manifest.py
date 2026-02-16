@@ -113,6 +113,13 @@ def _canonical_item(item: dict[str, Any]) -> dict[str, Any]:
     out.setdefault('country', item.get('country') or address.get('country'))
     out.setdefault('directNumber', item.get('directNumber') or item.get('phoneNumber') or item.get('phone_number'))
 
+
+    member_type = str(out.get('member_type') or '').upper()
+    if not out.get('person_id') and member_type in {'PEOPLE', 'PERSON', 'USER'} and out.get('member_id'):
+        out['person_id'] = out.get('member_id')
+    if not out.get('workspace_id') and member_type in {'WORKSPACE', 'PLACE'} and out.get('member_id'):
+        out['workspace_id'] = out.get('member_id')
+
     if 'webex_calling_enabled' not in out:
         out['webex_calling_enabled'] = bool(out.get('location_id'))
 
