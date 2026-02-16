@@ -48,7 +48,7 @@ def test_build_v1_requirements_status_marks_key_requirements() -> None:
         'locations': [{'language': 'es_ES', 'address_1': 'A', 'city': 'C', 'state': 'S', 'postal_code': 'P', 'country': 'ES'}],
         'people': [{'webex_calling_enabled': True, 'location_id': 'loc1'}],
         'workspaces': [{'workspace_id': 'w1'}],
-        'person_numbers': [{'directNumber': '+341'}],
+        'person_numbers': [{'direct_number': '+341'}],
         'calling_locations': [{'id': 'loc1'}],
         'calling_locations_details': [{'id': 'loc1'}],
     }

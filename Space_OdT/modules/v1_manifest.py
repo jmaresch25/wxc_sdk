@@ -29,7 +29,7 @@ STANDARD_COLUMNS = [
     'state',
     'postal_code',
     'country',
-    'directNumber',
+    'direct_number',
     'webex_calling_enabled',
     'source_method',
     'raw_keys',
@@ -111,7 +111,7 @@ def _canonical_item(item: dict[str, Any]) -> dict[str, Any]:
     out.setdefault('state', item.get('state') or address.get('state'))
     out.setdefault('postal_code', item.get('postal_code') or item.get('postalCode') or address.get('postalCode'))
     out.setdefault('country', item.get('country') or address.get('country'))
-    out.setdefault('directNumber', item.get('directNumber') or item.get('phoneNumber') or item.get('phone_number'))
+    out.setdefault('direct_number', item.get('direct_number') or item.get('directNumber') or item.get('phone_number') or item.get('phoneNumber'))
 
 
     member_type = str(out.get('member_type') or '').upper()

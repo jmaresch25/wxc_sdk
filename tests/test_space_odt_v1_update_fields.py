@@ -60,7 +60,7 @@ def test_row_from_item_maps_group_route_direct_and_location_fields() -> None:
     assert row['member_type'] == 'WORKSPACE'
     assert row['route_group_id'] == 'rg1'
     assert row['connection_type'] == 'Local Gateway'
-    assert row['directNumber'] == '+34123'
+    assert row['direct_number'] == '+34123'
     assert row['language'] == 'es_ES'
     assert row['address_1'] == 'A'
     assert row['city'] == 'C'
