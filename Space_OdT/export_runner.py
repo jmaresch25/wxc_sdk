@@ -15,10 +15,13 @@ from .status import StatusRecord, StatusRecorder, classify_exception, timed_call
 
 
 EXPORT_COLUMNS = {
-    'people': ['person_id', 'email', 'display_name', 'status', 'roles', 'licenses', 'location_id'],
+    'people': ['person_id', 'email', 'display_name', 'status', 'roles', 'licenses', 'location_id', 'webex_calling_enabled'],
     'groups': ['group_id', 'name'],
-    'locations': ['location_id', 'name', 'org_id', 'timezone'],
+    'locations': ['location_id', 'name', 'org_id', 'timezone', 'language', 'address_1', 'city', 'state', 'postal_code', 'country'],
     'licenses': ['license_id', 'sku_or_name'],
+    'workspaces': ['id', 'workspace_id', 'name', 'location_id', 'extension', 'phone_number', 'webex_calling_enabled'],
+    'licenses_no_pstn': ['entity_id', 'entity_type', 'license_id', 'license_name', 'is_pstn'],
+    'v1_requirements_status': ['requirement_id', 'status', 'artifact', 'details'],
     'status': ['module', 'method', 'result', 'http_status', 'error', 'count', 'elapsed_ms'],
 }
 
@@ -35,6 +38,79 @@ def _write_module_exports(exports_dir: Path, module_name: str, rows: list[dict])
 def _empty_module(exports_dir: Path, module_name: str) -> None:
     _write_module_exports(exports_dir, module_name, [])
 
+
+
+
+def _is_non_pstn_license(name: str) -> bool:
+    upper = (name or '').upper()
+    if not upper:
+        return False
+    if 'NO PSTN' in upper or 'NON PSTN' in upper or 'SIN PSTN' in upper:
+        return True
+    return 'PSTN' not in upper
+
+
+def _build_licenses_no_pstn(cache_entities: dict[str, list[dict]]) -> list[dict]:
+    licenses = cache_entities.get('licenses', [])
+    non_pstn = {row.get('license_id'): row.get('sku_or_name', '') for row in licenses if _is_non_pstn_license(str(row.get('sku_or_name', '')))}
+    rows: list[dict] = []
+    for assigned in cache_entities.get('license_assigned_users', []):
+        lid = assigned.get('license_id')
+        if lid not in non_pstn:
+            continue
+        entity_id = assigned.get('person_id') or assigned.get('workspace_id') or assigned.get('member_id') or assigned.get('id')
+        entity_type = 'workspace' if assigned.get('workspace_id') else 'user'
+        rows.append({
+            'entity_id': entity_id or '',
+            'entity_type': entity_type,
+            'license_id': lid or '',
+            'license_name': non_pstn.get(lid, ''),
+            'is_pstn': False,
+        })
+    return rows
+
+
+def _presence(rows: list[dict], fields: tuple[str, ...]) -> bool:
+    if not rows:
+        return False
+    return any(any(row.get(field) not in (None, '') for field in fields) for row in rows)
+
+
+def _build_v1_requirements_status(cache_entities: dict[str, list[dict]]) -> list[dict]:
+    statuses: list[dict] = []
+
+    def add(requirement_id: str, ok: bool, artifact: str, details: str = '') -> None:
+        statuses.append({
+            'requirement_id': requirement_id,
+            'status': 'ok' if ok else 'missing',
+            'artifact': artifact,
+            'details': details,
+        })
+
+    add('call_queue_details_names', _presence(cache_entities.get('call_queue_agents', []), ('first_name', 'last_name', 'member_id')), 'call_queue_agents')
+    add('call_queue_forwarding', bool(cache_entities.get('call_queue_forwarding')), 'call_queue_forwarding')
+    add('groups_list', bool(cache_entities.get('groups')), 'groups')
+    add('group_member_info', bool(cache_entities.get('group_members')), 'group_members')
+    add('group_id', _presence(cache_entities.get('group_members', []), ('group_id',)), 'group_members')
+    add('licenses_no_pstn', bool(cache_entities.get('licenses_no_pstn')), 'licenses_no_pstn')
+    add('route_group_id', _presence(cache_entities.get('location_pstn_connection', []), ('route_group_id',)), 'location_pstn_connection')
+    add('connection_type', _presence(cache_entities.get('location_pstn_connection', []), ('connection_type',)), 'location_pstn_connection')
+    add('locations_language', _presence(cache_entities.get('locations', []), ('language',)), 'locations')
+    add('locations_address_1', _presence(cache_entities.get('locations', []), ('address_1',)), 'locations')
+    add('locations_city', _presence(cache_entities.get('locations', []), ('city',)), 'locations')
+    add('locations_state', _presence(cache_entities.get('locations', []), ('state',)), 'locations')
+    add('locations_postal_code', _presence(cache_entities.get('locations', []), ('postal_code',)), 'locations')
+    add('locations_country', _presence(cache_entities.get('locations', []), ('country',)), 'locations')
+    add('users_webex_calling', _presence(cache_entities.get('people', []), ('webex_calling_enabled', 'location_id')), 'people')
+    add('workspace_id', _presence(cache_entities.get('workspaces', []), ('workspace_id',)), 'workspaces')
+    has_person_direct = _presence(cache_entities.get('person_numbers', []), ('direct_number',))
+    has_workspace_direct = _presence(cache_entities.get('workspace_numbers', []), ('direct_number',))
+    add('direct_number', has_person_direct or has_workspace_direct, 'person_numbers/workspace_numbers')
+    add('location_calling_enabled', bool(cache_entities.get('calling_locations')), 'calling_locations')
+    add('api_orgid_locationid_validation', bool(cache_entities.get('calling_locations_details')), 'calling_locations_details', 'SDK uses location_id context; org inferred by token')
+    add('control_hub_validation', False, 'manual', 'Validación alternativa debe ejecutarse en Control Hub')
+
+    return statuses
 
 def _write_cache_if_enabled(settings: Settings, cache_entities: dict) -> None:
     if not settings.write_cache:
@@ -243,6 +319,8 @@ def _write_report_if_enabled(settings: Settings, status_rows: list[dict], module
     return report_file
 
 
+
+
 def run_exports(api, settings: Settings) -> dict:
     paths = ensure_dirs(settings.out_dir)
     exports_dir = paths['exports']
@@ -286,6 +364,16 @@ def run_exports(api, settings: Settings) -> dict:
     status_rows = [asdict(r) for r in recorder.records]
     write_csv(exports_dir / 'status.csv', status_rows, EXPORT_COLUMNS['status'])
     write_json(exports_dir / 'status.json', status_rows)
+
+    licenses_no_pstn_rows = _build_licenses_no_pstn(cache_entities)
+    _write_module_exports(exports_dir, 'licenses_no_pstn', licenses_no_pstn_rows)
+    cache_entities['licenses_no_pstn'] = licenses_no_pstn_rows
+    module_counts['licenses_no_pstn'] = len(licenses_no_pstn_rows)
+
+    requirement_rows = _build_v1_requirements_status(cache_entities)
+    _write_module_exports(exports_dir, 'v1_requirements_status', requirement_rows)
+    cache_entities['v1_requirements_status'] = requirement_rows
+    module_counts['v1_requirements_status'] = len(requirement_rows)
 
     _write_cache_if_enabled(settings, cache_entities)
     report_path = _write_report_if_enabled(settings, status_rows, module_counts)

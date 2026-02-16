@@ -11,12 +11,26 @@ from .common import ModuleResult, as_list, call_with_supported_kwargs, model_to_
 STANDARD_COLUMNS = [
     'id',
     'name',
+    'first_name',
+    'last_name',
+    'member_id',
+    'member_type',
     'location_id',
     'person_id',
     'workspace_id',
     'license_id',
     'virtual_line_id',
     'group_id',
+    'route_group_id',
+    'connection_type',
+    'language',
+    'address_1',
+    'city',
+    'state',
+    'postal_code',
+    'country',
+    'direct_number',
+    'webex_calling_enabled',
     'source_method',
     'raw_keys',
     'raw_json',
@@ -71,8 +85,50 @@ def _iter_kwargs(cache: dict[str, list[dict]], spec: ArtifactSpec) -> list[dict[
     return out
 
 
+def _canonical_item(item: dict[str, Any]) -> dict[str, Any]:
+    address = item.get('address') if isinstance(item.get('address'), dict) else {}
+    out = dict(item)
+
+    out.setdefault('id', item.get('id') or item.get('member_id') or item.get('person_id') or item.get('workspace_id'))
+    out.setdefault('name', item.get('name') or item.get('displayName') or item.get('display_name'))
+    out.setdefault('first_name', item.get('first_name') or item.get('firstName'))
+    out.setdefault('last_name', item.get('last_name') or item.get('lastName'))
+    out.setdefault('member_id', item.get('member_id') or item.get('memberId') or item.get('id'))
+    out.setdefault('member_type', item.get('member_type') or item.get('memberType') or item.get('type'))
+    out.setdefault('location_id', item.get('location_id') or item.get('locationId'))
+    out.setdefault('person_id', item.get('person_id') or item.get('personId'))
+    out.setdefault('workspace_id', item.get('workspace_id') or item.get('workspaceId'))
+    out.setdefault('license_id', item.get('license_id') or item.get('licenseId'))
+    out.setdefault('virtual_line_id', item.get('virtual_line_id') or item.get('virtualLineId'))
+    out.setdefault('group_id', item.get('group_id') or item.get('groupId'))
+    out.setdefault('route_group_id', item.get('route_group_id') or item.get('routeGroupId') or item.get('premise_route_id')
+                   or item.get('premiseRouteId'))
+    out.setdefault('connection_type', item.get('connection_type') or item.get('connectionType')
+                   or item.get('pstn_connection_type') or item.get('pstnConnectionType'))
+    out.setdefault('language', item.get('language') or item.get('preferredLanguage'))
+    out.setdefault('address_1', item.get('address_1') or item.get('address1') or address.get('address1'))
+    out.setdefault('city', item.get('city') or address.get('city'))
+    out.setdefault('state', item.get('state') or address.get('state'))
+    out.setdefault('postal_code', item.get('postal_code') or item.get('postalCode') or address.get('postalCode'))
+    out.setdefault('country', item.get('country') or address.get('country'))
+    out.setdefault('direct_number', item.get('direct_number') or item.get('directNumber') or item.get('phone_number') or item.get('phoneNumber'))
+
+
+    member_type = str(out.get('member_type') or '').upper()
+    if not out.get('person_id') and member_type in {'PEOPLE', 'PERSON', 'USER'} and out.get('member_id'):
+        out['person_id'] = out.get('member_id')
+    if not out.get('workspace_id') and member_type in {'WORKSPACE', 'PLACE'} and out.get('member_id'):
+        out['workspace_id'] = out.get('member_id')
+
+    if 'webex_calling_enabled' not in out:
+        out['webex_calling_enabled'] = bool(out.get('location_id'))
+
+    return out
+
+
 def _row_from_item(item: dict, method_path: str, kwargs: dict[str, Any]) -> dict:
-    row = {k: item.get(k, '') for k in STANDARD_COLUMNS}
+    canonical = _canonical_item(item)
+    row = {k: canonical.get(k, '') for k in STANDARD_COLUMNS}
     for k in ('location_id', 'person_id', 'workspace_id', 'license_id', 'virtual_line_id', 'group_id', 'id', 'name'):
         if not row.get(k) and kwargs.get(k):
             row[k] = kwargs[k]
