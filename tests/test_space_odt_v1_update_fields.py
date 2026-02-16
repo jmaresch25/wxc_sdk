@@ -67,3 +67,14 @@ def test_row_from_item_maps_group_route_direct_and_location_fields() -> None:
     assert row['state'] == 'S'
     assert row['postal_code'] == 'P'
     assert row['country'] == 'ES'
+
+
+def test_workspace_artifact_specs_use_supported_parameters() -> None:
+    from Space_OdT.modules.v1_manifest import V1_ARTIFACT_SPECS
+
+    by_module = {spec.module: spec for spec in V1_ARTIFACT_SPECS}
+
+    assert by_module['workspace_permissions_in'].param_sources[0].name == 'entity_id'
+    assert by_module['workspace_permissions_out'].param_sources[0].name == 'entity_id'
+    assert by_module['workspace_available_numbers_secondary'].param_sources[0].name == 'entity_id'
+    assert 'workspace_available_numbers_primary' not in by_module

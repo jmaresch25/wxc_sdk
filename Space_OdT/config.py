@@ -66,7 +66,6 @@ class Settings:
         'virtual_line_available_numbers_primary',
         'virtual_line_available_numbers_secondary',
         'workspace_available_numbers_available',
-        'workspace_available_numbers_primary',
         'workspace_available_numbers_secondary',
     ])
 
