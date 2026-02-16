@@ -244,8 +244,8 @@ V1_ARTIFACT_SPECS: list[ArtifactSpec] = [
     ArtifactSpec('person_transfer_numbers', 'person_settings.permissions_out.transfer_numbers.read', {},
                  (ParamSource('entity_id', 'people', 'person_id', required_field='location_id'),)),
 
-    ArtifactSpec('workspace_permissions_in', 'workspace_settings.permissions_in.read', {}, (ParamSource('workspace_id', 'workspaces', 'id'),)),
-    ArtifactSpec('workspace_permissions_out', 'workspace_settings.permissions_out.read', {}, (ParamSource('workspace_id', 'workspaces', 'id'),)),
+    ArtifactSpec('workspace_permissions_in', 'workspace_settings.permissions_in.read', {}, (ParamSource('entity_id', 'workspaces', 'id'),)),
+    ArtifactSpec('workspace_permissions_out', 'workspace_settings.permissions_out.read', {}, (ParamSource('entity_id', 'workspaces', 'id'),)),
     ArtifactSpec('workspace_numbers', 'workspace_settings.numbers.read', {}, (ParamSource('workspace_id', 'workspaces', 'id'),)),
     ArtifactSpec('workspace_devices', 'workspace_settings.devices.list', {}, (ParamSource('workspace_id', 'workspaces', 'id'),)),
 
@@ -266,6 +266,5 @@ V1_ARTIFACT_SPECS: list[ArtifactSpec] = [
     ArtifactSpec('virtual_line_available_numbers_secondary', 'telephony.virtual_lines.available_numbers.secondary', {}, (ParamSource('virtual_line_id', 'virtual_lines', 'id'),)),
 
     ArtifactSpec('workspace_available_numbers_available', 'workspace_settings.available_numbers.available', {}, (ParamSource('workspace_id', 'workspaces', 'id'),)),
-    ArtifactSpec('workspace_available_numbers_primary', 'workspace_settings.available_numbers.primary', {}, (ParamSource('workspace_id', 'workspaces', 'id'),)),
-    ArtifactSpec('workspace_available_numbers_secondary', 'workspace_settings.available_numbers.secondary', {}, (ParamSource('workspace_id', 'workspaces', 'id'),)),
+    ArtifactSpec('workspace_available_numbers_secondary', 'workspace_settings.available_numbers.secondary', {}, (ParamSource('entity_id', 'workspaces', 'id'),)),
 ]
