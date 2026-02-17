@@ -98,3 +98,18 @@ def test_run_script_parses_and_uses_supported_params(monkeypatch):
     assert result['status'] == 'dry_run'
     assert result['params']['add_license_ids'] == ['lic-a']
     assert 'active' not in result['params']
+
+
+def test_launcher_supports_workspace_forwarding_telephony_script():
+    assert 'workspaces_configurar_desvio_prefijo53_telephony' in launcher.HANDLERS
+
+    result = launcher._run_script(
+        script_name='workspaces_configurar_desvio_prefijo53_telephony',
+        parameter_map={'workspace_id': 'w1', 'extension': '5102', 'destination': '539402744'},
+        token='tkn',
+        auto_confirm=True,
+        dry_run=True,
+    )
+
+    assert result['status'] == 'dry_run'
+    assert result['params']['workspace_id'] == 'w1'

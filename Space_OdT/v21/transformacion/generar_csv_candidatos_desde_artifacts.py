@@ -32,6 +32,7 @@ SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
     'workspaces_alta': ['display_name', 'location_id'],
     'workspaces_anadir_intercom_legacy': ['workspace_id', 'legacy_phone_number'],
     'workspaces_configurar_desvio_prefijo53': ['workspace_id', 'extension', 'destination'],
+    'workspaces_configurar_desvio_prefijo53_telephony': ['workspace_id', 'extension', 'destination'],
     'workspaces_configurar_perfil_saliente_custom': ['workspace_id'],
 }
 
