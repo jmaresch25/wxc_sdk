@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'ubicacion_configurar_pstn'
 
@@ -57,11 +57,13 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Configurar PSTN de una ubicación (SDK-first)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--location-id', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--location-id', default=None)
     parser.add_argument('--premise-route-type', default='ROUTE_GROUP')
-    parser.add_argument('--premise-route-id', required=True)
+    parser.add_argument('--premise-route-id', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['location_id', 'premise_route_id'], list_fields=[])
 
     payload = configurar_pstn_ubicacion(
         token=get_token(args.token),

@@ -7,7 +7,7 @@ from typing import Any
 
 from wxc_sdk.workspaces import Workspace
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'workspaces_alta'
 
@@ -59,10 +59,12 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Alta de workspace en Webex Calling')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--display-name', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--display-name', default=None)
     parser.add_argument('--location-id', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['display_name'], list_fields=[])
 
     payload = alta_workspace(
         token=get_token(args.token),

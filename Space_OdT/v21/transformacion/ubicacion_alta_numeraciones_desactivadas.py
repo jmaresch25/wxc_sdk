@@ -8,7 +8,7 @@ from typing import Any
 from wxc_sdk.common import NumberState
 from wxc_sdk.telephony.location.numbers import TelephoneNumberType
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'ubicacion_alta_numeraciones_desactivadas'
 
@@ -68,11 +68,13 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Alta numeraciones en ubicación (estado desactivado)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--location-id', required=True)
-    parser.add_argument('--phone-number', action='append', required=True, dest='phone_numbers')
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--location-id', default=None)
+    parser.add_argument('--phone-number', action='append', default=None, dest='phone_numbers')
     parser.add_argument('--number-type', default='DID', choices=['DID', 'TOLLFREE', 'MOBILE'])
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['location_id', 'phone_numbers'], list_fields=['phone_numbers'])
 
     payload = alta_numeraciones_desactivadas(
         token=get_token(args.token),

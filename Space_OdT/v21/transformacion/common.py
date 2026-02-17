@@ -3,8 +3,10 @@ from __future__ import annotations
 """Script v21 de transformación: incluye comentarios guía en secciones críticas."""
 
 import datetime as dt
+import csv
 import json
 import os
+from argparse import Namespace
 from pathlib import Path
 from typing import Any
 
@@ -66,3 +68,45 @@ def model_to_dict(value: Any) -> Any:
     if isinstance(value, list):
         return [model_to_dict(item) for item in value]
     return value
+
+
+def apply_csv_arguments(
+    args: Namespace,
+    *,
+    required: list[str],
+    list_fields: list[str] | None = None,
+) -> Namespace:
+    """Aplica parámetros desde --csv si existe y valida requeridos tras merge CLI/CSV."""
+    csv_file = getattr(args, 'csv', None)
+    if not csv_file:
+        _assert_required_args(args, required)
+        return args
+
+    with Path(csv_file).open('r', encoding='utf-8-sig', newline='') as handle:
+        row = next(csv.DictReader(handle), None)
+    if row is None:
+        raise ValueError(f'CSV vacío: {csv_file}')
+
+    list_fields = list_fields or []
+    for field in required + list_fields:
+        current_value = getattr(args, field, None)
+        if current_value not in (None, [], ''):
+            continue
+        raw_value = row.get(field)
+        if raw_value in (None, ''):
+            continue
+        if field in list_fields:
+            normalized = [item.strip() for item in raw_value.replace('|', ',').split(',') if item.strip()]
+            setattr(args, field, normalized)
+        else:
+            setattr(args, field, raw_value)
+
+    _assert_required_args(args, required)
+    return args
+
+
+def _assert_required_args(args: Namespace, required: list[str]) -> None:
+    missing = [field for field in required if getattr(args, field, None) in (None, '', [])]
+    if missing:
+        names = ', '.join(f'--{name.replace("_", "-")}' for name in missing)
+        raise ValueError(f'Faltan parámetros requeridos: {names}')
