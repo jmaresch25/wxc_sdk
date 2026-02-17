@@ -42,7 +42,8 @@ from .workspaces_validar_estado_permisos import validar_estado_permisos_workspac
 
 ActionFn = Callable[..., dict[str, Any]]
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_CSV = REPO_ROOT / '.artifacts' / 'exports' / 'v21_transformacion_candidatos.csv'
+DEFAULT_CSV = REPO_ROOT / '.artifacts' / 'report' / 'results_manual.csv'
+
 
 HANDLERS: dict[str, ActionFn] = {
     'ubicacion_actualizar_cabecera': actualizar_cabecera_ubicacion,
