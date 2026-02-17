@@ -7,7 +7,7 @@ from typing import Any
 
 from wxc_sdk.common import RouteIdentity
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'ubicacion_configurar_llamadas_internas'
 
@@ -66,12 +66,14 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Configurar llamadas internas de una ubicación (internal dialing)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--location-id', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--location-id', default=None)
     parser.add_argument('--enable-unknown-extension-route-policy', action='store_true')
     parser.add_argument('--premise-route-id', default=None)
     parser.add_argument('--premise-route-type', default=None, choices=['TRUNK', 'ROUTE_GROUP'])
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['location_id'], list_fields=[])
 
     payload = configurar_llamadas_internas_ubicacion(
         token=get_token(args.token),

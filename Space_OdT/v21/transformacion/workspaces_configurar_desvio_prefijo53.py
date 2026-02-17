@@ -11,7 +11,7 @@ from wxc_sdk.person_settings.forwarding import (
     PersonForwardingSetting,
 )
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'workspaces_configurar_desvio_prefijo53'
 
@@ -73,11 +73,13 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Configurar desvío prefijo 53 para workspace')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--workspace-id', required=True)
-    parser.add_argument('--extension', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--workspace-id', default=None)
+    parser.add_argument('--extension', default=None)
     parser.add_argument('--destination', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['workspace_id', 'extension'], list_fields=[])
 
     payload = configurar_desvio_prefijo53_workspace(
         token=get_token(args.token),

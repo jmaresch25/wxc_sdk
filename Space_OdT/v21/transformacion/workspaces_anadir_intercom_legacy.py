@@ -7,7 +7,7 @@ from typing import Any
 
 from wxc_sdk.workspace_settings.numbers import UpdateWorkspacePhoneNumber
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'workspaces_anadir_intercom_legacy'
 
@@ -70,10 +70,12 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Añadir intercom legacy (número secundario) a workspace')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--workspace-id', required=True)
-    parser.add_argument('--legacy-phone-number', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--workspace-id', default=None)
+    parser.add_argument('--legacy-phone-number', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['workspace_id', 'legacy_phone_number'], list_fields=[])
 
     payload = anadir_intercom_legacy_workspace(
         token=get_token(args.token),

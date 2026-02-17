@@ -7,7 +7,7 @@ from typing import Any
 
 from wxc_sdk.scim.users import EmailObject, EmailObjectType, NameObject, SCHEMAS, ScimUser
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'usuarios_alta_scim'
 
@@ -63,13 +63,15 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Alta de usuario vía SCIM v2 (SDK-first)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--org-id', required=True)
-    parser.add_argument('--email', required=True)
-    parser.add_argument('--first-name', required=True)
-    parser.add_argument('--last-name', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--org-id', default=None)
+    parser.add_argument('--email', default=None)
+    parser.add_argument('--first-name', default=None)
+    parser.add_argument('--last-name', default=None)
     parser.add_argument('--display-name', default=None)
     parser.add_argument('--inactive', action='store_true', help='Crear usuario como inactivo')
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['org_id', 'email', 'first_name', 'last_name'], list_fields=[])
 
     payload = alta_usuario_scim(
         token=get_token(args.token),

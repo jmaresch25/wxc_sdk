@@ -7,7 +7,7 @@ import json
 from typing import Any, Callable
 from urllib.request import Request, urlopen
 
-from .common import get_token, load_runtime_env
+from .common import apply_csv_arguments, get_token, load_runtime_env
 from .ubicacion_actualizar_cabecera import actualizar_cabecera_ubicacion
 from .ubicacion_alta_numeraciones_desactivadas import alta_numeraciones_desactivadas
 from .ubicacion_configurar_pstn import configurar_pstn_ubicacion
@@ -73,9 +73,11 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Launcher tester para consumir acciones desde API remota')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--remote-url', required=True, help='Endpoint que devuelve JSON con acciones a ejecutar')
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--remote-url', default=None, help='Endpoint que devuelve JSON con acciones a ejecutar')
     parser.add_argument('--timeout-s', type=float, default=10.0)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['remote_url'], list_fields=[])
 
     token = get_token(args.token)
     payload = _load_remote_payload(args.remote_url, timeout_s=args.timeout_s)

@@ -7,7 +7,7 @@ from typing import Any
 
 from wxc_sdk.people import PeopleApi, Person, PhoneNumber
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'usuarios_alta_people'
 
@@ -73,9 +73,10 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Alta de usuarios en People API (SDK-first)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--email', required=True)
-    parser.add_argument('--first-name', required=True)
-    parser.add_argument('--last-name', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--email', default=None)
+    parser.add_argument('--first-name', default=None)
+    parser.add_argument('--last-name', default=None)
     parser.add_argument('--display-name', default=None)
     parser.add_argument('--location-id', default=None)
     parser.add_argument('--extension', default=None)
@@ -83,6 +84,7 @@ def main() -> None:
     parser.add_argument('--phone-number', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['email', 'first_name', 'last_name'], list_fields=['licenses'])
 
     payload = alta_usuario_people(
         token=get_token(args.token),

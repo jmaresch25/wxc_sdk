@@ -11,7 +11,7 @@ from wxc_sdk.person_settings.forwarding import (
     PersonForwardingSetting,
 )
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'usuarios_configurar_desvio_prefijo53'
 
@@ -70,11 +70,13 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Configurar desvío incondicional a prefijo 53 para un usuario')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--person-id', required=True)
-    parser.add_argument('--extension', required=True, help='Extensión base para construir destino 53+extension')
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--person-id', default=None)
+    parser.add_argument('--extension', default=None, help='Extensión base para construir destino 53+extension')
     parser.add_argument('--destination', default=None, help='Destino explícito, si no se usa 53+extension')
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['person_id', 'extension'], list_fields=[])
 
     payload = configurar_desvio_prefijo53_usuario(
         token=get_token(args.token),

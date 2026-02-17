@@ -7,7 +7,7 @@ from typing import Any
 
 from wxc_sdk.person_settings.permissions_out import OutgoingPermissions
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'ubicacion_configurar_permisos_salientes_defecto'
 
@@ -53,9 +53,11 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Configurar permisos salientes por defecto en una ubicación')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--location-id', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--location-id', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['location_id'], list_fields=[])
 
     payload = configurar_permisos_salientes_defecto_ubicacion(
         token=get_token(args.token),

@@ -7,7 +7,7 @@ import json
 
 from wxc_sdk.telephony.location.numbers import TelephoneNumberType
 
-from .common import get_token, load_runtime_env
+from .common import apply_csv_arguments, get_token, load_runtime_env
 from .ubicacion_actualizar_cabecera import actualizar_cabecera_ubicacion
 from .ubicacion_alta_numeraciones_desactivadas import alta_numeraciones_desactivadas
 from .ubicacion_configurar_pstn import configurar_pstn_ubicacion
@@ -18,15 +18,17 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Launcher real SDK para flujo Ubicación v2.1')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--location-id', required=True)
-    parser.add_argument('--premise-route-id', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--location-id', default=None)
+    parser.add_argument('--premise-route-id', default=None)
     parser.add_argument('--premise-route-type', default='ROUTE_GROUP', choices=['ROUTE_GROUP', 'TRUNK'])
-    parser.add_argument('--phone-number', action='append', required=True, dest='phone_numbers')
-    parser.add_argument('--header-phone-number', required=True)
+    parser.add_argument('--phone-number', action='append', default=None, dest='phone_numbers')
+    parser.add_argument('--header-phone-number', default=None)
     parser.add_argument('--header-name', default=None)
     parser.add_argument('--number-type', default='DID', choices=['DID', 'TOLLFREE', 'MOBILE'])
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['location_id', 'premise_route_id', 'header_phone_number', 'phone_numbers'], list_fields=['phone_numbers'])
 
     token = get_token(args.token)
 

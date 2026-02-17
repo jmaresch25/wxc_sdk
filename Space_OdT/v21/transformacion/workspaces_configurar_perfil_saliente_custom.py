@@ -13,7 +13,7 @@ from wxc_sdk.person_settings.permissions_out import (
     OutgoingPermissions,
 )
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'workspaces_configurar_perfil_saliente_custom'
 
@@ -85,11 +85,13 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Configurar perfil de llamadas salientes custom para workspace')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--workspace-id', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--workspace-id', default=None)
     parser.add_argument('--allow-call-type', action='append', default=None)
     parser.add_argument('--block-call-type', action='append', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['workspace_id'], list_fields=['allow_call_type', 'block_call_type'])
 
     payload = configurar_perfil_saliente_custom_workspace(
         token=get_token(args.token),

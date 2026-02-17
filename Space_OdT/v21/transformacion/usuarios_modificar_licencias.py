@@ -7,7 +7,7 @@ from typing import Any
 
 from wxc_sdk.licenses import LicenseProperties, LicenseRequest, LicenseRequestOperation
 
-from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
+from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'usuarios_modificar_licencias'
 
@@ -62,7 +62,8 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Modificar licencias de usuario (SDK-first)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--person-id', required=True)
+    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--person-id', default=None)
     parser.add_argument('--add-license-id', action='append', default=None, dest='add_license_ids')
     parser.add_argument('--remove-license-id', action='append', default=None, dest='remove_license_ids')
     parser.add_argument('--location-id', default=None)
@@ -70,6 +71,7 @@ def main() -> None:
     parser.add_argument('--phone-number', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    args = apply_csv_arguments(args, required=['person_id'], list_fields=['add_license_ids', 'remove_license_ids'])
 
     payload = modificar_licencias_usuario(
         token=get_token(args.token),
