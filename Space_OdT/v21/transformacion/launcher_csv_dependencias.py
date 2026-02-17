@@ -31,6 +31,7 @@ from .workspaces_alta import alta_workspace
 from .workspaces_anadir_intercom_legacy import anadir_intercom_legacy_workspace
 from .workspaces_configurar_desvio_prefijo53 import configurar_desvio_prefijo53_workspace
 from .workspaces_configurar_perfil_saliente_custom import configurar_perfil_saliente_custom_workspace
+from .workspaces_validar_estado_permisos import validar_estado_permisos_workspace
 
 ActionFn = Callable[..., dict[str, Any]]
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -93,6 +94,7 @@ def _invoke_with_retry_after(*, handler: ActionFn, token: str, params: dict[str,
                 raise
             LOGGER.warning('Recibido 429 (Retry-After=%s). Reintento %s/%s en %.2fs', retry_after, attempt, MAX_RETRIES_ON_RETRY_AFTER, wait_seconds)
             time.sleep(wait_seconds)
+
 
 
 def _setup_debug_logging() -> None:
@@ -164,7 +166,7 @@ def _params_for_script(script_name: str, parameter_map: dict[str, Any]) -> tuple
     return params, []
 
 
-def _run_script(*, script_name: str, parameter_map: dict[str, Any], token: str, auto_confirm: bool, dry_run: bool) -> dict[str, Any]:
+def _run_script(*, script_name: str, parameter_map: dict[str, Any], token: str, auto_confirm: bool, dry_run: bool, precheck_workspace_permissions: bool) -> dict[str, Any]:
     if script_name not in HANDLERS:
         return {'script_name': script_name, 'status': 'rejected', 'reason': 'unsupported_script'}
 
@@ -184,6 +186,11 @@ def _run_script(*, script_name: str, parameter_map: dict[str, Any], token: str, 
     }
     LOGGER.info('Invocación preparada:\n%s', json.dumps(invocation_payload, indent=2, ensure_ascii=False, sort_keys=True))
 
+    precheck_result: dict[str, Any] | None = None
+    if precheck_workspace_permissions and 'workspace_id' in params and script_name.startswith('workspaces_') and not dry_run:
+        precheck_result = validar_estado_permisos_workspace(token=token, workspace_id=params['workspace_id'], org_id=params.get('org_id'))
+        LOGGER.info('Precheck permisos workspace para %s:\n%s', script_name, json.dumps(precheck_result, indent=2, ensure_ascii=False, sort_keys=True))
+
     if not _confirm(script_name, auto_confirm=auto_confirm):
         return {'script_name': script_name, 'status': 'skipped', 'reason': 'user_cancelled'}
 
@@ -202,9 +209,10 @@ def _run_script(*, script_name: str, parameter_map: dict[str, Any], token: str, 
             'params': params,
             'invocation': invocation_payload,
             'traceback': traceback.format_exc(),
+            'precheck': precheck_result,
         }
 
-    return {'script_name': script_name, 'status': 'executed', 'result': result, 'invocation': invocation_payload}
+    return {'script_name': script_name, 'status': 'executed', 'result': result, 'invocation': invocation_payload, 'precheck': precheck_result}
 
 
 def main() -> None:
@@ -215,6 +223,7 @@ def main() -> None:
     parser.add_argument('--script-name', action='append', default=None, help='Filtra por script_name (repetible)')
     parser.add_argument('--auto-confirm', action='store_true', help='Evita input() y confirma todo automáticamente')
     parser.add_argument('--dry-run', action='store_true', help='No llama API, solo valida y muestra payload a ejecutar')
+    parser.add_argument('--precheck-workspace-permissions', action='store_true', help='Consulta y muestra permisos de workspace antes de ejecutar scripts workspaces_*')
     args = parser.parse_args()
 
     _setup_debug_logging()
@@ -225,7 +234,7 @@ def main() -> None:
     token = '' if args.dry_run else get_token(args.token)
     report: list[dict[str, Any]] = []
     for script_name in scripts:
-        report.append(_run_script(script_name=script_name, parameter_map=parameter_map, token=token, auto_confirm=args.auto_confirm, dry_run=args.dry_run))
+        report.append(_run_script(script_name=script_name, parameter_map=parameter_map, token=token, auto_confirm=args.auto_confirm, dry_run=args.dry_run, precheck_workspace_permissions=args.precheck_workspace_permissions))
 
     print(json.dumps({'csv_path': str(args.csv_path), 'results': report}, indent=2, ensure_ascii=False, sort_keys=True))
 
