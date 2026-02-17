@@ -1,0 +1,122 @@
+[
+  {
+    "requirement_id": "call_queue_details_names",
+    "status": "missing",
+    "artifact": "call_queue_agents",
+    "details": ""
+  },
+  {
+    "requirement_id": "call_queue_forwarding",
+    "status": "ok",
+    "artifact": "call_queue_forwarding",
+    "details": ""
+  },
+  {
+    "requirement_id": "groups_list",
+    "status": "ok",
+    "artifact": "groups",
+    "details": ""
+  },
+  {
+    "requirement_id": "group_member_info",
+    "status": "ok",
+    "artifact": "group_members",
+    "details": ""
+  },
+  {
+    "requirement_id": "group_id",
+    "status": "ok",
+    "artifact": "group_members",
+    "details": ""
+  },
+  {
+    "requirement_id": "licenses_no_pstn",
+    "status": "ok",
+    "artifact": "licenses_no_pstn",
+    "details": ""
+  },
+  {
+    "requirement_id": "route_group_id",
+    "status": "missing",
+    "artifact": "location_pstn_connection",
+    "details": ""
+  },
+  {
+    "requirement_id": "connection_type",
+    "status": "missing",
+    "artifact": "location_pstn_connection",
+    "details": ""
+  },
+  {
+    "requirement_id": "locations_language",
+    "status": "ok",
+    "artifact": "locations",
+    "details": ""
+  },
+  {
+    "requirement_id": "locations_address_1",
+    "status": "ok",
+    "artifact": "locations",
+    "details": ""
+  },
+  {
+    "requirement_id": "locations_city",
+    "status": "ok",
+    "artifact": "locations",
+    "details": ""
+  },
+  {
+    "requirement_id": "locations_state",
+    "status": "ok",
+    "artifact": "locations",
+    "details": ""
+  },
+  {
+    "requirement_id": "locations_postal_code",
+    "status": "missing",
+    "artifact": "locations",
+    "details": ""
+  },
+  {
+    "requirement_id": "locations_country",
+    "status": "ok",
+    "artifact": "locations",
+    "details": ""
+  },
+  {
+    "requirement_id": "users_webex_calling",
+    "status": "ok",
+    "artifact": "people",
+    "details": ""
+  },
+  {
+    "requirement_id": "workspace_id",
+    "status": "ok",
+    "artifact": "workspaces",
+    "details": ""
+  },
+  {
+    "requirement_id": "direct_number",
+    "status": "ok",
+    "artifact": "person_numbers/workspace_numbers",
+    "details": ""
+  },
+  {
+    "requirement_id": "location_calling_enabled",
+    "status": "ok",
+    "artifact": "calling_locations",
+    "details": ""
+  },
+  {
+    "requirement_id": "api_orgid_locationid_validation",
+    "status": "missing",
+    "artifact": "calling_locations_details",
+    "details": "SDK uses location_id context; org inferred by token"
+  },
+  {
+    "requirement_id": "control_hub_validation",
+    "status": "missing",
+    "artifact": "manual",
+    "details": "Validación alternativa debe ejecutarse en Control Hub"
+  }
+]

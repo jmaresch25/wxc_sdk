@@ -1,0 +1,6 @@
+id,name,first_name,last_name,member_id,member_type,location_id,person_id,workspace_id,license_id,virtual_line_id,group_id,route_group_id,connection_type,language,address_1,city,state,postal_code,country,direct_number,webex_calling_enabled,source_method,raw_keys,raw_json
+,,,,,,Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA,,,,,,,,,,,,,,,False,telephony.callqueue.get_call_queue_settings,,{}
+,,,,,,Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA,,,,,,,,,,,,,,,False,telephony.callqueue.get_call_queue_settings,,{}
+,,,,,,Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA,,,,,,,,,,,,,,,False,telephony.callqueue.get_call_queue_settings,,{}
+,,,,,,Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA,,,,,,,,,,,,,,,False,telephony.callqueue.get_call_queue_settings,,{}
+,,,,,,Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA,,,,,,,,,,,,,,,False,telephony.callqueue.get_call_queue_settings,,{}

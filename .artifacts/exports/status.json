@@ -1,0 +1,560 @@
+[
+  {
+    "module": "people",
+    "method": "people.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 49,
+    "elapsed_ms": 1600
+  },
+  {
+    "module": "groups",
+    "method": "groups.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 54,
+    "elapsed_ms": 635
+  },
+  {
+    "module": "locations",
+    "method": "locations.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 7,
+    "elapsed_ms": 452
+  },
+  {
+    "module": "licenses",
+    "method": "licenses.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 15,
+    "elapsed_ms": 2042
+  },
+  {
+    "module": "call_queues",
+    "method": "telephony.callqueue.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 1,
+    "elapsed_ms": 974
+  },
+  {
+    "module": "hunt_groups",
+    "method": "telephony.huntgroup.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 288
+  },
+  {
+    "module": "auto_attendants",
+    "method": "telephony.auto_attendant.list",
+    "result": "not_found",
+    "http_status": 404,
+    "error": "404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/config/locations/Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA/autoAttendants, No static resource hydra/v1/telephony/config/locations/Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA/autoAttendants.",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "virtual_lines",
+    "method": "telephony.virtual_lines.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 263
+  },
+  {
+    "module": "virtual_extensions",
+    "method": "telephony.virtual_extensions.list_range",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 276
+  },
+  {
+    "module": "workspaces",
+    "method": "workspaces.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 5,
+    "elapsed_ms": 728
+  },
+  {
+    "module": "calling_locations",
+    "method": "telephony.locations.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 2,
+    "elapsed_ms": 504
+  },
+  {
+    "module": "calling_locations_details",
+    "method": "telephony.locations.details",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "location_details",
+    "method": "locations.details",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 70,
+    "elapsed_ms": 1427
+  },
+  {
+    "module": "people_details",
+    "method": "people.details",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 1470,
+    "elapsed_ms": 13027
+  },
+  {
+    "module": "workspace_details",
+    "method": "workspaces.details",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 115,
+    "elapsed_ms": 1035
+  },
+  {
+    "module": "location_pstn_connection",
+    "method": "telephony.pstn.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_call_forwarding",
+    "method": "person_settings.forwarding.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "workspace_call_forwarding",
+    "method": "workspace_settings.forwarding.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 2,
+    "elapsed_ms": 1783
+  },
+  {
+    "module": "group_members",
+    "method": "groups.members",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 19,
+    "elapsed_ms": 24315
+  },
+  {
+    "module": "license_assigned_users",
+    "method": "licenses.assigned_users",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 203,
+    "elapsed_ms": 7314
+  },
+  {
+    "module": "workspace_capabilities",
+    "method": "workspaces.capabilities",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 50,
+    "elapsed_ms": 2257
+  },
+  {
+    "module": "auto_attendants",
+    "method": "telephony.auto_attendant.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 5,
+    "elapsed_ms": 305
+  },
+  {
+    "module": "auto_attendant_details",
+    "method": "telephony.auto_attendant.details",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "auto_attendant_announcement_files",
+    "method": "telephony.auto_attendant.list_announcement_files",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "auto_attendant_forwarding",
+    "method": "telephony.auto_attendant.forwarding.settings",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "hunt_groups",
+    "method": "telephony.huntgroup.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 278
+  },
+  {
+    "module": "hunt_group_details",
+    "method": "telephony.huntgroup.details",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "hunt_group_forwarding",
+    "method": "telephony.huntgroup.forwarding.settings",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "call_queues",
+    "method": "telephony.callqueue.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 1,
+    "elapsed_ms": 255
+  },
+  {
+    "module": "call_queue_details",
+    "method": "telephony.callqueue.details",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 28,
+    "elapsed_ms": 629
+  },
+  {
+    "module": "call_queue_settings",
+    "method": "telephony.callqueue.get_call_queue_settings",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 5,
+    "elapsed_ms": 383
+  },
+  {
+    "module": "call_queue_agents",
+    "method": "telephony.callqueue.agents.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 267
+  },
+  {
+    "module": "call_queue_forwarding",
+    "method": "telephony.callqueue.forwarding.settings",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 4,
+    "elapsed_ms": 290
+  },
+  {
+    "module": "virtual_lines",
+    "method": "telephony.virtual_lines.list",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 260
+  },
+  {
+    "module": "virtual_line_details",
+    "method": "telephony.virtual_lines.details",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "virtual_line_assigned_devices",
+    "method": "telephony.virtual_lines.assigned_devices",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "virtual_extensions",
+    "method": "telephony.virtual_extensions.list_extensions",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 282
+  },
+  {
+    "module": "virtual_extension_details",
+    "method": "telephony.virtual_extensions.details_extension",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "virtual_extension_ranges",
+    "method": "telephony.virtual_extensions.list_range",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 257
+  },
+  {
+    "module": "virtual_extension_range_details",
+    "method": "telephony.virtual_extensions.details_range",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_numbers",
+    "method": "person_settings.numbers.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_permissions_in",
+    "method": "person_settings.permissions_in.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_permissions_out",
+    "method": "person_settings.permissions_out.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_out_access_codes",
+    "method": "person_settings.permissions_out.access_codes.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_out_digit_patterns",
+    "method": "person_settings.permissions_out.digit_patterns.get_digit_patterns",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_transfer_numbers",
+    "method": "person_settings.permissions_out.transfer_numbers.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "workspace_permissions_in",
+    "method": "workspace_settings.permissions_in.read",
+    "result": "error",
+    "http_status": null,
+    "error": "IncomingPermissionsApi.read() missing 1 required positional argument: 'entity_id'",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "workspace_permissions_out",
+    "method": "workspace_settings.permissions_out.read",
+    "result": "error",
+    "http_status": null,
+    "error": "OutgoingPermissionsApi.read() missing 1 required positional argument: 'entity_id'",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "workspace_numbers",
+    "method": "workspace_settings.numbers.read",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 5,
+    "elapsed_ms": 1391
+  },
+  {
+    "module": "workspace_devices",
+    "method": "workspace_settings.devices.list",
+    "result": "error",
+    "http_status": 400,
+    "error": "400 Client Error: Bad Request for url: https://webexapis.com/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/devices, 4003 [Error 4003] Unauthorized request: UserAccessDeviceGetListWithDeviceOwnerRequestWCV3",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_available_numbers_primary",
+    "method": "person_settings.available_numbers.primary",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_available_numbers_secondary",
+    "method": "person_settings.available_numbers.secondary",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_available_numbers_call_forward",
+    "method": "person_settings.available_numbers.call_forward",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_available_numbers_call_intercept",
+    "method": "person_settings.available_numbers.call_intercept",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_available_numbers_ecbn",
+    "method": "person_settings.available_numbers.ecbn",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "person_available_numbers_fax_message",
+    "method": "person_settings.available_numbers.fax_message",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "virtual_line_available_numbers_available",
+    "method": "telephony.virtual_lines.available_numbers.available",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "virtual_line_available_numbers_primary",
+    "method": "telephony.virtual_lines.available_numbers.primary",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "virtual_line_available_numbers_secondary",
+    "method": "telephony.virtual_lines.available_numbers.secondary",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "workspace_available_numbers_available",
+    "method": "workspace_settings.available_numbers.available",
+    "result": "ok",
+    "http_status": null,
+    "error": "",
+    "count": 0,
+    "elapsed_ms": 1315
+  },
+  {
+    "module": "workspace_available_numbers_primary",
+    "method": "workspace_settings.available_numbers.primary",
+    "result": "error",
+    "http_status": null,
+    "error": "endpoint primary does not exist for workspaces",
+    "count": 0,
+    "elapsed_ms": 0
+  },
+  {
+    "module": "workspace_available_numbers_secondary",
+    "method": "workspace_settings.available_numbers.secondary",
+    "result": "error",
+    "http_status": null,
+    "error": "AvailableNumbersApi.secondary() missing 1 required positional argument: 'entity_id'",
+    "count": 0,
+    "elapsed_ms": 0
+  }
+]

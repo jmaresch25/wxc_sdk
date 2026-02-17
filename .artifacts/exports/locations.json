@@ -1,0 +1,86 @@
+[
+  {
+    "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OL2ZjODY3OGRhLTBiOGItNDBlZS04ZWVjLTNhNzFlODFiMzc0OA",
+    "name": "Lab Location A",
+    "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+    "timezone": "America/Los_Angeles",
+    "language": "en_US",
+    "address_1": "100 Main St",
+    "city": "San Jose",
+    "state": "CA",
+    "postal_code": "",
+    "country": "US"
+  },
+  {
+    "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzFiOThkZjU3LTM5MzYtNGExMC1iYjY3LWE3YzZkZWFmOWVmZA",
+    "name": "Lab Location B",
+    "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+    "timezone": "America/Los_Angeles",
+    "language": "en_US",
+    "address_1": "200 Market St",
+    "city": "San Jose",
+    "state": "CA",
+    "postal_code": "",
+    "country": "US"
+  },
+  {
+    "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzBhMTgyM2FiLTgzM2YtNGM1MC1iZjYzLWRmY2U1Mzk3NWJhOA",
+    "name": "loc-20251224-182147-04bb",
+    "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+    "timezone": "Europe/Madrid",
+    "language": "es_ES",
+    "address_1": "Av. Demo 123",
+    "city": "Barcelona",
+    "state": "Barcelona",
+    "postal_code": "",
+    "country": "ES"
+  },
+  {
+    "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OL2RhMjg4MTdjLWZmMDItNDYxOS1iZmU1LTE0MjllMDBhYTlmYg",
+    "name": "loc-20251224-182521-0eae",
+    "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+    "timezone": "Europe/Madrid",
+    "language": "es_ES",
+    "address_1": "Av. Demo 123",
+    "city": "Barcelona",
+    "state": "Barcelona",
+    "postal_code": "",
+    "country": "ES"
+  },
+  {
+    "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzA2NzA4ZWUzLTQ1Y2MtNDFlNy1iNjg5LWZmMDU0M2MxZWQ3MQ",
+    "name": "loc-20251224-182926-8d30",
+    "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+    "timezone": "Europe/Madrid",
+    "language": "es_ES",
+    "address_1": "Av. Demo 123",
+    "city": "Barcelona",
+    "state": "Barcelona",
+    "postal_code": "",
+    "country": "ES"
+  },
+  {
+    "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OL2IwNDE5OWM5LTcwMTEtNGEwYy1iYTQ1LWRjYmU1NzAzOWNmYQ",
+    "name": "loc-20251224-183255-8e0a",
+    "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+    "timezone": "Europe/Madrid",
+    "language": "es_ES",
+    "address_1": "Av. Demo 123",
+    "city": "Barcelona",
+    "state": "Barcelona",
+    "postal_code": "",
+    "country": "ES"
+  },
+  {
+    "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+    "name": "Site1",
+    "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+    "timezone": "America/Los_Angeles",
+    "language": "en_us",
+    "address_1": "170 W Tasman Dr",
+    "city": "San Jose",
+    "state": "CA",
+    "postal_code": "",
+    "country": "US"
+  }
+]
