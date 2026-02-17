@@ -3,6 +3,7 @@ from __future__ import annotations
 """Script v21 de transformación: incluye comentarios guía en secciones críticas."""
 
 import argparse
+import base64
 from typing import Any
 
 from wxc_sdk.common import RouteIdentity
@@ -10,6 +11,20 @@ from wxc_sdk.common import RouteIdentity
 from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'ubicacion_configurar_llamadas_internas'
+
+
+def _decode_hydra_resource_type(webex_id: str) -> str | None:
+    """Devuelve el tipo del recurso Hydra embebido en un ID Webex (p.ej. ROUTEGROUP, TRUNK)."""
+    try:
+        padding = '=' * ((4 - len(webex_id) % 4) % 4)
+        decoded = base64.b64decode(f'{webex_id}{padding}').decode()
+    except Exception:
+        return None
+
+    parts = decoded.split('/')
+    if len(parts) < 2:
+        return None
+    return parts[-2].upper()
 
 
 def configurar_llamadas_internas_ubicacion(
@@ -25,6 +40,14 @@ def configurar_llamadas_internas_ubicacion(
         raise ValueError('premise_route_type debe ser TRUNK o ROUTE_GROUP')
     if enable_unknown_extension_route_policy and (not premise_route_id or not premise_route_type):
         raise ValueError('Si habilitas la política debes informar premise_route_id y premise_route_type')
+    if enable_unknown_extension_route_policy:
+        decoded_type = _decode_hydra_resource_type(premise_route_id)
+        expected_type = {'ROUTE_GROUP': {'ROUTEGROUP', 'ROUTE_GROUP'}, 'TRUNK': {'TRUNK'}}[premise_route_type]
+        if decoded_type and decoded_type not in expected_type:
+            raise ValueError(
+                f'premise_route_id no coincide con premise_route_type={premise_route_type}: '
+                f'tipo decodificado={decoded_type}'
+            )
 
     # 1) Inicialización: logger por acción y cliente API autenticado.
     log = action_logger(SCRIPT_NAME)
