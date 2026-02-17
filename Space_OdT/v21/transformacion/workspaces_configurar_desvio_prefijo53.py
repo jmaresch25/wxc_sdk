@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
+from wxc_sdk.rest import RestError
 from wxc_sdk.person_settings.forwarding import (
     CallForwardingAlways,
     CallForwardingPerson,
@@ -14,6 +15,32 @@ from wxc_sdk.person_settings.forwarding import (
 from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'workspaces_configurar_desvio_prefijo53'
+
+
+def _is_busy_forwarding_unauthorized(error: Exception) -> bool:
+    """Detecta el 4003 específico de Webex para lectura/escritura de rama busy."""
+    if not isinstance(error, RestError):
+        return False
+    return error.code == 4003 and 'UserCallForwardingBusy' in (error.description or '')
+
+
+def _workspace_call_forwarding_endpoint(workspace_id: str) -> str:
+    """Endpoint alternativo de telephony config para workspaces."""
+    return f'https://webexapis.com/v1/telephony/config/workspaces/{workspace_id}/callForwarding'
+
+
+def _fallback_payload(destination: str) -> dict[str, Any]:
+    """Payload mínimo (solo Always) para escenarios donde Busy no está autorizado."""
+    return {
+        'callForwarding': {
+            'always': {
+                'enabled': True,
+                'destination': destination,
+                'destinationVoicemailEnabled': False,
+                'ringReminderEnabled': False,
+            }
+        }
+    }
 
 
 def configurar_desvio_prefijo53_workspace(
@@ -31,8 +58,17 @@ def configurar_desvio_prefijo53_workspace(
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
 
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = model_to_dict(api.workspace_settings.forwarding.read(entity_id=workspace_id, org_id=org_id))
+    # 2) Snapshot previo: intentamos primero SDK; si falla por 4003 Busy usamos endpoint alterno.
+    before: dict[str, Any] | Any
+    read_strategy = 'sdk_workspace_settings.forwarding.read'
+    try:
+        before = model_to_dict(api.workspace_settings.forwarding.read(entity_id=workspace_id, org_id=org_id))
+    except Exception as error:
+        if not _is_busy_forwarding_unauthorized(error):
+            raise
+        read_strategy = 'rest_get telephony/config/workspaces/{workspaceId}/callForwarding'
+        params = org_id and {'orgId': org_id} or None
+        before = api.session.rest_get(url=_workspace_call_forwarding_endpoint(workspace_id), params=params)
 
     target_destination = destination or f'53{extension}'
     forwarding = PersonForwardingSetting(
@@ -53,17 +89,58 @@ def configurar_desvio_prefijo53_workspace(
     request = {
         'entity_id': workspace_id,
         'org_id': org_id,
+        'read_strategy': read_strategy,
+        'configure_strategies': [
+            'sdk_workspace_settings.forwarding.configure',
+            'rest_put telephony/config/workspaces/{workspaceId}/callForwarding (payload mínimo Always)',
+        ],
         'settings': model_to_dict(forwarding),
+        'fallback_settings': _fallback_payload(target_destination),
     }
     log('before_read', {'before': before})
     log('configure_request', request)
 
     # 4) Ejecución del cambio contra Webex Calling.
-    api.workspace_settings.forwarding.configure(entity_id=workspace_id, forwarding=forwarding, org_id=org_id)
-    after = model_to_dict(api.workspace_settings.forwarding.read(entity_id=workspace_id, org_id=org_id))
+    configure_strategy = 'sdk_workspace_settings.forwarding.configure'
+    try:
+        api.workspace_settings.forwarding.configure(entity_id=workspace_id, forwarding=forwarding, org_id=org_id)
+    except Exception as error:
+        if not _is_busy_forwarding_unauthorized(error):
+            raise
+        configure_strategy = 'rest_put telephony/config/workspaces/{workspaceId}/callForwarding (payload mínimo Always)'
+        params = org_id and {'orgId': org_id} or None
+        api.session.rest_put(
+            url=_workspace_call_forwarding_endpoint(workspace_id),
+            params=params,
+            json=_fallback_payload(target_destination),
+        )
+
+    # 4.1) Verificación post-cambio con la misma lógica de fallback.
+    verify_strategy = 'sdk_workspace_settings.forwarding.read'
+    try:
+        after = model_to_dict(api.workspace_settings.forwarding.read(entity_id=workspace_id, org_id=org_id))
+    except Exception as error:
+        if not _is_busy_forwarding_unauthorized(error):
+            raise
+        verify_strategy = 'rest_get telephony/config/workspaces/{workspaceId}/callForwarding'
+        params = org_id and {'orgId': org_id} or None
+        after = api.session.rest_get(url=_workspace_call_forwarding_endpoint(workspace_id), params=params)
 
     # 5) Resultado normalizado para logs/pipelines aguas abajo.
-    result = {'status': 'success', 'api_response': {'before': before, 'after': after, 'request': request}}
+    result = {
+        'status': 'success',
+        'api_response': {
+            'before': before,
+            'after': after,
+            'request': request,
+            'configure_strategy_used': configure_strategy,
+            'verify_strategy_used': verify_strategy,
+            'note': (
+                'Si aparece 4003 UserCallForwardingBusy*, el script intenta automáticamente método alternativo '
+                'vía /telephony/config/workspaces/{workspaceId}/callForwarding con payload mínimo Always.'
+            ),
+        },
+    }
     log('configure_response', result)
     return result
 
