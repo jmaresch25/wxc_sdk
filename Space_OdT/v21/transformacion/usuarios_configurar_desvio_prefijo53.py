@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-"""Script v21 de transformación: incluye comentarios guía en secciones críticas."""
+"""Script v21 de transformación: incluye comentarios guía en secciones críticas.
+
+Pre-requisitos operativos:
+- Token de administrador (admin de organización o partner admin delegado).
+- Scopes con lectura/escritura de usuarios y calling settings (p.ej. `spark-admin:people_read`
+  + scopes de telephony/person settings para leer/escribir desvíos).
+- Usuario objetivo (`person_id`) con servicio/licencia de Webex Calling activo.
+"""
 
 import argparse
 from typing import Any
@@ -17,9 +24,72 @@ from .common import action_logger, apply_csv_arguments, create_api, get_token, l
 SCRIPT_NAME = 'usuarios_configurar_desvio_prefijo53'
 
 
+class CallingEligibilityError(RuntimeError):
+    """Error operativo normalizado para launcher_csv_dependencias.py."""
+
+    def __init__(self, *, error_type: str, error: str, params: dict[str, Any]):
+        super().__init__(error)
+        self.error_type = error_type
+        self.error = error
+        self.params = params
+
+
 def _is_unauthorized_forwarding_read(error: RestError) -> bool:
     description = (error.description or '').lower()
     return error.code == 4003 and 'usercallforwardingalwaysgetrequest' in description
+
+
+def _assert_person_calling_eligibility(*, api, person_id: str, org_id: str | None, log) -> dict[str, Any]:
+    """Valida que el token y el usuario permiten operar features de Webex Calling."""
+    guidance_params = {
+        'person_id': person_id,
+        'org_id': org_id,
+        'required_scopes': [
+            'spark-admin:people_read',
+            'scopes admin de Webex Calling/person settings para call forwarding',
+        ],
+        'required_role': 'admin de la organización (o partner admin con delegación)',
+        'required_user_state': 'usuario con servicio/licencia Webex Calling (extension/locationId)',
+    }
+    try:
+        person_payload = model_to_dict(api.people.details(person_id=person_id, calling_data=True))
+    except RestError as error:
+        description = (error.description or '').lower()
+        status_code = getattr(getattr(error, 'response', None), 'status_code', None)
+        if status_code in {401, 403} or 'scope' in description or 'admin' in description or 'callingdata' in description:
+            raise CallingEligibilityError(
+                error_type='calling_eligibility_permission_denied',
+                error=(
+                    'No se pudo validar elegibilidad Calling del usuario: token sin permisos suficientes o sin rol admin. '
+                    'Acción: usar token admin con scope spark-admin:people_read y permisos de person settings/calling; '
+                    'verificar delegación del admin y que el person_id pertenezca a su organización.'
+                ),
+                params=guidance_params,
+            ) from error
+        if status_code == 404:
+            raise CallingEligibilityError(
+                error_type='calling_eligibility_person_not_found',
+                error='No existe el person_id indicado. Acción: validar person_id en Control Hub/export antes de reintentar.',
+                params=guidance_params,
+            ) from error
+        raise
+
+    has_calling_service = bool(person_payload.get('extension') and person_payload.get('locationId') or person_payload.get('location_id'))
+    if not has_calling_service:
+        raise CallingEligibilityError(
+            error_type='calling_eligibility_user_without_calling',
+            error=(
+                'El usuario no es elegible para Calling (sin extensión/ubicación de Calling). '
+                'Acción: asignar licencia/servicio Webex Calling y ubicación al usuario antes de configurar desvío.'
+            ),
+            params=guidance_params,
+        )
+
+    log('calling_eligibility_ok', {'person_id': person_id, 'org_id': org_id, 'calling_summary': {
+        'extension': person_payload.get('extension'),
+        'location_id': person_payload.get('locationId') or person_payload.get('location_id'),
+    }})
+    return person_payload
 
 
 def _read_forwarding_with_fallback(*, api, person_id: str, org_id: str | None, log) -> dict[str, Any]:
@@ -83,6 +153,9 @@ def configurar_desvio_prefijo53_usuario(
     # 1) Inicialización: logger por acción y cliente API autenticado.
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
+
+    # 1.1) Pre-chequeo obligatorio: corta temprano si token/usuario no habilitan Calling.
+    _assert_person_calling_eligibility(api=api, person_id=person_id, org_id=org_id, log=log)
 
     # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
     before = _read_forwarding_with_fallback(api=api, person_id=person_id, org_id=org_id, log=log)

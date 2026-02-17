@@ -194,12 +194,15 @@ def _run_script(*, script_name: str, parameter_map: dict[str, Any], token: str, 
         result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)
     except Exception as exc:  # noqa: BLE001
         LOGGER.exception('Fallo ejecutando %s con params=%s', script_name, json.dumps(params, ensure_ascii=False, sort_keys=True))
+        error_type = getattr(exc, 'error_type', type(exc).__name__)
+        error_message = getattr(exc, 'error', str(exc))
+        error_params = getattr(exc, 'params', params)
         return {
             'script_name': script_name,
             'status': 'error',
-            'error_type': type(exc).__name__,
-            'error': str(exc),
-            'params': params,
+            'error_type': error_type,
+            'error': error_message,
+            'params': error_params,
             'invocation': invocation_payload,
             'traceback': traceback.format_exc(),
         }
