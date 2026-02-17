@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
+from wxc_sdk.rest import RestError
 from wxc_sdk.person_settings.forwarding import (
     CallForwardingAlways,
     CallForwardingPerson,
@@ -14,6 +15,58 @@ from wxc_sdk.person_settings.forwarding import (
 from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'usuarios_configurar_desvio_prefijo53'
+
+
+def _is_unauthorized_forwarding_read(error: RestError) -> bool:
+    description = (error.description or '').lower()
+    return error.code == 4003 and 'usercallforwardingalwaysgetrequest' in description
+
+
+def _read_forwarding_with_fallback(*, api, person_id: str, org_id: str | None, log) -> dict[str, Any]:
+    """
+    Lee call forwarding priorizando el endpoint moderno y con fallback al endpoint telephony/config.
+    """
+    params = org_id and {'orgId': org_id} or None
+    try:
+        return model_to_dict(api.person_settings.forwarding.read(entity_id=person_id, org_id=org_id))
+    except RestError as error:
+        if not _is_unauthorized_forwarding_read(error):
+            raise
+        log('forwarding_read_fallback', {
+            'reason': str(error),
+            'primary_endpoint': f'people/{person_id}/features/callForwarding',
+            'fallback_endpoint': f'telephony/config/people/{person_id}/callForwarding',
+            'params': params,
+        })
+        url = api.session.ep(f'telephony/config/people/{person_id}/callForwarding')
+        return model_to_dict(api.session.rest_get(url=url, params=params))
+
+
+def _configure_forwarding_with_fallback(*, api, person_id: str, org_id: str | None,
+                                        forwarding: PersonForwardingSetting, log) -> None:
+    params = org_id and {'orgId': org_id} or None
+    try:
+        api.person_settings.forwarding.configure(entity_id=person_id, forwarding=forwarding, org_id=org_id)
+        return
+    except RestError as error:
+        if not _is_unauthorized_forwarding_read(error):
+            raise
+        payload = forwarding.call_forwarding.always.model_dump(mode='json', by_alias=True, exclude_none=True)
+        payload = {
+            'enabled': payload.get('enabled', True),
+            'destination': payload.get('destination', ''),
+            'ringReminderEnabled': payload.get('ringReminderEnabled', False),
+            'destinationVoicemailEnabled': payload.get('destinationVoicemailEnabled', False),
+        }
+        log('forwarding_configure_fallback', {
+            'reason': str(error),
+            'primary_endpoint': f'people/{person_id}/features/callForwarding',
+            'fallback_endpoint': f'telephony/config/people/{person_id}/callForwarding',
+            'params': params,
+            'payload': payload,
+        })
+        url = api.session.ep(f'telephony/config/people/{person_id}/callForwarding')
+        api.session.rest_put(url=url, params=params, json=payload)
 
 
 def configurar_desvio_prefijo53_usuario(
@@ -32,7 +85,7 @@ def configurar_desvio_prefijo53_usuario(
     api = create_api(token)
 
     # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = model_to_dict(api.person_settings.forwarding.read(entity_id=person_id, org_id=org_id))
+    before = _read_forwarding_with_fallback(api=api, person_id=person_id, org_id=org_id, log=log)
 
     target_destination = destination or f'53{extension}'
     forwarding = PersonForwardingSetting(
@@ -56,8 +109,8 @@ def configurar_desvio_prefijo53_usuario(
     log('configure_request', request)
 
     # 4) Ejecución del cambio contra Webex Calling.
-    api.person_settings.forwarding.configure(entity_id=person_id, forwarding=forwarding, org_id=org_id)
-    after = model_to_dict(api.person_settings.forwarding.read(entity_id=person_id, org_id=org_id))
+    _configure_forwarding_with_fallback(api=api, person_id=person_id, org_id=org_id, forwarding=forwarding, log=log)
+    after = _read_forwarding_with_fallback(api=api, person_id=person_id, org_id=org_id, log=log)
 
     # 5) Resultado normalizado para logs/pipelines aguas abajo.
     result = {'status': 'success', 'api_response': {'before': before, 'after': after, 'request': request}}
