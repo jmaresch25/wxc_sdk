@@ -27,9 +27,7 @@ def alta_numeraciones_desactivadas(
     # 1) Inicialización: logger por acción y cliente API autenticado.
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = [model_to_dict(item) for item in api.telephony.location.phone_numbers(location_id=location_id, org_id=org_id)]
-    # 3) Payload final: registramos exactamente qué se enviará al endpoint.
+    # 2) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {
         'location_id': location_id,
         'phone_numbers': phone_numbers,
@@ -37,7 +35,6 @@ def alta_numeraciones_desactivadas(
         'state': NumberState.inactive.value,
         'org_id': org_id,
     }
-    log('before_read', {'before': before})
     log('add_numbers_request', request)
 
     add_response = api.telephony.location.number.add(
@@ -48,13 +45,10 @@ def alta_numeraciones_desactivadas(
         org_id=org_id,
     )
 
-    after = [model_to_dict(item) for item in api.telephony.location.phone_numbers(location_id=location_id, org_id=org_id)]
-    # 5) Resultado normalizado para logs/pipelines aguas abajo.
+    # 3) Resultado normalizado para logs/pipelines aguas abajo.
     result = {
         'status': 'success',
         'api_response': {
-            'before': before,
-            'after': after,
             'request': request,
             'add_response': model_to_dict(add_response),
         },

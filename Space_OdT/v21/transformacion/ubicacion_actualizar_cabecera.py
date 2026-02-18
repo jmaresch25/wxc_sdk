@@ -23,9 +23,7 @@ def actualizar_cabecera_ubicacion(
     # 1) Inicialización: logger por acción y cliente API autenticado.
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = model_to_dict(api.telephony.location.details(location_id=location_id, org_id=org_id))
-
+    # 2) Leemos configuración actual para construir el update incremental.
     settings = api.telephony.location.details(location_id=location_id, org_id=org_id)
     if settings.calling_line_id is None:
         settings.calling_line_id = CallingLineId(phone_number=phone_number)
@@ -44,15 +42,13 @@ def actualizar_cabecera_ubicacion(
         'calling_line_name': calling_line_name,
         'org_id': org_id,
     }
-    log('before_read', {'before': before})
     log('update_request', request)
 
     batch_job_id = api.telephony.location.update(location_id=location_id, settings=settings, org_id=org_id)
-    after = model_to_dict(api.telephony.location.details(location_id=location_id, org_id=org_id))
-    # 5) Resultado normalizado para logs/pipelines aguas abajo.
+    # 4) Resultado normalizado para logs/pipelines aguas abajo.
     result = {
         'status': 'success',
-        'api_response': {'before': before, 'after': after, 'request': request, 'batch_job_id': batch_job_id},
+        'api_response': {'request': request, 'batch_job_id': batch_job_id},
     }
     log('update_response', result)
     return result

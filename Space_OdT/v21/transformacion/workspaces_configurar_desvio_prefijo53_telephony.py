@@ -87,8 +87,6 @@ def configurar_desvio_prefijo53_workspace_telephony(
             log('configure_rejected', result)
             return result
 
-    before = _read_forwarding(api=api, workspace_id=workspace_id, org_id=org_id)
-    log('before_read', {'before': before})
     log('configure_request', request)
 
     _configure_forwarding(
@@ -97,9 +95,8 @@ def configurar_desvio_prefijo53_workspace_telephony(
         org_id=org_id,
         destination=target_destination,
     )
-    after = _read_forwarding(api=api, workspace_id=workspace_id, org_id=org_id)
 
-    result = {'status': 'success', 'api_response': {'before': before, 'after': after, 'request': request}}
+    result = {'status': 'success', 'api_response': {'request': request}}
     log('configure_response', result)
     return result
 

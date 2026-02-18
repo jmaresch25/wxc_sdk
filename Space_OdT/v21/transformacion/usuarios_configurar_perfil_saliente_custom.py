@@ -39,9 +39,6 @@ def configurar_perfil_saliente_custom_usuario(
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
 
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = model_to_dict(api.person_settings.permissions_out.read(entity_id=person_id, org_id=org_id))
-
     allow_set = _normalize_call_types(allow_call_types)
     block_set = _normalize_call_types(block_call_types)
 
@@ -67,15 +64,13 @@ def configurar_perfil_saliente_custom_usuario(
     # 3) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {'entity_id': person_id, 'org_id': org_id, 'settings': model_to_dict(settings)}
 
-    log('before_read', {'before': before})
     log('configure_request', request)
 
-    # 4) Ejecución del cambio contra Webex Calling.
+    # 3) Ejecución del cambio contra Webex Calling.
     api.person_settings.permissions_out.configure(entity_id=person_id, settings=settings, org_id=org_id)
-    after = model_to_dict(api.person_settings.permissions_out.read(entity_id=person_id, org_id=org_id))
 
-    # 5) Resultado normalizado para logs/pipelines aguas abajo.
-    result = {'status': 'success', 'api_response': {'before': before, 'after': after, 'request': request}}
+    # 4) Resultado normalizado para logs/pipelines aguas abajo.
+    result = {'status': 'success', 'api_response': {'request': request}}
     log('configure_response', result)
     return result
 
