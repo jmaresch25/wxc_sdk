@@ -7,7 +7,15 @@ from typing import Any
 
 from wxc_sdk.person_settings.permissions_out import OutgoingPermissions
 
-from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
+from .common import (
+    action_logger,
+    apply_csv_arguments,
+    create_api,
+    get_token,
+    load_report_json,
+    load_runtime_env,
+    model_to_dict,
+)
 
 SCRIPT_NAME = 'ubicacion_configurar_permisos_salientes_defecto'
 
@@ -25,7 +33,11 @@ def configurar_permisos_salientes_defecto_ubicacion(
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
 
-    settings = OutgoingPermissions(use_custom_enabled=False, use_custom_permissions=False)
+    profile_payload = load_report_json('location_profile.json')
+    if profile_payload is not None:
+        settings = OutgoingPermissions.model_validate(profile_payload)
+    else:
+        settings = OutgoingPermissions(use_custom_enabled=False, use_custom_permissions=False)
     # 2) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {
         'entity_id': location_id,

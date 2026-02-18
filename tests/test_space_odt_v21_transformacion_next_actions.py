@@ -297,3 +297,67 @@ def test_launcher_tester_api_remota_supports_first_three_location_actions(monkey
     assert report['results'][0]['result']['kind'] == 'pstn'
     assert report['results'][1]['result']['kind'] == 'numbers'
     assert report['results'][2]['result']['kind'] == 'header'
+
+
+def test_configurar_perfil_saliente_custom_workspace_uses_report_json(monkeypatch):
+    from Space_OdT.v21.transformacion.workspaces_configurar_perfil_saliente_custom import (
+        configurar_perfil_saliente_custom_workspace,
+    )
+
+    class PermissionsOutApi:
+        def __init__(self):
+            self.last = None
+
+        def configure(self, entity_id, settings, org_id=None):
+            self.last = (entity_id, settings, org_id)
+
+    permissions = PermissionsOutApi()
+    fake_api = SimpleNamespace(workspace_settings=SimpleNamespace(permissions_out=permissions))
+
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.workspaces_configurar_perfil_saliente_custom.create_api',
+        lambda token: fake_api,
+    )
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.workspaces_configurar_perfil_saliente_custom.load_report_json',
+        lambda filename: {
+            'useCustomEnabled': False,
+            'useCustomPermissions': True,
+            'callingPermissions': [{'callType': 'INTERNAL_CALL', 'action': 'ALLOW', 'transferEnabled': True}],
+        },
+    )
+
+    result = configurar_perfil_saliente_custom_workspace(token='tkn', workspace_id='ws1')
+
+    assert result['status'] == 'success'
+    assert permissions.last[0] == 'ws1'
+    assert permissions.last[1].use_custom_enabled is False
+
+
+def test_configurar_permisos_salientes_defecto_ubicacion_uses_report_json(monkeypatch):
+    class PermissionsOutApi:
+        def __init__(self):
+            self.last = None
+
+        def configure(self, entity_id, settings, org_id=None):
+            self.last = (entity_id, settings, org_id)
+
+    permissions = PermissionsOutApi()
+    fake_api = SimpleNamespace(telephony=SimpleNamespace(location=SimpleNamespace(permissions_out=permissions)))
+
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.ubicacion_configurar_permisos_salientes_defecto.create_api',
+        lambda token: fake_api,
+    )
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.ubicacion_configurar_permisos_salientes_defecto.load_report_json',
+        lambda filename: {
+            'callingPermissions': [{'callType': 'INTERNAL', 'action': 'ALLOW', 'transferEnabled': True}],
+        },
+    )
+
+    result = configurar_permisos_salientes_defecto_ubicacion(token='tkn', location_id='loc1')
+
+    assert result['status'] == 'success'
+    assert permissions.last[0] == 'loc1'
+    assert permissions.last[1].calling_permissions.internal.action == 'ALLOW'

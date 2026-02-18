@@ -40,6 +40,15 @@ def create_api(token: str) -> WebexSimpleApi:
     return WebexSimpleApi(tokens=token)
 
 
+def load_report_json(filename: str) -> dict[str, Any] | None:
+    """Carga un JSON opcional desde ROOTDIR/.ARTIFACTS/REPORT/<filename>."""
+    report_file = Path(__file__).resolve().parents[3] / '.ARTIFACTS' / 'REPORT' / filename
+    if not report_file.is_file():
+        return None
+    with report_file.open('r', encoding='utf-8') as handle:
+        return json.load(handle)
+
+
 def action_logger(script_name: str):
     # Logger JSONL por script para auditoría de requests/responses funcionales.
     log_file = Path(__file__).resolve().parent / 'logs' / f'{script_name}.log'
