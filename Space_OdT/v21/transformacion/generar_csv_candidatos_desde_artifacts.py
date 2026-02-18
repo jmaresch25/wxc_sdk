@@ -26,6 +26,7 @@ SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
     'usuarios_alta_people': ['email', 'first_name', 'last_name', 'location_id', 'licenses'],
     'usuarios_alta_scim': ['org_id', 'email', 'first_name', 'last_name'],
     'usuarios_anadir_intercom_legacy': ['person_id', 'legacy_phone_number'],
+    'usuarios_asignar_location_desde_csv': [],
     'usuarios_configurar_desvio_prefijo53': ['person_id', 'extension', 'destination'],
     'usuarios_configurar_perfil_saliente_custom': ['person_id'],
     'usuarios_modificar_licencias': ['person_id', 'add_license_ids'],
@@ -34,6 +35,7 @@ SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
     'workspaces_configurar_desvio_prefijo53': ['workspace_id', 'extension', 'destination'],
     'workspaces_configurar_desvio_prefijo53_telephony': ['workspace_id', 'extension', 'destination'],
     'workspaces_configurar_perfil_saliente_custom': ['workspace_id'],
+    'workspaces_validar_estado_permisos': ['workspace_id'],
 }
 
 
@@ -79,7 +81,15 @@ def _parameter_columns() -> list[str]:
                 ordered.append(param)
 
     # Parámetros opcionales para modos extendidos (no bloquean por dependencias).
-    for optional_param in ['workspaces_lote_json', 'continue_on_error', 'skip_existing']:
+    for optional_param in [
+        'workspaces_lote_json',
+        'continue_on_error',
+        'skip_existing',
+        'csv_path',
+        'people_json',
+        'overwrite_csv',
+        'generate_only',
+    ]:
         if optional_param not in seen:
             ordered.append(optional_param)
             seen.add(optional_param)

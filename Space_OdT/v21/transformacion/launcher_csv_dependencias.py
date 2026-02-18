@@ -24,6 +24,12 @@ from .ubicacion_configurar_pstn import configurar_pstn_ubicacion
 from .usuarios_alta_people import alta_usuario_people
 from .usuarios_alta_scim import alta_usuario_scim
 from .usuarios_anadir_intercom_legacy import anadir_intercom_legacy_usuario
+from .usuarios_asignar_location_desde_csv import (
+    DEFAULT_REPORT_CSV,
+    DEFAULT_USERS_EXPORT,
+    assign_users_to_locations,
+    generate_csv_from_people_json,
+)
 from .usuarios_configurar_desvio_prefijo53 import configurar_desvio_prefijo53_usuario
 from .usuarios_configurar_perfil_saliente_custom import configurar_perfil_saliente_custom_usuario
 from .usuarios_modificar_licencias import modificar_licencias_usuario
@@ -47,6 +53,7 @@ HANDLERS: dict[str, ActionFn] = {
     'usuarios_alta_people': alta_usuario_people,
     'usuarios_alta_scim': alta_usuario_scim,
     'usuarios_anadir_intercom_legacy': anadir_intercom_legacy_usuario,
+    'usuarios_asignar_location_desde_csv': assign_users_to_locations,
     'usuarios_configurar_desvio_prefijo53': configurar_desvio_prefijo53_usuario,
     'usuarios_configurar_perfil_saliente_custom': configurar_perfil_saliente_custom_usuario,
     'usuarios_modificar_licencias': modificar_licencias_usuario,
@@ -55,6 +62,13 @@ HANDLERS: dict[str, ActionFn] = {
     'workspaces_configurar_desvio_prefijo53': configurar_desvio_prefijo53_workspace,
     'workspaces_configurar_desvio_prefijo53_telephony': configurar_desvio_prefijo53_workspace_telephony,
     'workspaces_configurar_perfil_saliente_custom': configurar_perfil_saliente_custom_workspace,
+    'workspaces_validar_estado_permisos': validar_estado_permisos_workspace,
+}
+
+LOCAL_SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
+    # Se alimenta por defecto de su propio CSV de control.
+    'usuarios_asignar_location_desde_csv': [],
+    'workspaces_validar_estado_permisos': ['workspace_id'],
 }
 
 LOGGER = logging.getLogger(__name__)
@@ -154,7 +168,7 @@ def _confirm(script_name: str, auto_confirm: bool) -> bool:
 
 
 def _params_for_script(script_name: str, parameter_map: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
-    required = SCRIPT_DEPENDENCIES[script_name]
+    required = LOCAL_SCRIPT_DEPENDENCIES.get(script_name, SCRIPT_DEPENDENCIES.get(script_name, []))
 
     # Caso especial MVP: workspaces_alta también puede ejecutarse en lote con
     # `workspaces_lote_json` sin requerir `display_name`/`location_id`.
@@ -204,6 +218,33 @@ def _run_script(*, script_name: str, parameter_map: dict[str, Any], token: str, 
 
     if dry_run:
         return {'script_name': script_name, 'status': 'dry_run', 'params': params, 'invocation': invocation_payload}
+
+    if script_name == 'usuarios_asignar_location_desde_csv':
+        report_csv = Path(params.get('csv_path') or DEFAULT_REPORT_CSV)
+        people_json = Path(params.get('people_json') or DEFAULT_USERS_EXPORT)
+        overwrite_csv = bool(params.get('overwrite_csv'))
+        generate_only = bool(params.get('generate_only'))
+
+        generated_csv = generate_csv_from_people_json(
+            people_json=people_json,
+            output_csv=report_csv,
+            overwrite=overwrite_csv,
+        )
+        if generate_only:
+            return {
+                'script_name': script_name,
+                'status': 'executed',
+                'result': {'csv_path': str(generated_csv), 'generate_only': True},
+                'invocation': invocation_payload,
+            }
+
+        result = assign_users_to_locations(csv_path=generated_csv, token=token, dry_run=False)
+        return {
+            'script_name': script_name,
+            'status': 'executed',
+            'result': {'csv_path': str(generated_csv), 'updates': result},
+            'invocation': invocation_payload,
+        }
 
     try:
         result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)
