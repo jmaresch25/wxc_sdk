@@ -78,25 +78,13 @@ def test_alta_numeraciones_desactivadas_calls_number_add(monkeypatch):
 
 
 def test_actualizar_cabecera_ubicacion_updates_calling_line(monkeypatch):
-    class Settings:
-        def __init__(self):
-            self.calling_line_id = SimpleNamespace(phone_number='+34000000000', name='Sede')
-
-        def model_dump(self, **kwargs):
-            return {
-                'callingLineId': {
-                    'phoneNumber': self.calling_line_id.phone_number,
-                    'name': self.calling_line_id.name,
-                }
-            }
-
-    settings = Settings()
+    captured = {}
 
     class LocationApi:
-        def details(self, location_id, org_id=None):
-            return settings
-
         def update(self, location_id, settings, org_id=None):
+            captured['location_id'] = location_id
+            captured['settings'] = settings
+            captured['org_id'] = org_id
             return 'batch-1'
 
     fake_api = SimpleNamespace(telephony=SimpleNamespace(location=LocationApi()))
@@ -110,8 +98,17 @@ def test_actualizar_cabecera_ubicacion_updates_calling_line(monkeypatch):
     )
 
     assert result['status'] == 'success'
-    assert settings.calling_line_id.phone_number == '+34918887777'
-    assert settings.calling_line_id.name == 'Cabecera Central'
+    assert captured['location_id'] == 'loc1'
+    assert captured['settings'].calling_line_id.phone_number == '+34918887777'
+    assert captured['settings'].calling_line_id.name == 'Cabecera Central'
+
+
+def test_actualizar_cabecera_ubicacion_requires_mandatory_params():
+    with pytest.raises(ValueError, match='location_id es obligatorio'):
+        actualizar_cabecera_ubicacion(token='tkn', location_id='', phone_number='+34918887777')
+
+    with pytest.raises(ValueError, match='phone_number es obligatorio'):
+        actualizar_cabecera_ubicacion(token='tkn', location_id='loc1', phone_number='')
 
 
 def test_configurar_pstn_rejects_invalid_route_type():
