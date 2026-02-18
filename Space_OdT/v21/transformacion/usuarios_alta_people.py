@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-from wxc_sdk.people import PeopleApi, Person, PhoneNumber
+from wxc_sdk.people import PeopleApi, Person, PhoneNumber, PhoneNumberType
 
 from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
@@ -49,7 +49,7 @@ def alta_usuario_people(
         location_id=location_id,
         extension=extension,
         licenses=licenses,
-        phone_numbers=phone_number and [PhoneNumber(value=phone_number)] or None,
+        phone_numbers=phone_number and [PhoneNumber(type=PhoneNumberType.work, value=phone_number)] or None,
     )
 
     # 3) Payload final: registramos exactamente qué se enviará al endpoint.
