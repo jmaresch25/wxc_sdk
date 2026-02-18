@@ -27,7 +27,7 @@ def test_configurar_pstn_ubicacion_uses_sdk_calls(monkeypatch):
 
         def list(self, location_id, org_id=None):
             calls.append(('list', location_id, org_id))
-            return [_Model({'id': 'rg-new'})]
+            return [_Model({'id': 'rg-new', 'pstn_connection_type': 'LOCAL_GATEWAY'})]
 
         def configure(self, **kwargs):
             calls.append(('configure', kwargs))
@@ -44,7 +44,9 @@ def test_configurar_pstn_ubicacion_uses_sdk_calls(monkeypatch):
     )
 
     assert result['status'] == 'success'
-    assert any(call[0] == 'configure' for call in calls)
+    configure_calls = [call for call in calls if call[0] == 'configure']
+    assert configure_calls
+    assert configure_calls[0][1]['id'] == 'rg-new'
 
 
 def test_alta_numeraciones_desactivadas_calls_number_add(monkeypatch):
@@ -118,5 +120,22 @@ def test_configurar_pstn_rejects_invalid_route_type():
             token='tkn',
             location_id='loc1',
             premise_route_type='INVALID',
+            premise_route_id='rg',
+        )
+
+
+def test_configurar_pstn_requires_local_gateway_option(monkeypatch):
+    class Pstn:
+        def list(self, location_id, org_id=None):
+            return [_Model({'id': 'ccp-1', 'pstn_connection_type': 'INTEGRATED_CCP'})]
+
+    fake_api = SimpleNamespace(telephony=SimpleNamespace(pstn=Pstn()))
+    monkeypatch.setattr('Space_OdT.v21.transformacion.ubicacion_configurar_pstn.create_api', lambda token: fake_api)
+
+    with pytest.raises(ValueError, match='LOCAL_GATEWAY'):
+        configurar_pstn_ubicacion(
+            token='tkn',
+            location_id='loc1',
+            premise_route_type='ROUTE_GROUP',
             premise_route_id='rg',
         )
