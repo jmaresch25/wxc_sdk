@@ -34,9 +34,11 @@ class CallingEligibilityError(RuntimeError):
         self.params = params
 
 
-def _is_unauthorized_forwarding_read(error: RestError) -> bool:
-    description = (error.description or '').lower()
-    return error.code == 4003 and 'usercallforwardingalwaysgetrequest' in description
+def _is_busy_forwarding_unauthorized(error: Exception) -> bool:
+    """Detecta el 4003 específico de Webex para lectura/escritura de rama busy."""
+    if not isinstance(error, RestError):
+        return False
+    return error.code == 4003 and 'UserCallForwardingBusy' in (error.description or '')
 
 
 def _assert_person_calling_eligibility(*, api, person_id: str, org_id: str | None, log) -> dict[str, Any]:
@@ -100,7 +102,7 @@ def _read_forwarding_with_fallback(*, api, person_id: str, org_id: str | None, l
     try:
         return model_to_dict(api.person_settings.forwarding.read(entity_id=person_id, org_id=org_id))
     except RestError as error:
-        if not _is_unauthorized_forwarding_read(error):
+        if not _is_busy_forwarding_unauthorized(error):
             raise
         log('forwarding_read_fallback', {
             'reason': str(error),
@@ -119,7 +121,7 @@ def _configure_forwarding_with_fallback(*, api, person_id: str, org_id: str | No
         api.person_settings.forwarding.configure(entity_id=person_id, forwarding=forwarding, org_id=org_id)
         return
     except RestError as error:
-        if not _is_unauthorized_forwarding_read(error):
+        if not _is_busy_forwarding_unauthorized(error):
             raise
         payload = forwarding.call_forwarding.always.model_dump(mode='json', by_alias=True, exclude_none=True)
         payload = {
@@ -156,6 +158,7 @@ def configurar_desvio_prefijo53_usuario(
 
     # 1.1) Pre-chequeo obligatorio: corta temprano si token/usuario no habilitan Calling.
     _assert_person_calling_eligibility(api=api, person_id=person_id, org_id=org_id, log=log)
+    read_strategy = 'not_used'
 
     target_destination = destination or f'53{extension}'
     forwarding = PersonForwardingSetting(
@@ -172,7 +175,12 @@ def configurar_desvio_prefijo53_usuario(
     request = {
         'entity_id': person_id,
         'org_id': org_id,
-        'forwarding': model_to_dict(forwarding),
+        'read_strategy': read_strategy,
+        'configure_strategies': [
+            'sdk_person_settings.forwarding.configure',
+            'rest_put telephony/config/people/{personId}/callForwarding (payload mínimo Always)',
+        ],
+        'settings': model_to_dict(forwarding),
     }
 
     log('configure_request', request)
