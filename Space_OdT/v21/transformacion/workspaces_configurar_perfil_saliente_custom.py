@@ -13,7 +13,15 @@ from wxc_sdk.person_settings.permissions_out import (
     OutgoingPermissions,
 )
 
-from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
+from .common import (
+    action_logger,
+    apply_csv_arguments,
+    create_api,
+    get_token,
+    load_report_json,
+    load_runtime_env,
+    model_to_dict,
+)
 
 SCRIPT_NAME = 'workspaces_configurar_perfil_saliente_custom'
 
@@ -39,28 +47,33 @@ def configurar_perfil_saliente_custom_workspace(
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
 
-    allow_set = _normalize_call_types(allow_call_types)
-    block_set = _normalize_call_types(block_call_types)
+    profile_payload = load_report_json('workspace_profile.json')
 
-    calling_permissions = CallingPermissions.allow_all()
-    for call_type in block_set:
-        setattr(
-            calling_permissions,
-            call_type.name.lower(),
-            CallTypePermission(action=Action.block, transfer_enabled=False),
-        )
-    for call_type in allow_set:
-        setattr(
-            calling_permissions,
-            call_type.name.lower(),
-            CallTypePermission(action=Action.allow, transfer_enabled=True),
-        )
+    if profile_payload is not None:
+        settings = OutgoingPermissions.model_validate(profile_payload)
+    else:
+        allow_set = _normalize_call_types(allow_call_types)
+        block_set = _normalize_call_types(block_call_types)
 
-    settings = OutgoingPermissions(
-        use_custom_enabled=True,
-        use_custom_permissions=True,
-        calling_permissions=calling_permissions,
-    )
+        calling_permissions = CallingPermissions.allow_all()
+        for call_type in block_set:
+            setattr(
+                calling_permissions,
+                call_type.name.lower(),
+                CallTypePermission(action=Action.block, transfer_enabled=False),
+            )
+        for call_type in allow_set:
+            setattr(
+                calling_permissions,
+                call_type.name.lower(),
+                CallTypePermission(action=Action.allow, transfer_enabled=True),
+            )
+
+        settings = OutgoingPermissions(
+            use_custom_enabled=True,
+            use_custom_permissions=True,
+            calling_permissions=calling_permissions,
+        )
     # 3) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {'entity_id': workspace_id, 'org_id': org_id, 'settings': model_to_dict(settings)}
 

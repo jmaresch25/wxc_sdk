@@ -1,0 +1,59 @@
+{
+  "callingPermissions": [
+    {
+      "callType": "INTERNAL",
+      "action": "ALLOW",
+      "transferEnabled": true
+    },
+    {
+      "callType": "TOLL_FREE",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "NATIONAL",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "INTERNATIONAL",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "OPERATOR_ASSISTED",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "CHARGEABLE_DIRECTORY_ASSISTED",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "SPECIAL_SERVICES_I",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "SPECIAL_SERVICES_II",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "PREMIUM_SERVICES_I",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "PREMIUM_SERVICES_II",
+      "action": "BLOCK",
+      "transferEnabled": false
+    },
+    {
+      "callType": "MOBILE",
+      "action": "BLOCK",
+      "transferEnabled": false
+    }
+  ]
+}
