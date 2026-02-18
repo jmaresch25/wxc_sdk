@@ -25,10 +25,15 @@ def modificar_licencias_usuario(
 ) -> dict[str, Any]:
     if not add_license_ids and not remove_license_ids:
         raise ValueError('Se requiere al menos una licencia en add_license_ids o remove_license_ids')
+    if location_id and not (phone_number or extension):
+        raise ValueError('Si se informa location_id, también se requiere phone_number o extension')
 
     # 1) Inicialización: logger por acción y cliente API autenticado.
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
+    assign_fn = getattr(getattr(api, 'licenses', None), 'assign_licenses_to_users', None)
+    if assign_fn is None:
+        raise RuntimeError('El cliente SDK no expone api.licenses.assign_licenses_to_users()')
 
     license_requests: list[LicenseRequest] = []
     for license_id in add_license_ids or []:
@@ -49,7 +54,7 @@ def modificar_licencias_usuario(
     }
     log('licenses_request', request)
 
-    response = api.licenses.assign_licenses_to_users(person_id=person_id, licenses=license_requests, org_id=org_id)
+    response = assign_fn(person_id=person_id, licenses=license_requests, org_id=org_id)
     response_payload = model_to_dict(response)
     # 5) Resultado normalizado para logs/pipelines aguas abajo.
     result = {'status': 'success', 'api_response': {'request': request, 'response': response_payload}}
