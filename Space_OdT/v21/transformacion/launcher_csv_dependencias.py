@@ -164,7 +164,7 @@ def _read_parameter_map(csv_path: Path) -> dict[str, Any]:
 def _confirm(script_name: str, auto_confirm: bool) -> bool:
     if auto_confirm:
         return True
-    answer = input(f'¿Ejecutar {script_name}? [y/N]: ').strip().lower()
+    answer = input(f'*+_-/*+_-/*+_-/*+_-/*+_-/*+_-/*+_-/¿Ejecutar {script_name}? [y/N]: ').strip().lower()
     return answer in {'y', 'yes', 's', 'si'}
 
 

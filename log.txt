@@ -1,0 +1,627 @@
+{
+  "csv_path": "E:\\Python Scripts\\webex_best_sdk\\.artifacts\\report\\results_manual.csv",
+  "results": [
+    {
+      "invocation": {
+        "kwargs": {
+          "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "phone_number": "934702929",
+          "token": "***"
+        },
+        "method": "actualizar_cabecera_ubicacion",
+        "script_name": "ubicacion_actualizar_cabecera"
+      },
+      "precheck": null,
+      "result": {
+        "api_response": {
+          "after": {
+            "announcementLanguage": "en_us",
+            "callingLineId": {
+              "name": "jmareschlop-6xlr"
+            },
+            "defaultDomain": "98303641.us10.bcld.webex.com",
+            "enforceOutsideDialDigit": false,
+            "externalCallerIdName": "Site1",
+            "id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+            "name": "Site1",
+            "useChargeNumberForPChargeInfo": false,
+            "userLimit": 500001
+          },
+          "batch_job_id": null,
+          "before": {
+            "announcementLanguage": "en_us",
+            "callingLineId": {
+              "name": "jmareschlop-6xlr"
+            },
+            "defaultDomain": "98303641.us10.bcld.webex.com",
+            "enforceOutsideDialDigit": false,
+            "externalCallerIdName": "Site1",
+            "id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+            "name": "Site1",
+            "useChargeNumberForPChargeInfo": false,
+            "userLimit": 500001
+          },
+          "request": {
+            "calling_line_name": null,
+            "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+            "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+            "phone_number": "934702929"
+          }
+        },
+        "status": "success"
+      },
+      "script_name": "ubicacion_actualizar_cabecera",
+      "status": "executed"
+    },
+    {
+      "missing_dependencies": "phone_numbers",
+      "reason": "missing_dependencies",
+      "script_name": "ubicacion_alta_numeraciones_desactivadas",
+      "status": "skipped"
+    },
+    {
+      "error": "premise_route_id no coincide con premise_route_type=ROUTE_GROUP: tipo decodificado=ORGANIZATION",
+      "error_type": "ValueError",
+      "invocation": {
+        "kwargs": {
+          "enable_unknown_extension_route_policy": true,
+          "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "premise_route_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9kYzc4NzgyYi1mMGM5LTQxOGUtYjY5Ni1iOWZjOGE2ZjIyNjA",
+          "premise_route_type": "ROUTE_GROUP",
+          "token": "***"
+        },
+        "method": "configurar_llamadas_internas_ubicacion",
+        "script_name": "ubicacion_configurar_llamadas_internas"
+      },
+      "params": {
+        "enable_unknown_extension_route_policy": true,
+        "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "premise_route_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9kYzc4NzgyYi1mMGM5LTQxOGUtYjY5Ni1iOWZjOGE2ZjIyNjA",
+        "premise_route_type": "ROUTE_GROUP"
+      },
+      "precheck": null,
+      "script_name": "ubicacion_configurar_llamadas_internas",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\ubicacion_configurar_llamadas_internas.py\", line 47, in configurar_llamadas_internas_ubicacion\n    raise ValueError(\n    ...<2 lines>...\n    )\nValueError: premise_route_id no coincide con premise_route_type=ROUTE_GROUP: tipo decodificado=ORGANIZATION\n"
+    },
+    {
+      "invocation": {
+        "kwargs": {
+          "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "token": "***"
+        },
+        "method": "configurar_permisos_salientes_defecto_ubicacion",
+        "script_name": "ubicacion_configurar_permisos_salientes_defecto"
+      },
+      "precheck": null,
+      "result": {
+        "api_response": {
+          "after": {
+            "callingPermissions": [
+              {
+                "action": "ALLOW",
+                "callType": "INTERNAL_CALL",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "TOLL_FREE",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "NATIONAL",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "BLOCK",
+                "callType": "INTERNATIONAL",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": false
+              },
+              {
+                "action": "ALLOW",
+                "callType": "OPERATOR_ASSISTED",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "CHARGEABLE_DIRECTORY_ASSISTED",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "SPECIAL_SERVICES_I",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "SPECIAL_SERVICES_II",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "BLOCK",
+                "callType": "PREMIUM_SERVICES_I",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": false
+              },
+              {
+                "action": "BLOCK",
+                "callType": "PREMIUM_SERVICES_II",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": false
+              }
+            ],
+            "useCustomEnabled": null,
+            "useCustomPermissions": null
+          },
+          "before": {
+            "callingPermissions": [
+              {
+                "action": "ALLOW",
+                "callType": "INTERNAL_CALL",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "TOLL_FREE",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "NATIONAL",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "BLOCK",
+                "callType": "INTERNATIONAL",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": false
+              },
+              {
+                "action": "ALLOW",
+                "callType": "OPERATOR_ASSISTED",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "CHARGEABLE_DIRECTORY_ASSISTED",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "SPECIAL_SERVICES_I",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "ALLOW",
+                "callType": "SPECIAL_SERVICES_II",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": true
+              },
+              {
+                "action": "BLOCK",
+                "callType": "PREMIUM_SERVICES_I",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": false
+              },
+              {
+                "action": "BLOCK",
+                "callType": "PREMIUM_SERVICES_II",
+                "isCallTypeRestrictionEnabled": false,
+                "transferEnabled": false
+              }
+            ],
+            "useCustomEnabled": null,
+            "useCustomPermissions": null
+          },
+          "request": {
+            "entity_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+            "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+            "settings": {
+              "useCustomEnabled": false,
+              "useCustomPermissions": false
+            }
+          }
+        },
+        "status": "success"
+      },
+      "script_name": "ubicacion_configurar_permisos_salientes_defecto",
+      "status": "executed"
+    },
+    {
+      "error": "404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/pstn/locations/Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA/connection?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, {\"errorMessage\":\"Location 4ffd8bf3-de31-4412-8dda-b4424b119b48 not found or PSTN for the location is not configured\"}",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "premise_route_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9kYzc4NzgyYi1mMGM5LTQxOGUtYjY5Ni1iOWZjOGE2ZjIyNjA",
+          "premise_route_type": "ROUTE_GROUP",
+          "token": "***"
+        },
+        "method": "configurar_pstn_ubicacion",
+        "script_name": "ubicacion_configurar_pstn"
+      },
+      "params": {
+        "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "premise_route_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9kYzc4NzgyYi1mMGM5LTQxOGUtYjY5Ni1iOWZjOGE2ZjIyNjA",
+        "premise_route_type": "ROUTE_GROUP"
+      },
+      "precheck": null,
+      "script_name": "ubicacion_configurar_pstn",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/pstn/locations/Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA/connection?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\ubicacion_configurar_pstn.py\", line 28, in configurar_pstn_ubicacion\n    before = model_to_dict(api.telephony.pstn.read(location_id=location_id, org_id=org_id))\n                           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\telephony\\pstn\\__init__.py\", line 171, in read\n    data = super().get(url, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\api_child.py\", line 56, in get\n    return self.session.rest_get(*args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/pstn/locations/Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA/connection?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, {\"errorMessage\":\"Location 4ffd8bf3-de31-4412-8dda-b4424b119b48 not found or PSTN for the location is not configured\"}\n"
+    },
+    {
+      "invocation": {
+        "kwargs": {
+          "display_name": "admin@jmareschlop-6xlr.wbx.ai",
+          "email": "admin@jmareschlop-6xlr.wbx.ai",
+          "extension": "5102",
+          "first_name": "Ana",
+          "last_name": "Fernández",
+          "licenses": "Webex Calling Professional",
+          "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "phone_number": "934702929",
+          "token": "***"
+        },
+        "method": "alta_usuario_people",
+        "script_name": "usuarios_alta_people"
+      },
+      "precheck": null,
+      "result": {
+        "api_response": {
+          "existing": [
+            {
+              "created": "2025-11-25T17:29:24.564000Z",
+              "displayName": "admin@jmareschlop-6xlr.wbx.ai",
+              "emails": [
+                "admin@jmareschlop-6xlr.wbx.ai"
+              ],
+              "firstName": "admin",
+              "id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
+              "invitePending": false,
+              "lastActivity": "2026-02-17T16:20:50.588Z",
+              "lastModified": "2026-02-17T15:36:00.352000Z",
+              "lastName": "admin",
+              "licenses": [
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOkZUQ19hMjQ3MzgyOC1hOTgwLTQ3MmYtODE5ZC02YjljY2UwOGU5MmI",
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOkZNU185ZWNhNzgxNC0zMzEzLTQ2NGYtOTY0Mi0wMjM5ODc1YmM5Zjg",
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOkZTU18xYjcyOGZmOS03ZGU4LTRjYjctOTU0MC0yOTMyMGI1YTQyY2I",
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOldBTV8xN2NkYzJmYy0wZDExLTQ3YmUtYWU3Yy1iZjc1OGYzZDIxYjI",
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOkZUTV9mNWZkZTM1Zi00NzA0LTQ2MGEtODEwZi00YzVkMzUyNDFlNjk",
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOk1TXzVhYjk0OTBlLTRjMmQtNDExMi1iNjQ4LTVmZTg2MTAzZDBiOA",
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOlJUVF9lMjIyYWY1My05ZWJiLTQ3ZTEtOWMyYS04ZGIzNDQ3OTkxNTY",
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOkVFX2NkYzUxNWNlLWU4MjEtNGEwNC04NzUyLTJkMDQzZjA3NjQyY19qbWFyZXNjaGxvcC02eGxyLndlYmV4LmNvbQ",
+                "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOkNGX2IzMmJkMDAwLTIwYTYtNGMwZC1hYWU2LTRlZDUyZWVlMTNkYg"
+              ],
+              "loginEnabled": true,
+              "nickName": "admin",
+              "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+              "roles": [
+                "Y2lzY29zcGFyazovL3VzL1JPTEUvaWRfZnVsbF9hZG1pbg"
+              ],
+              "status": "active",
+              "type": "person"
+            }
+          ]
+        },
+        "reason": "user_already_exists",
+        "status": "skipped"
+      },
+      "script_name": "usuarios_alta_people",
+      "status": "executed"
+    },
+    {
+      "error": "403 Client Error: Forbidden for url: https://webexapis.com/identity/scim/Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI/v2/Users?filter=userName+eq+%22admin%40jmareschlop-6xlr.wbx.ai%22&count=1, {\n    \"schemas\": [\n        \"urn:ietf:params:scim:api:messages:2.0:Error\",\n        \"urn:scim:schemas:extension:cisco:webexidentity:api:messages:2.0:Error\"\n    ],\n    \"status\": \"403\",\n    \n    \"urn:scim:schemas:extension:cisco:webexidentity:api:messages:2.0:Error\": {\n        \"trackingId\": \"SIMPLE_effb4538-2e1e-42ff-bed7-d3d322e6b0c1\",\n        \"errorCode\": \"200003\",\n        \"details\": \"Sorry, you don't have sufficient privileges\"\n    }\n}",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "display_name": "admin@jmareschlop-6xlr.wbx.ai",
+          "email": "admin@jmareschlop-6xlr.wbx.ai",
+          "first_name": "Ana",
+          "last_name": "Fernández",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "token": "***"
+        },
+        "method": "alta_usuario_scim",
+        "script_name": "usuarios_alta_scim"
+      },
+      "params": {
+        "display_name": "admin@jmareschlop-6xlr.wbx.ai",
+        "email": "admin@jmareschlop-6xlr.wbx.ai",
+        "first_name": "Ana",
+        "last_name": "Fernández",
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI"
+      },
+      "precheck": null,
+      "script_name": "usuarios_alta_scim",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 403 Client Error: Forbidden for url: https://webexapis.com/identity/scim/Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI/v2/Users?filter=userName+eq+%22admin%40jmareschlop-6xlr.wbx.ai%22&count=1\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\usuarios_alta_scim.py\", line 30, in alta_usuario_scim\n    search = api.scim.users.search(org_id=org_id, filter=filter_expr, count=1)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\scim\\users\\__init__.py\", line 574, in search\n    data = super().get(url, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\api_child.py\", line 56, in get\n    return self.session.rest_get(*args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 403 Client Error: Forbidden for url: https://webexapis.com/identity/scim/Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI/v2/Users?filter=userName+eq+%22admin%40jmareschlop-6xlr.wbx.ai%22&count=1, {\n    \"schemas\": [\n        \"urn:ietf:params:scim:api:messages:2.0:Error\",\n        \"urn:scim:schemas:extension:cisco:webexidentity:api:messages:2.0:Error\"\n    ],\n    \"status\": \"403\",\n    \n    \"urn:scim:schemas:extension:cisco:webexidentity:api:messages:2.0:Error\": {\n        \"trackingId\": \"SIMPLE_effb4538-2e1e-42ff-bed7-d3d322e6b0c1\",\n        \"errorCode\": \"200003\",\n        \"details\": \"Sorry, you don't have sufficient privileges\"\n    }\n}\n"
+    },
+    {
+      "error": "404 Client Error: Not Found for url: https://webexapis.com/v1/people/Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM/features/numbers?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 User not found.",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "legacy_phone_number": "519402744",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "person_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
+          "token": "***"
+        },
+        "method": "anadir_intercom_legacy_usuario",
+        "script_name": "usuarios_anadir_intercom_legacy"
+      },
+      "params": {
+        "legacy_phone_number": "519402744",
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "person_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM"
+      },
+      "precheck": null,
+      "script_name": "usuarios_anadir_intercom_legacy",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://webexapis.com/v1/people/Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM/features/numbers?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\usuarios_anadir_intercom_legacy.py\", line 27, in anadir_intercom_legacy_usuario\n    before = api.person_settings.numbers.read(person_id=person_id, org_id=org_id)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\person_settings\\numbers.py\", line 101, in read\n    return PersonNumbers.model_validate(self.get(ep, params=params))\n                                        ~~~~~~~~^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\api_child.py\", line 56, in get\n    return self.session.rest_get(*args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 404 Client Error: Not Found for url: https://webexapis.com/v1/people/Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM/features/numbers?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 User not found.\n"
+    },
+    {
+      "error": "El usuario no es elegible para Calling (sin extensión/ubicación de Calling). Acción: asignar licencia/servicio Webex Calling y ubicación al usuario antes de configurar desvío.",
+      "error_type": "calling_eligibility_user_without_calling",
+      "invocation": {
+        "kwargs": {
+          "destination": "539402744",
+          "extension": "5102",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "person_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
+          "token": "***"
+        },
+        "method": "configurar_desvio_prefijo53_usuario",
+        "script_name": "usuarios_configurar_desvio_prefijo53"
+      },
+      "params": {
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "person_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
+        "required_role": "admin de la organización (o partner admin con delegación)",
+        "required_scopes": [
+          "spark-admin:people_read",
+          "scopes admin de Webex Calling/person settings para call forwarding"
+        ],
+        "required_user_state": "usuario con servicio/licencia Webex Calling (extension/locationId)"
+      },
+      "precheck": null,
+      "script_name": "usuarios_configurar_desvio_prefijo53",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\usuarios_configurar_desvio_prefijo53.py\", line 158, in configurar_desvio_prefijo53_usuario\n    _assert_person_calling_eligibility(api=api, person_id=person_id, org_id=org_id, log=log)\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\usuarios_configurar_desvio_prefijo53.py\", line 79, in _assert_person_calling_eligibility\n    raise CallingEligibilityError(\n    ...<6 lines>...\n    )\nSpace_OdT.v21.transformacion.usuarios_configurar_desvio_prefijo53.CallingEligibilityError: El usuario no es elegible para Calling (sin extensión/ubicación de Calling). Acción: asignar licencia/servicio Webex Calling y ubicación al usuario antes de configurar desvío.\n"
+    },
+    {
+      "error": "400 Client Error: Bad Request for url: https://webexapis.com/v1/people/Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM/features/outgoingPermission?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 [Error 4003] Unauthorized request: UserOutgoingCallingPlanPermissionsByTypeGetRequestWCV2",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "person_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
+          "token": "***"
+        },
+        "method": "configurar_perfil_saliente_custom_usuario",
+        "script_name": "usuarios_configurar_perfil_saliente_custom"
+      },
+      "params": {
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "person_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM"
+      },
+      "precheck": null,
+      "script_name": "usuarios_configurar_perfil_saliente_custom",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://webexapis.com/v1/people/Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM/features/outgoingPermission?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\usuarios_configurar_perfil_saliente_custom.py\", line 43, in configurar_perfil_saliente_custom_usuario\n    before = model_to_dict(api.person_settings.permissions_out.read(entity_id=person_id, org_id=org_id))\n                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\person_settings\\permissions_out.py\", line 735, in read\n    return OutgoingPermissions.model_validate(self.get(ep, params=params))\n                                              ~~~~~~~~^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\api_child.py\", line 56, in get\n    return self.session.rest_get(*args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 400 Client Error: Bad Request for url: https://webexapis.com/v1/people/Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM/features/outgoingPermission?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 [Error 4003] Unauthorized request: UserOutgoingCallingPlanPermissionsByTypeGetRequestWCV2\n"
+    },
+    {
+      "error": "404 Client Error: Not Found for url: https://webexapis.com/v1/licenses/users, 1 The requested resource could not be found.",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "add_license_ids": "\"Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOlJUVF9lMjIyYWY1My05ZWJiLTQ3ZTEtOWMyYS04ZGIzNDQ3OTkxNTY\", \"Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOk1TXzVhYjk0OTBlLTRjMmQtNDExMi1iNjQ4LTVmZTg2MTAzZDBiOA\"",
+          "extension": "5102",
+          "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "person_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
+          "phone_number": "934702929",
+          "token": "***"
+        },
+        "method": "modificar_licencias_usuario",
+        "script_name": "usuarios_modificar_licencias"
+      },
+      "params": {
+        "add_license_ids": "\"Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOlJUVF9lMjIyYWY1My05ZWJiLTQ3ZTEtOWMyYS04ZGIzNDQ3OTkxNTY\", \"Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOk1TXzVhYjk0OTBlLTRjMmQtNDExMi1iNjQ4LTVmZTg2MTAzZDBiOA\"",
+        "extension": "5102",
+        "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "person_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
+        "phone_number": "934702929"
+      },
+      "precheck": null,
+      "script_name": "usuarios_modificar_licencias",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://webexapis.com/v1/licenses/users\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\usuarios_modificar_licencias.py\", line 52, in modificar_licencias_usuario\n    response = api.licenses.assign_licenses_to_users(person_id=person_id, licenses=license_requests, org_id=org_id)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\licenses\\__init__.py\", line 322, in assign_licenses_to_users\n    data = super().patch(url, json=body)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\api_child.py\", line 94, in patch\n    return self.session.rest_patch(*args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 450, in rest_patch\n    return self._rest_request('PATCH', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 404 Client Error: Not Found for url: https://webexapis.com/v1/licenses/users, 1 The requested resource could not be found.\n"
+    },
+    {
+      "invocation": {
+        "kwargs": {
+          "display_name": "admin@jmareschlop-6xlr.wbx.ai",
+          "location_id": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "token": "***"
+        },
+        "method": "alta_workspace",
+        "script_name": "workspaces_alta"
+      },
+      "precheck": null,
+      "result": {
+        "api_response": {
+          "existing": [
+            {
+              "calendar": {
+                "type": "none"
+              },
+              "calling": {
+                "type": "freeCalling"
+              },
+              "created": "2026-02-17T12:05:22.942000Z",
+              "deviceHostedMeetings": {
+                "enabled": false
+              },
+              "devicePlatform": "cisco",
+              "displayName": "admin@jmareschlop-6xlr.wbx.ai",
+              "health": {
+                "issues": [
+                  {
+                    "createdAt": "2026-02-17T12:05:23.530955Z",
+                    "description": "Adding a type specifies what the workspace is used for.",
+                    "id": "type-not-set",
+                    "level": "info",
+                    "recommendedAction": "Set a type for this workspace.",
+                    "title": "Workspace type not set"
+                  },
+                  {
+                    "createdAt": "2026-02-17T12:05:23.530955Z",
+                    "description": "Adding a capacity specifies how many people can fit in the workspace.",
+                    "id": "capacity-not-set",
+                    "level": "info",
+                    "recommendedAction": "Set a capacity for this workspace.",
+                    "title": "Workspace capacity not set"
+                  }
+                ],
+                "level": "info"
+              },
+              "hotdeskingStatus": "off",
+              "id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2U1NjExMDk2LTRmNDYtNDVjYS05MTk2LTdiMGE0NTM1MjUzZQ==",
+              "locationId": "Y2lzY29zcGFyazovL3VzL0xPQ0FUSU9OLzRmZmQ4YmYzLWRlMzEtNDQxMi04ZGRhLWI0NDI0YjExOWI0OA",
+              "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+              "plannedMaintenance": {
+                "mode": "off"
+              },
+              "sipAddress": "adminjmareschlop-6xlrwbxai263631@jmareschlop-6xlr.rooms.webex.com",
+              "supportedDevices": "collaborationDevices",
+              "workspaceLocationId": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1dPUktTUEFDRV9MT0NBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDIjNGZmZDhiZjMtZGUzMS00NDEyLThkZGEtYjQ0MjRiMTE5YjQ4"
+            }
+          ]
+        },
+        "reason": "workspace_already_exists",
+        "status": "skipped"
+      },
+      "script_name": "workspaces_alta",
+      "status": "executed"
+    },
+    {
+      "error": "400 Client Error: Bad Request for url: https://webexapis.com/v1/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/features/numbers/?org_id=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 [Error 4003] Unauthorized request: UserGetRequestWCV15",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "legacy_phone_number": "519402744",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "token": "***",
+          "workspace_id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ=="
+        },
+        "method": "anadir_intercom_legacy_workspace",
+        "script_name": "workspaces_anadir_intercom_legacy"
+      },
+      "params": {
+        "legacy_phone_number": "519402744",
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "workspace_id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ=="
+      },
+      "precheck": null,
+      "script_name": "workspaces_anadir_intercom_legacy",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://webexapis.com/v1/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/features/numbers/?org_id=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\workspaces_anadir_intercom_legacy.py\", line 27, in anadir_intercom_legacy_workspace\n    before = api.workspace_settings.numbers.read(workspace_id=workspace_id, org_id=org_id)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\workspace_settings\\numbers\\__init__.py\", line 68, in read\n    data = self.get(url=url, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\api_child.py\", line 56, in get\n    return self.session.rest_get(*args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 400 Client Error: Bad Request for url: https://webexapis.com/v1/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/features/numbers/?org_id=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 [Error 4003] Unauthorized request: UserGetRequestWCV15\n"
+    },
+    {
+      "error": "404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, No static resource hydra/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding.",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "destination": "539402744",
+          "extension": "5102",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "token": "***",
+          "workspace_id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ=="
+        },
+        "method": "configurar_desvio_prefijo53_workspace",
+        "script_name": "workspaces_configurar_desvio_prefijo53"
+      },
+      "params": {
+        "destination": "539402744",
+        "extension": "5102",
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "workspace_id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ=="
+      },
+      "precheck": null,
+      "script_name": "workspaces_configurar_desvio_prefijo53",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://webexapis.com/v1/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/features/callForwarding?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\workspaces_configurar_desvio_prefijo53.py\", line 65, in configurar_desvio_prefijo53_workspace\n    before = model_to_dict(api.workspace_settings.forwarding.read(entity_id=workspace_id, org_id=org_id))\n                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\person_settings\\forwarding.py\", line 137, in read\n    return PersonForwardingSetting.model_validate(self.get(ep, params=params))\n                                                  ~~~~~~~~^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\api_child.py\", line 56, in get\n    return self.session.rest_get(*args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 400 Client Error: Bad Request for url: https://webexapis.com/v1/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/features/callForwarding?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 [Error 4003] Unauthorized request: UserCallForwardingBusyGetRequest\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\workspaces_configurar_desvio_prefijo53.py\", line 71, in configurar_desvio_prefijo53_workspace\n    before = api.session.rest_get(url=_workspace_call_forwarding_endpoint(workspace_id), params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, No static resource hydra/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding.\n"
+    },
+    {
+      "error": "404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, No static resource hydra/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding.",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "destination": "539402744",
+          "extension": "5102",
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "token": "***",
+          "workspace_id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ=="
+        },
+        "method": "configurar_desvio_prefijo53_workspace_telephony",
+        "script_name": "workspaces_configurar_desvio_prefijo53_telephony"
+      },
+      "params": {
+        "destination": "539402744",
+        "extension": "5102",
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "workspace_id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ=="
+      },
+      "precheck": null,
+      "script_name": "workspaces_configurar_desvio_prefijo53_telephony",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\workspaces_configurar_desvio_prefijo53_telephony.py\", line 90, in configurar_desvio_prefijo53_workspace_telephony\n    before = _read_forwarding(api=api, workspace_id=workspace_id, org_id=org_id)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\workspaces_configurar_desvio_prefijo53_telephony.py\", line 24, in _read_forwarding\n    return model_to_dict(api.session.rest_get(url=url, params=params))\n                         ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 404 Client Error: Not Found for url: https://webexapis.com/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, No static resource hydra/v1/telephony/config/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/callForwarding.\n"
+    },
+    {
+      "error": "400 Client Error: Bad Request for url: https://webexapis.com/v1/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/features/outgoingPermission?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 [Error 4003] Unauthorized request: UserOutgoingCallingPlanPermissionsByTypeGetRequestWCV2",
+      "error_type": "RestError",
+      "invocation": {
+        "kwargs": {
+          "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+          "token": "***",
+          "workspace_id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ=="
+        },
+        "method": "configurar_perfil_saliente_custom_workspace",
+        "script_name": "workspaces_configurar_perfil_saliente_custom"
+      },
+      "params": {
+        "org_id": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI",
+        "workspace_id": "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ=="
+      },
+      "precheck": null,
+      "script_name": "workspaces_configurar_perfil_saliente_custom",
+      "status": "error",
+      "traceback": "Traceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 365, in _request_w_response\n    response.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"E:\\Python Scripts\\.venv\\Lib\\site-packages\\requests\\models.py\", line 1026, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://webexapis.com/v1/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/features/outgoingPermission?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 204, in _run_script\n    result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\launcher_csv_dependencias.py\", line 87, in _invoke_with_retry_after\n    return handler(token=token, **params)\n  File \"E:\\Python Scripts\\webex_best_sdk\\Space_OdT\\v21\\transformacion\\workspaces_configurar_perfil_saliente_custom.py\", line 43, in configurar_perfil_saliente_custom_workspace\n    before = model_to_dict(api.workspace_settings.permissions_out.read(entity_id=workspace_id, org_id=org_id))\n                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\person_settings\\permissions_out.py\", line 735, in read\n    return OutgoingPermissions.model_validate(self.get(ep, params=params))\n                                              ~~~~~~~~^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\api_child.py\", line 56, in get\n    return self.session.rest_get(*args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 412, in rest_get\n    return self._rest_request('GET', *args, **kwargs)\n           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 401, in _rest_request\n    _, data = self._request_w_response(method, url=url, **kwargs)\n              ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 231, in wrapper\n    result = func(session, *args, **kwargs)\n  File \"E:\\Python Scripts\\webex_best_sdk\\wxc_sdk\\rest.py\", line 370, in _request_w_response\n    raise error\nwxc_sdk.rest.RestError: 400 Client Error: Bad Request for url: https://webexapis.com/v1/workspaces/Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2IwYTRkZjI1LTU2MDYtNDI4Zi1iMTYzLWE5YTZkYTk5MWY3YQ==/features/outgoingPermission?orgId=Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi9lNWY3ZDk3My1iMjY5LTQ2ODYtOTk3ZS00NTExOTE2OGNlZDI, 4003 [Error 4003] Unauthorized request: UserOutgoingCallingPlanPermissionsByTypeGetRequestWCV2\n"
+    }
+  ]
+}

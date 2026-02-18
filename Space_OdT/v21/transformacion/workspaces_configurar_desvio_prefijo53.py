@@ -36,8 +36,8 @@ def _fallback_payload(destination: str) -> dict[str, Any]:
             'always': {
                 'enabled': True,
                 'destination': destination,
-                'destinationVoicemailEnabled': False,
-                'ringReminderEnabled': False,
+                'destinationVoicemailEnabled': True,
+                'ringReminderEnabled': True,
             }
         }
     }
@@ -66,8 +66,8 @@ def configurar_desvio_prefijo53_workspace(
             always=CallForwardingAlways(
                 enabled=True,
                 destination=target_destination,
-                destination_voicemail_enabled=False,
-                ring_reminder_enabled=False,
+                destination_voicemail_enabled=True,
+                ring_reminder_enabled=True,
             ),
             busy=CallForwardingPerson.default().busy,
             no_answer=CallForwardingPerson.default().no_answer,
