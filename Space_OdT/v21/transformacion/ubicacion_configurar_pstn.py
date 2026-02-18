@@ -10,6 +10,14 @@ from .common import action_logger, apply_csv_arguments, create_api, get_token, l
 SCRIPT_NAME = 'ubicacion_configurar_pstn'
 
 
+def _find_local_gateway_connection_id(options: list[dict[str, Any]]) -> str:
+    """Obtiene el `id` de la opción LOCAL_GATEWAY requerida por el endpoint de configuración."""
+    for option in options:
+        if option.get('pstn_connection_type') == 'LOCAL_GATEWAY' and option.get('id'):
+            return str(option['id'])
+    raise ValueError('No se encontró una opción PSTN LOCAL_GATEWAY con id para la ubicación indicada.')
+
+
 def configurar_pstn_ubicacion(
     *,
     token: str,
@@ -25,10 +33,12 @@ def configurar_pstn_ubicacion(
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
     options = model_to_dict(api.telephony.pstn.list(location_id=location_id, org_id=org_id))
+    connection_id = _find_local_gateway_connection_id(options)
 
     # 2) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {
         'location_id': location_id,
+        'id': connection_id,
         'premise_route_type': premise_route_type,
         'premise_route_id': premise_route_id,
         'org_id': org_id,
@@ -38,6 +48,7 @@ def configurar_pstn_ubicacion(
     # 3) Ejecución del cambio contra Webex Calling.
     api.telephony.pstn.configure(
         location_id=location_id,
+        id=connection_id,
         premise_route_type=premise_route_type,
         premise_route_id=premise_route_id,
         org_id=org_id,
