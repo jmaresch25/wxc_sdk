@@ -23,23 +23,23 @@ def anadir_intercom_legacy_usuario(
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
 
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = api.person_settings.numbers.read(person_id=person_id, org_id=org_id)
-    before_payload = model_to_dict(before)
-    already_exists = any((num.get('directNumber') == legacy_phone_number) for num in before_payload.get('phoneNumbers', []))
+    # 2) Lectura base para validar idempotencia (no duplicar número legacy).
+    current_numbers = api.person_settings.numbers.read(person_id=person_id, org_id=org_id)
+    current_payload = model_to_dict(current_numbers)
+    already_exists = any((num.get('directNumber') == legacy_phone_number) for num in current_payload.get('phoneNumbers', []))
     if already_exists:
         # 5) Resultado normalizado para logs/pipelines aguas abajo.
         result = {
             'status': 'skipped',
             'reason': 'legacy_number_already_present',
-            'api_response': {'before': before_payload},
+            'api_response': {'before': current_payload},
         }
         log('update_skipped', {'person_id': person_id, 'legacy_phone_number': legacy_phone_number})
         return result
 
     update = UpdatePersonNumbers(
         phone_numbers=[UpdatePersonPhoneNumber(action='ADD', external=legacy_phone_number, primary=False)],
-        enable_distinctive_ring_pattern=bool(before_payload.get('distinctiveRingEnabled', False)),
+        enable_distinctive_ring_pattern=bool(current_payload.get('distinctiveRingEnabled', False)),
     )
     # 3) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {'person_id': person_id, 'org_id': org_id, 'update': model_to_dict(update)}
@@ -47,12 +47,9 @@ def anadir_intercom_legacy_usuario(
 
     # 4) Ejecución del cambio contra Webex Calling.
     api.person_settings.numbers.update(person_id=person_id, update=update, org_id=org_id)
-    after = api.person_settings.numbers.read(person_id=person_id, org_id=org_id)
-    after_payload = model_to_dict(after)
-
     result = {
         'status': 'success',
-        'api_response': {'request': request, 'before': before_payload, 'after': after_payload},
+        'api_response': {'request': request},
     }
     log('update_response', result)
     return result

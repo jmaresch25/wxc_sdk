@@ -25,25 +25,21 @@ def configurar_permisos_salientes_defecto_ubicacion(
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
 
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = model_to_dict(api.telephony.location.permissions_out.read(entity_id=location_id, org_id=org_id))
     settings = OutgoingPermissions(use_custom_enabled=False, use_custom_permissions=False)
-    # 3) Payload final: registramos exactamente qué se enviará al endpoint.
+    # 2) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {
         'entity_id': location_id,
         'settings': model_to_dict(settings),
         'org_id': org_id,
     }
 
-    log('before_read', {'before': before})
     log('configure_request', request)
 
-    # 4) Ejecución del cambio contra Webex Calling.
+    # 3) Ejecución del cambio contra Webex Calling.
     api.telephony.location.permissions_out.configure(entity_id=location_id, settings=settings, org_id=org_id)
-    after = model_to_dict(api.telephony.location.permissions_out.read(entity_id=location_id, org_id=org_id))
 
-    # 5) Resultado normalizado para logs/pipelines aguas abajo.
-    result = {'status': 'success', 'api_response': {'before': before, 'after': after, 'request': request}}
+    # 4) Resultado normalizado para logs/pipelines aguas abajo.
+    result = {'status': 'success', 'api_response': {'request': request}}
     log('configure_response', result)
     return result
 

@@ -157,9 +157,6 @@ def configurar_desvio_prefijo53_usuario(
     # 1.1) Pre-chequeo obligatorio: corta temprano si token/usuario no habilitan Calling.
     _assert_person_calling_eligibility(api=api, person_id=person_id, org_id=org_id, log=log)
 
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = _read_forwarding_with_fallback(api=api, person_id=person_id, org_id=org_id, log=log)
-
     target_destination = destination or f'53{extension}'
     forwarding = PersonForwardingSetting(
         call_forwarding=CallForwardingPerson(
@@ -178,15 +175,13 @@ def configurar_desvio_prefijo53_usuario(
         'forwarding': model_to_dict(forwarding),
     }
 
-    log('before_read', {'before': before})
     log('configure_request', request)
 
-    # 4) Ejecución del cambio contra Webex Calling.
+    # 3) Ejecución del cambio contra Webex Calling.
     _configure_forwarding_with_fallback(api=api, person_id=person_id, org_id=org_id, forwarding=forwarding, log=log)
-    after = _read_forwarding_with_fallback(api=api, person_id=person_id, org_id=org_id, log=log)
 
-    # 5) Resultado normalizado para logs/pipelines aguas abajo.
-    result = {'status': 'success', 'api_response': {'before': before, 'after': after, 'request': request}}
+    # 4) Resultado normalizado para logs/pipelines aguas abajo.
+    result = {'status': 'success', 'api_response': {'request': request}}
     log('configure_response', result)
     return result
 

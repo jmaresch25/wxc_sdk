@@ -53,9 +53,8 @@ def configurar_llamadas_internas_ubicacion(
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
 
+    # 2) Leemos configuración actual para construir el update incremental.
     settings = api.telephony.location.internal_dialing.read(location_id=location_id, org_id=org_id)
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = model_to_dict(settings)
 
     settings.enable_unknown_extension_route_policy = enable_unknown_extension_route_policy
     if enable_unknown_extension_route_policy:
@@ -71,15 +70,13 @@ def configurar_llamadas_internas_ubicacion(
         'premise_route_type': premise_route_type,
         'org_id': org_id,
     }
-    log('before_read', {'before': before})
     log('update_request', request)
 
-    # 4) Ejecución del cambio contra Webex Calling.
+    # 3) Ejecución del cambio contra Webex Calling.
     api.telephony.location.internal_dialing.update(location_id=location_id, update=settings, org_id=org_id)
-    after = model_to_dict(api.telephony.location.internal_dialing.read(location_id=location_id, org_id=org_id))
 
-    # 5) Resultado normalizado para logs/pipelines aguas abajo.
-    result = {'status': 'success', 'api_response': {'before': before, 'after': after, 'request': request}}
+    # 4) Resultado normalizado para logs/pipelines aguas abajo.
+    result = {'status': 'success', 'api_response': {'request': request}}
     log('update_response', result)
     return result
 

@@ -24,30 +24,26 @@ def configurar_pstn_ubicacion(
     # 1) Inicialización: logger por acción y cliente API autenticado.
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
-    # 2) Snapshot previo: leemos estado actual para trazabilidad y rollback manual.
-    before = model_to_dict(api.telephony.pstn.read(location_id=location_id, org_id=org_id))
     options = model_to_dict(api.telephony.pstn.list(location_id=location_id, org_id=org_id))
 
-    # 3) Payload final: registramos exactamente qué se enviará al endpoint.
+    # 2) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {
         'location_id': location_id,
         'premise_route_type': premise_route_type,
         'premise_route_id': premise_route_id,
         'org_id': org_id,
     }
-    log('before_read', {'before': before, 'options': options})
-    log('configure_request', request)
+    log('configure_request', {**request, 'options': options})
 
-    # 4) Ejecución del cambio contra Webex Calling.
+    # 3) Ejecución del cambio contra Webex Calling.
     api.telephony.pstn.configure(
         location_id=location_id,
         premise_route_type=premise_route_type,
         premise_route_id=premise_route_id,
         org_id=org_id,
     )
-    after = model_to_dict(api.telephony.pstn.read(location_id=location_id, org_id=org_id))
-    # 5) Resultado normalizado para logs/pipelines aguas abajo.
-    result = {'status': 'success', 'api_response': {'before': before, 'after': after, 'options': options, 'request': request}}
+    # 4) Resultado normalizado para logs/pipelines aguas abajo.
+    result = {'status': 'success', 'api_response': {'options': options, 'request': request}}
     log('configure_response', result)
     return result
 
