@@ -77,6 +77,12 @@ def _parameter_columns() -> list[str]:
             if param not in seen:
                 seen.add(param)
                 ordered.append(param)
+
+    # Parámetros opcionales para modos extendidos (no bloquean por dependencias).
+    for optional_param in ['workspaces_lote_json', 'continue_on_error', 'skip_existing']:
+        if optional_param not in seen:
+            ordered.append(optional_param)
+            seen.add(optional_param)
     return ordered
 
 
@@ -112,6 +118,16 @@ def build_parameter_row(exports_dir: Path) -> tuple[list[str], dict[str, Any]]:
         'licenses': _split_semicolon_list(first_person.get('licenses')),
         'add_license_ids': [r['license_id'] for r in licenses if (r.get('license_id') or '').strip()][:2],
         'display_name': (first_workspace.get('name') or first_person.get('display_name') or '').strip() or None,
+        'workspaces_lote_json': [
+            {
+                'display_name': (first_workspace.get('name') or first_person.get('display_name') or '').strip() or 'MISSING_WORKSPACE_NAME',
+                'location_id': _first_non_empty(locations, 'location_id') or _first_non_empty(people, 'location_id'),
+                'extension': _first_non_empty(person_numbers, 'name'),
+                'primary_number': phone_number,
+            }
+        ],
+        'continue_on_error': True,
+        'skip_existing': True,
     }
 
     columns = _parameter_columns()
