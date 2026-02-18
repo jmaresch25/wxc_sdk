@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-from wxc_sdk.telephony.location import CallingLineId
+from wxc_sdk.telephony.location import CallingLineId, TelephonyLocation
 
 from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
@@ -21,19 +21,18 @@ def actualizar_cabecera_ubicacion(
     calling_line_name: str | None = None,
 ) -> dict[str, Any]:
     # 1) Inicialización: logger por acción y cliente API autenticado.
+    if not location_id:
+        raise ValueError('location_id es obligatorio')
+    if not phone_number:
+        raise ValueError('phone_number es obligatorio')
+
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
-    # 2) Leemos configuración actual para construir el update incremental.
-    settings = api.telephony.location.details(location_id=location_id, org_id=org_id)
-    if settings.calling_line_id is None:
-        settings.calling_line_id = CallingLineId(phone_number=phone_number)
-    else:
-        settings.calling_line_id.phone_number = phone_number
+    # 2) Actualizamos usando el método específico de ubicación con el objeto mínimo requerido.
+    calling_line = CallingLineId(phone_number=phone_number)
     if calling_line_name:
-        if settings.calling_line_id is None:
-            settings.calling_line_id = CallingLineId(name=calling_line_name, phone_number=phone_number)
-        else:
-            settings.calling_line_id.name = calling_line_name
+        calling_line.name = calling_line_name
+    settings = TelephonyLocation(calling_line_id=calling_line)
 
     # 3) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {
