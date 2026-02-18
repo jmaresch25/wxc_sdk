@@ -155,6 +155,12 @@ def _confirm(script_name: str, auto_confirm: bool) -> bool:
 
 def _params_for_script(script_name: str, parameter_map: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     required = SCRIPT_DEPENDENCIES[script_name]
+
+    # Caso especial MVP: workspaces_alta también puede ejecutarse en lote con
+    # `workspaces_lote_json` sin requerir `display_name`/`location_id`.
+    if script_name == 'workspaces_alta' and not _is_missing_value(parameter_map.get('workspaces_lote_json')):
+        required = ['workspaces_lote_json']
+
     missing = [dep for dep in required if _is_missing_value(parameter_map.get(dep))]
     if missing:
         return {}, missing
