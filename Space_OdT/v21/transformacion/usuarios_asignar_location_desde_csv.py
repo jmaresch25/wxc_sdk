@@ -12,8 +12,6 @@ from typing import Any
 if __package__ in {None, ''}:
     sys.path.append(str(Path(__file__).resolve().parents[3]))
 
-from wxc_sdk.licenses import LicenseProperties, LicenseRequest, LicenseRequestOperation
-
 if __package__ in {None, ''}:
     from Space_OdT.v21.transformacion.common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
 else:
@@ -22,20 +20,12 @@ else:
 SCRIPT_NAME = 'usuarios_asignar_location_desde_csv'
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_USERS_EXPORT = REPO_ROOT / '.artifacts' / 'exports' / 'people.json'
-DEFAULT_REPORT_CSV = REPO_ROOT / '.arifacts' / 'report' / 'people_to_location.csv'
+DEFAULT_REPORT_CSV = REPO_ROOT / '.artifacts' / 'report' / 'people_to_location.csv'
 
 CSV_HEADERS = [
     'selected',
-    'target_location_id',
     'person_id',
-    'email',
-    'display_name',
-    'current_location_id',
-    'calling_license_id',
-    'extension',
-    'phone_number',
-    'org_id',
-    'status',
+    'target_location_id',
 ]
 
 
@@ -55,11 +45,6 @@ def _is_truthy(raw: str | None) -> bool:
     return (raw or '').strip().lower() in {'1', 'true', 'yes', 'y', 'si', 'sí', 'x'}
 
 
-def _clean(raw: str | None) -> str | None:
-    value = (raw or '').strip()
-    return value or None
-
-
 def generate_csv_from_people_json(*, people_json: Path, output_csv: Path, overwrite: bool = False) -> Path:
     if output_csv.exists() and not overwrite:
         return output_csv
@@ -73,16 +58,8 @@ def generate_csv_from_people_json(*, people_json: Path, output_csv: Path, overwr
             writer.writerow(
                 {
                     'selected': '',
-                    'target_location_id': '',
                     'person_id': (person.get('person_id') or person.get('id') or '').strip(),
-                    'email': (person.get('email') or '').strip(),
-                    'display_name': (person.get('display_name') or person.get('displayName') or '').strip(),
-                    'current_location_id': (person.get('location_id') or person.get('locationId') or '').strip(),
-                    'calling_license_id': '',
-                    'extension': '',
-                    'phone_number': '',
-                    'org_id': (person.get('org_id') or person.get('orgId') or '').strip(),
-                    'status': (person.get('status') or '').strip(),
+                    'target_location_id': '',
                 }
             )
     return output_csv
@@ -103,39 +80,8 @@ def _load_selected_rows(csv_path: Path) -> list[dict[str, str]]:
     return selected
 
 
-def _apply_with_license_assignment(api: Any, row: dict[str, str]) -> dict[str, Any]:
-    """Ruta preferida SDK: asignar licencia de calling con propiedades de location."""
-    person_id = row['person_id'].strip()
-    target_location_id = row['target_location_id'].strip()
-    calling_license_id = (row.get('calling_license_id') or '').strip()
-    if not calling_license_id:
-        raise ValueError('calling_license_id es obligatorio para asignación por licencias')
-
-    props = LicenseProperties(
-        location_id=target_location_id,
-        extension=_clean(row.get('extension')),
-        phone_number=_clean(row.get('phone_number')),
-    )
-    license_request = LicenseRequest(id=calling_license_id, operation=LicenseRequestOperation.add, properties=props)
-
-    response = api.licenses.assign_licenses_to_users(
-        person_id=person_id,
-        licenses=[license_request],
-        org_id=_clean(row.get('org_id')),
-    )
-    return {
-        'person_id': person_id,
-        'email': (row.get('email') or '').strip(),
-        'from_location_id': _clean(row.get('current_location_id')),
-        'to_location_id': target_location_id,
-        'path': 'licenses.assign_licenses_to_users',
-        'api_response': model_to_dict(response),
-        'status': 'updated',
-    }
-
-
 def _apply_with_people_update(api: Any, row: dict[str, str]) -> dict[str, Any]:
-    """Fallback SDK: update del recurso people cuando no se aporta licencia."""
+    """Asigna location usando update del recurso people (campos mínimos obligatorios)."""
     person_id = row['person_id'].strip()
     target_location_id = row['target_location_id'].strip()
 
@@ -146,7 +92,6 @@ def _apply_with_people_update(api: Any, row: dict[str, str]) -> dict[str, Any]:
 
     return {
         'person_id': person_id,
-        'email': (row.get('email') or '').strip(),
         'from_location_id': before_location_id,
         'to_location_id': target_location_id,
         'updated_location_id': updated.location_id,
@@ -167,14 +112,8 @@ def assign_users_to_locations(*, csv_path: Path, token: str | None = None, dry_r
             preview.append(
                 {
                     'person_id': row['person_id'].strip(),
-                    'email': (row.get('email') or '').strip(),
-                    'from_location_id': _clean(row.get('current_location_id')),
                     'to_location_id': row['target_location_id'].strip(),
-                    'preferred_sdk_path': (
-                        'licenses.assign_licenses_to_users'
-                        if (row.get('calling_license_id') or '').strip()
-                        else 'people.update'
-                    ),
+                    'sdk_path': 'people.update',
                 }
             )
         print(json.dumps({'dry_run': True, 'changes': preview}, indent=2, ensure_ascii=False))
@@ -185,10 +124,7 @@ def assign_users_to_locations(*, csv_path: Path, token: str | None = None, dry_r
     log = action_logger(SCRIPT_NAME)
     results: list[dict[str, Any]] = []
     for row in rows:
-        if (row.get('calling_license_id') or '').strip():
-            payload = _apply_with_license_assignment(api, row)
-        else:
-            payload = _apply_with_people_update(api, row)
+        payload = _apply_with_people_update(api, row)
         log('user_location_updated', payload)
         results.append(payload)
 
@@ -198,7 +134,7 @@ def assign_users_to_locations(*, csv_path: Path, token: str | None = None, dry_r
 
 def main() -> None:
     parser = argparse.ArgumentParser(description='Asigna usuarios seleccionados en CSV a una location objetivo')
-    parser.add_argument('--people-json', type=Path, default=DEFAULT_USERS_EXPORT, help='Export de personas (JSON)')
+    parser.add_argument('--people-json', type=Path, default=DEFAULT_USERS_EXPORT, help='Export de personas (JSON), solo para generar CSV inicial')
     parser.add_argument('--csv', type=Path, default=DEFAULT_REPORT_CSV, help='CSV de control para selección/mapeo')
     parser.add_argument('--token', default=None)
     parser.add_argument('--overwrite-csv', action='store_true', help='Sobrescribe CSV aunque ya exista')
@@ -206,11 +142,15 @@ def main() -> None:
     parser.add_argument('--apply', action='store_true', help='Aplica cambios reales (sin este flag se hace dry-run)')
     args = parser.parse_args()
 
-    csv_path = generate_csv_from_people_json(
-        people_json=args.people_json,
-        output_csv=args.csv,
-        overwrite=args.overwrite_csv,
-    )
+    should_generate_csv = args.generate_only or args.overwrite_csv or not args.csv.exists()
+    if should_generate_csv:
+        csv_path = generate_csv_from_people_json(
+            people_json=args.people_json,
+            output_csv=args.csv,
+            overwrite=args.overwrite_csv,
+        )
+    else:
+        csv_path = args.csv
     print(f'CSV disponible en: {csv_path}')
 
     if args.generate_only:
