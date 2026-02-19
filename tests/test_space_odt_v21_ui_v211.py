@@ -24,3 +24,28 @@ def test_preview_rejects_actions_in_development():
         _preview_action('workspaces_alta', rows=[{}], mapping={})
 
     assert ACTION_DESCRIPTIONS['workspaces_alta'] == '... en desarrollo ...'
+
+
+def test_apply_action_bulk_returns_orders(monkeypatch):
+    from Space_OdT.v21 import ui_v211
+
+    monkeypatch.setitem(ui_v211.HANDLERS, 'usuarios_modificar_licencias', lambda token, **kwargs: {'status_code': 200, 'payload': kwargs})
+
+    rows = [
+        {'person_id': 'p1', 'add_license_ids': 'lic-a;lic-b'},
+        {'person_id': 'p2', 'add_license_ids': 'lic-c'},
+        {'person_id': 'p3', 'add_license_ids': 'lic-d'},
+    ]
+    result = ui_v211._apply_action(
+        action_id='usuarios_modificar_licencias',
+        rows=rows,
+        mapping={},
+        token='tkn',
+        bulk=True,
+        chunk_size=2,
+        max_workers=2,
+    )
+
+    assert result['bulk']['enabled'] is True
+    assert result['bulk']['orders_total'] == 2
+    assert result['total_rows'] == 3
