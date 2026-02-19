@@ -56,6 +56,16 @@ ACTION_CATALOG = {
     ],
 }
 
+EN_DESARROLLO_ACTIONS = {
+    'ubicacion_configurar_pstn',
+    'usuarios_alta_people',
+    'usuarios_alta_scim',
+    'workspaces_alta',
+    'workspaces_anadir_intercom_legacy',
+    'workspaces_configurar_desvio_prefijo53',
+    'workspaces_configurar_perfil_saliente_custom',
+}
+
 ACTION_DESCRIPTIONS: dict[str, str] = {
     'ubicacion_configurar_pstn': 'Configura la conexión PSTN de la ubicación mediante premise route.',
     'ubicacion_alta_numeraciones_desactivadas': 'Da de alta numeraciones en estado desactivado para la ubicación.',
@@ -73,6 +83,14 @@ ACTION_DESCRIPTIONS: dict[str, str] = {
     'workspaces_configurar_desvio_prefijo53': 'Configura desvío prefijo 53 en workspace.',
     'workspaces_configurar_perfil_saliente_custom': 'Configura perfil saliente personalizado en workspace.',
 }
+
+for _section_actions in ACTION_CATALOG.values():
+    for _action in _section_actions:
+        if _action['id'] in EN_DESARROLLO_ACTIONS:
+            _action['label'] = f"{_action['label']} · en desarrollo"
+
+for _action_id in EN_DESARROLLO_ACTIONS:
+    ACTION_DESCRIPTIONS[_action_id] = '... en desarrollo ...'
 
 DATASET_NAMES = {
     'locations': 'CSV 1 · Ubicaciones',
@@ -192,6 +210,11 @@ def _rows_for_action(*, action_id: str | None, state: dict[str, Any]) -> list[di
     raise ValueError(f'Acción no soportada: {action_id}')
 
 
+def _ensure_action_available(action_id: str) -> None:
+    if action_id in EN_DESARROLLO_ACTIONS:
+        raise ValueError(f'Acción {action_id} ... en desarrollo ...')
+
+
 def _extract(row: dict[str, Any], source: str | None) -> Any:
     if not source:
         return None
@@ -225,7 +248,7 @@ def _build_params(action_id: str, row: dict[str, Any], mapping: dict[str, str]) 
     params: dict[str, Any] = {}
     missing: list[str] = []
     for req in required:
-        value = _normalize_for_param(req, _extract(row, mapping.get(req)))
+        value = _normalize_for_param(req, _extract(row, mapping.get(req, req)))
         if value in (None, '', []):
             missing.append(req)
         else:
@@ -234,7 +257,7 @@ def _build_params(action_id: str, row: dict[str, Any], mapping: dict[str, str]) 
     for key in accepted:
         if key in params:
             continue
-        value = _normalize_for_param(key, _extract(row, mapping.get(key)))
+        value = _normalize_for_param(key, _extract(row, mapping.get(key, key)))
         if value not in (None, '', []):
             params[key] = value
 
@@ -242,6 +265,7 @@ def _build_params(action_id: str, row: dict[str, Any], mapping: dict[str, str]) 
 
 
 def _preview_action(action_id: str, rows: list[dict[str, Any]], mapping: dict[str, str]) -> dict[str, Any]:
+    _ensure_action_available(action_id)
     detailed_rows = []
     for idx, row in enumerate(rows, start=1):
         params, missing = _build_params(action_id, row, mapping)
@@ -257,6 +281,7 @@ def _preview_action(action_id: str, rows: list[dict[str, Any]], mapping: dict[st
 
 
 def _apply_action(*, action_id: str, rows: list[dict[str, Any]], mapping: dict[str, str], token: str) -> dict[str, Any]:
+    _ensure_action_available(action_id)
     logs_dir = Path(__file__).resolve().parent / 'transformacion' / 'logs'
     logs_dir.mkdir(parents=True, exist_ok=True)
     log_path = logs_dir / f'{action_id}.log'
