@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+import csv
 
 import pytest
 
 from Space_OdT.v21.transformacion import launcher_csv_dependencias as launcher
+from Space_OdT.v21.transformacion import usuarios_asignar_location_desde_csv as users_csv
 
 
 class _ThrottledError(Exception):
@@ -134,3 +136,41 @@ def test_launcher_supports_workspace_forwarding_telephony_script():
 
     assert result['status'] == 'dry_run'
     assert result['params']['workspace_id'] == 'w1'
+
+
+
+def test_people_to_location_csv_headers_are_minimal_required_fields(tmp_path):
+    people_json = tmp_path / 'people.json'
+    people_json.write_text('[{"id":"person-1"}]', encoding='utf-8')
+    csv_path = tmp_path / 'people_to_location.csv'
+
+    users_csv.generate_csv_from_people_json(people_json=people_json, output_csv=csv_path, overwrite=True)
+
+    with csv_path.open('r', encoding='utf-8', newline='') as handle:
+        reader = csv.DictReader(handle)
+        assert reader.fieldnames == ['selected', 'person_id', 'target_location_id']
+        first = next(reader)
+
+    assert first['person_id'] == 'person-1'
+    assert first['target_location_id'] == ''
+
+
+def test_launcher_includes_people_to_location_csv_head_in_invocation(monkeypatch, tmp_path):
+    report_csv = tmp_path / 'people_to_location.csv'
+    report_csv.write_text('selected,person_id,target_location_id\n1,p-1,loc-1\n', encoding='utf-8')
+
+    monkeypatch.setattr(launcher, 'generate_csv_from_people_json', lambda **kwargs: report_csv)
+
+    result = launcher._run_script(
+        script_name='usuarios_asignar_location_desde_csv',
+        parameter_map={'csv_path': str(report_csv), 'people_json': str(tmp_path / 'people.json')},
+        token='tkn',
+        auto_confirm=True,
+        dry_run=True,
+    )
+
+    assert result['status'] == 'dry_run'
+    preview = result['invocation']['csv_preview']
+    assert preview['exists'] is True
+    assert preview['columns'] == ['selected', 'person_id', 'target_location_id']
+    assert preview['head'][0]['person_id'] == 'p-1'
