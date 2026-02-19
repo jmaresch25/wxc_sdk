@@ -37,6 +37,35 @@ python Space_OdT\cli.py inventory_run --out-dir .\.artifacts\ --open-report
 
 The static HTML report highlights the new V1 artifacts in a dedicated section so new coverage is visible quickly.
 
+
+
+## V11 inventory retriever UI (on-demand)
+
+V11 añade una UI ligera para recuperar artifacts de V1 **bajo demanda** (un CSV por acción), evitando la generación masiva completa cuando hay miles de registros.
+
+### Lanzamiento
+
+```bash
+python -m Space_OdT.cli v11_inventory_ui --out-dir .artifacts --v21-ui-port 8772 --open-report
+```
+
+- URL por defecto: `http://127.0.0.1:8772`
+- Selector de artifact (lista de modules V1) + botón **GET CSV**.
+- Estado del job en pantalla (éxito/error + ruta CSV generado).
+- Salida: `.artifacts/exports/<artifact>.csv`.
+- En v11 no se generan JSON para la acción on-demand.
+
+### Consultas JSON en pantalla (paginadas)
+
+La propia UI incluye una segunda sección para inspección rápida de API en formato JSON:
+
+- Lista de routing groups
+- Listado de licencias
+- Obtener `person_id` de personas
+- Lista de `workspace_id`
+
+Incluye `page` y `page_size` para no saturar pantalla/API en escenarios de 3000-4000+ registros.
+
 ## V2 bulk softphone provisioning (CLI)
 
 V2 adds an async bulk runner for provisioning existing users as softphones using V1 inventory as lookup cache.
