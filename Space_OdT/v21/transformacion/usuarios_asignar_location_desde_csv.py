@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from wxc_sdk.licenses import LicenseProperties, LicenseRequest, LicenseRequestOperation
+
 if __package__ in {None, ''}:
     sys.path.append(str(Path(__file__).resolve().parents[3]))
 
@@ -27,6 +29,8 @@ CSV_HEADERS = [
     'person_id',
     'target_location_id',
 ]
+
+_CALLING_LICENSE_IDS_CACHE: set[str] | None = None
 
 
 def _load_people(path: Path) -> list[dict[str, Any]]:
@@ -80,12 +84,12 @@ def _load_selected_rows(csv_path: Path) -> list[dict[str, str]]:
     return selected
 
 
-def _apply_with_people_update(api: Any, row: dict[str, str]) -> dict[str, Any]:
+def _apply_with_people_update(api: Any, row: dict[str, str], *, person: Any | None = None) -> dict[str, Any]:
     """Asigna location usando update del recurso people (campos mínimos obligatorios)."""
     person_id = row['person_id'].strip()
     target_location_id = row['target_location_id'].strip()
 
-    person = api.people.details(person_id=person_id, calling_data=True)
+    person = person or api.people.details(person_id=person_id, calling_data=True)
     before_location_id = person.location_id
     person.location_id = target_location_id
     updated = api.people.update(person=person, calling_data=True)
@@ -100,31 +104,87 @@ def _apply_with_people_update(api: Any, row: dict[str, str]) -> dict[str, Any]:
     }
 
 
+def _calling_license_id_for_person(api: Any, person: Any) -> str | None:
+    """Devuelve el ID de licencia calling asignada al usuario, si existe."""
+    global _CALLING_LICENSE_IDS_CACHE
+
+    if _CALLING_LICENSE_IDS_CACHE is None:
+        _CALLING_LICENSE_IDS_CACHE = {
+            lic.license_id
+            for lic in api.licenses.list()
+            if getattr(lic, 'webex_calling', False)
+        }
+
+    for license_id in getattr(person, 'licenses', []) or []:
+        if license_id in _CALLING_LICENSE_IDS_CACHE:
+            return license_id
+    return None
+
+
+def _apply_with_license_assignment(api: Any, row: dict[str, str], *, calling_license_id: str) -> dict[str, Any]:
+    person_id = row['person_id'].strip()
+    target_location_id = row['target_location_id'].strip()
+
+    response = api.licenses.assign_licenses_to_users(
+        person_id=person_id,
+        licenses=[
+            LicenseRequest(
+                id=calling_license_id,
+                operation=LicenseRequestOperation.add,
+                properties=LicenseProperties(location_id=target_location_id),
+            )
+        ],
+    )
+
+    return {
+        'person_id': person_id,
+        'to_location_id': target_location_id,
+        'calling_license_id': calling_license_id,
+        'path': 'licenses.assign_licenses_to_users',
+        'status': 'updated',
+        'response': model_to_dict(response),
+    }
+
+
+def _apply_location_change(api: Any, row: dict[str, str]) -> dict[str, Any]:
+    person_id = row['person_id'].strip()
+    person = api.people.details(person_id=person_id, calling_data=True)
+    calling_license_id = _calling_license_id_for_person(api, person)
+    if calling_license_id:
+        return _apply_with_license_assignment(api, row, calling_license_id=calling_license_id)
+    return _apply_with_people_update(api, row, person=person)
+
+
 def assign_users_to_locations(*, csv_path: Path, token: str | None = None, dry_run: bool = True) -> list[dict[str, Any]]:
     rows = _load_selected_rows(csv_path)
     if not rows:
         print(f'No hay filas seleccionadas en {csv_path}. Marca selected=1 para aplicar cambios.')
         return []
 
+    load_runtime_env()
+    api = create_api(get_token(token))
+
     if dry_run:
         preview = []
         for row in rows:
+            person = api.people.details(person_id=row['person_id'].strip(), calling_data=True)
+            calling_license_id = _calling_license_id_for_person(api, person)
+            sdk_path = 'licenses.assign_licenses_to_users' if calling_license_id else 'people.update'
             preview.append(
                 {
                     'person_id': row['person_id'].strip(),
                     'to_location_id': row['target_location_id'].strip(),
-                    'sdk_path': 'people.update',
+                    'sdk_path': sdk_path,
+                    'calling_license_id': calling_license_id,
                 }
             )
         print(json.dumps({'dry_run': True, 'changes': preview}, indent=2, ensure_ascii=False))
         return preview
 
-    load_runtime_env()
-    api = create_api(get_token(token))
     log = action_logger(SCRIPT_NAME)
     results: list[dict[str, Any]] = []
     for row in rows:
-        payload = _apply_with_people_update(api, row)
+        payload = _apply_location_change(api, row)
         log('user_location_updated', payload)
         results.append(payload)
 
