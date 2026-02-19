@@ -38,7 +38,7 @@ def load_runtime_env() -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='Space_OdT deterministic Webex read-only exporter')
-    parser.add_argument('command', choices=['inventory_run', 'v2_bulk_run', 'v21_softphone_bulk_run', 'v21_softphone_ui', 'v211_softphone_ui'])
+    parser.add_argument('command', choices=['inventory_run', 'v2_bulk_run', 'v21_softphone_bulk_run', 'v21_softphone_ui', 'v211_softphone_ui', 'v11_inventory_ui'])
     parser.add_argument('--out-dir', default='.artifacts')
     parser.add_argument('--no-report', action='store_true')
     parser.add_argument('--no-cache', action='store_true')
@@ -146,6 +146,17 @@ def main() -> None:
             raise SystemExit(str(exc))
         launch_v211_ui(token=token, host=args.v21_ui_host, port=args.v21_ui_port)
         raise SystemExit(0)
+
+    if args.command == 'v11_inventory_ui':
+        from Space_OdT.v11 import launch_v11_ui
+
+        try:
+            token = resolve_access_token(args.token)
+        except MissingTokenError as exc:
+            raise SystemExit(str(exc))
+        launch_v11_ui(token=token, out_dir=Path(args.out_dir), host=args.v21_ui_host, port=args.v21_ui_port, open_browser=args.open_report)
+        raise SystemExit(0)
+
 
     if args.command == 'v21_softphone_bulk_run':
         from Space_OdT.v21.engine import MissingV21InputsError, V21Runner
