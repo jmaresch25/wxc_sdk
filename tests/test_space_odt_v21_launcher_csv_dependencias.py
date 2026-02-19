@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+import csv
 
 import pytest
 
 from Space_OdT.v21.transformacion import launcher_csv_dependencias as launcher
+from Space_OdT.v21.transformacion import usuarios_asignar_location_desde_csv as users_csv
 
 
 class _ThrottledError(Exception):
@@ -134,3 +136,97 @@ def test_launcher_supports_workspace_forwarding_telephony_script():
 
     assert result['status'] == 'dry_run'
     assert result['params']['workspace_id'] == 'w1'
+
+
+
+def test_people_to_location_csv_headers_are_minimal_required_fields(tmp_path):
+    people_json = tmp_path / 'people.json'
+    people_json.write_text('[{"id":"person-1"}]', encoding='utf-8')
+    csv_path = tmp_path / 'people_to_location.csv'
+
+    users_csv.generate_csv_from_people_json(people_json=people_json, output_csv=csv_path, overwrite=True)
+
+    with csv_path.open('r', encoding='utf-8', newline='') as handle:
+        reader = csv.DictReader(handle)
+        assert reader.fieldnames == ['selected', 'person_id', 'target_location_id']
+        first = next(reader)
+
+    assert first['person_id'] == 'person-1'
+    assert first['target_location_id'] == ''
+
+
+def test_launcher_includes_people_to_location_csv_head_in_invocation(monkeypatch, tmp_path):
+    report_csv = tmp_path / 'people_to_location.csv'
+    report_csv.write_text('selected,person_id,target_location_id\n1,p-1,loc-1\n', encoding='utf-8')
+
+    monkeypatch.setattr(launcher, 'generate_csv_from_people_json', lambda **kwargs: report_csv)
+
+    result = launcher._run_script(
+        script_name='usuarios_asignar_location_desde_csv',
+        parameter_map={'csv_path': str(report_csv), 'people_json': str(tmp_path / 'people.json')},
+        token='tkn',
+        auto_confirm=True,
+        dry_run=True,
+    )
+
+    assert result['status'] == 'dry_run'
+    preview = result['invocation']['csv_preview']
+    assert preview['exists'] is True
+    assert preview['columns'] == ['selected', 'person_id', 'target_location_id']
+    assert preview['head'][0]['person_id'] == 'p-1'
+
+
+
+def test_apply_location_change_uses_people_update_without_calling_license(monkeypatch):
+    class _People:
+        def __init__(self):
+            self.updated = False
+
+        def details(self, person_id, calling_data=True):
+            return type('P', (), {'person_id': person_id, 'location_id': 'old-loc', 'licenses': [], 'phone_numbers': [], 'extension': None})()
+
+        def update(self, person, calling_data=True):
+            self.updated = True
+            return type('U', (), {'location_id': person.location_id})()
+
+    class _Licenses:
+        def list(self):
+            return []
+
+    api = type('API', (), {'people': _People(), 'licenses': _Licenses()})()
+
+    result = users_csv._apply_location_change(api, {'person_id': 'p1', 'target_location_id': 'loc-2'})
+
+    assert result['path'] == 'people.update'
+    assert result['to_location_id'] == 'loc-2'
+
+
+def test_apply_location_change_uses_license_assignment_for_calling_users():
+    class _License:
+        license_id = 'lic-calling'
+        webex_calling = True
+
+    class _People:
+        def details(self, person_id, calling_data=True):
+            phone = type('Phone', (), {'value': '+34999999999'})()
+            return type('P', (), {
+                'person_id': person_id,
+                'location_id': 'old-loc',
+                'licenses': ['lic-calling'],
+                'phone_numbers': [phone],
+                'extension': '1234',
+            })()
+
+    class _Licenses:
+        def list(self):
+            return [_License()]
+
+        def assign_licenses_to_users(self, person_id=None, licenses=None):
+            return {'personId': person_id, 'licenses': licenses}
+
+    api = type('API', (), {'people': _People(), 'licenses': _Licenses()})()
+
+    result = users_csv._apply_location_change(api, {'person_id': 'p1', 'target_location_id': 'loc-2'})
+
+    assert result['path'] == 'licenses.assign_licenses_to_users'
+    assert result['calling_license_id'] == 'lic-calling'

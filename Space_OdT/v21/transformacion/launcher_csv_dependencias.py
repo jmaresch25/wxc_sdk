@@ -27,6 +27,7 @@ from .usuarios_anadir_intercom_legacy import anadir_intercom_legacy_usuario
 from .usuarios_asignar_location_desde_csv import (
     DEFAULT_REPORT_CSV,
     DEFAULT_USERS_EXPORT,
+    CSV_HEADERS as PEOPLE_TO_LOCATION_CSV_HEADERS,
     assign_users_to_locations,
     generate_csv_from_people_json,
 )
@@ -169,6 +170,20 @@ def _coerce_param_value(value: Any, annotation: Any) -> Any:
     return value
 
 
+
+
+def _preview_csv_head(csv_path: Path, *, max_rows: int = 5) -> dict[str, Any]:
+    if not csv_path.exists():
+        return {'csv_path': str(csv_path), 'exists': False, 'head': []}
+    with csv_path.open('r', encoding='utf-8-sig', newline='') as handle:
+        reader = csv.DictReader(handle)
+        return {
+            'csv_path': str(csv_path),
+            'exists': True,
+            'columns': reader.fieldnames or [],
+            'head': [row for _, row in zip(range(max_rows), reader)],
+        }
+
 def _read_parameter_map(csv_path: Path) -> dict[str, Any]:
     """Lee CSV generado por `generar_csv_candidatos_desde_artifacts`: headers=parámetros, 1 fila de datos."""
     with csv_path.open('r', encoding='utf-8', newline='') as handle:
@@ -255,25 +270,36 @@ def _run_script(
     if not _confirm(script_name, auto_confirm=auto_confirm):
         return {'script_name': script_name, 'status': 'skipped', 'reason': 'user_cancelled'}
 
-    if dry_run:
-        return {'script_name': script_name, 'status': 'dry_run', 'params': params, 'invocation': invocation_payload}
-
     if script_name == 'usuarios_asignar_location_desde_csv':
-        report_csv = Path(params.get('csv_path') or DEFAULT_REPORT_CSV)
-        people_json = Path(params.get('people_json') or DEFAULT_USERS_EXPORT)
-        overwrite_csv = bool(params.get('overwrite_csv'))
-        generate_only = bool(params.get('generate_only'))
+        report_csv = Path(parameter_map.get('csv_path') or DEFAULT_REPORT_CSV)
+        people_json = Path(parameter_map.get('people_json') or DEFAULT_USERS_EXPORT)
+        overwrite_csv = bool(parameter_map.get('overwrite_csv'))
+        generate_only = bool(parameter_map.get('generate_only'))
 
         generated_csv = generate_csv_from_people_json(
             people_json=people_json,
             output_csv=report_csv,
             overwrite=overwrite_csv,
         )
+        csv_preview = _preview_csv_head(generated_csv)
+        invocation_payload['csv_preview'] = csv_preview
+        invocation_payload['required_csv_columns'] = PEOPLE_TO_LOCATION_CSV_HEADERS
+        LOGGER.info('Invocación preparada (usuarios_asignar_location_desde_csv):\n%s', json.dumps(invocation_payload, indent=2, ensure_ascii=False, sort_keys=True))
+
+        if dry_run:
+            return {
+                'script_name': script_name,
+                'status': 'dry_run',
+                'params': params,
+                'invocation': invocation_payload,
+                'result': {'csv_path': str(generated_csv), 'csv_preview': csv_preview, 'required_csv_columns': PEOPLE_TO_LOCATION_CSV_HEADERS},
+            }
+
         if generate_only:
             return {
                 'script_name': script_name,
                 'status': 'executed',
-                'result': {'csv_path': str(generated_csv), 'generate_only': True},
+                'result': {'csv_path': str(generated_csv), 'generate_only': True, 'csv_preview': csv_preview},
                 'invocation': invocation_payload,
             }
 
@@ -281,9 +307,12 @@ def _run_script(
         return {
             'script_name': script_name,
             'status': 'executed',
-            'result': {'csv_path': str(generated_csv), 'updates': result},
+            'result': {'csv_path': str(generated_csv), 'updates': result, 'csv_preview': csv_preview},
             'invocation': invocation_payload,
         }
+
+    if dry_run:
+        return {'script_name': script_name, 'status': 'dry_run', 'params': params, 'invocation': invocation_payload}
 
     try:
         result = _invoke_with_retry_after(handler=HANDLERS[script_name], token=token, params=params)
