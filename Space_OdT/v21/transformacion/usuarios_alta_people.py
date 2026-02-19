@@ -21,7 +21,7 @@ def alta_usuario_people(
     display_name: str | None = None,
     location_id: str | None = None,
     extension: str | None = None,
-    licenses: list[str] | None = None,
+    licenses: list[str] | str | None = None,
     phone_number: str | None = None,
     org_id: str | None = None,
 ) -> dict[str, Any]:
@@ -41,6 +41,8 @@ def alta_usuario_people(
         log('create_skipped', {'email': email, 'existing_count': len(existing)})
         return result
 
+    normalized_licenses = _normalize_licenses(licenses)
+
     person_settings = Person(
         emails=[email],
         first_name=first_name,
@@ -48,7 +50,7 @@ def alta_usuario_people(
         display_name=display_name or f'{first_name} {last_name}'.strip(),
         location_id=location_id,
         extension=extension,
-        licenses=licenses,
+        licenses=normalized_licenses,
         phone_numbers=phone_number and [PhoneNumber(type=PhoneNumberType.work, value=phone_number)] or None,
     )
 
@@ -66,6 +68,15 @@ def alta_usuario_people(
     result = {'status': 'success', 'api_response': {'request': request, 'created': created_payload}}
     log('create_response', result)
     return result
+
+
+def _normalize_licenses(licenses: list[str] | str | None) -> list[str] | None:
+    if licenses is None:
+        return None
+    if isinstance(licenses, str):
+        values = [item.strip() for item in licenses.split(',')]
+        return [item for item in values if item] or None
+    return [item.strip() for item in licenses if item and item.strip()] or None
 
 
 def main() -> None:
