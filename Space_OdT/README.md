@@ -229,3 +229,28 @@ python -m Space_OdT.cli v211_softphone_ui --v21-ui-port 8771
 Notas operativas:
 - esta UI reutiliza los scripts de `Space_OdT/v21/transformacion` como backend real;
 - `.artifacts` se mantiene para salidas de run legacy, mientras que la traza de ejecución de acciones UI queda en `transformacion/logs`.
+
+## UI v11 inventario bajo demanda (`v11_inventory_ui`)
+
+Para arrancar la UI v11 de inventario/retrieval on-demand:
+
+```bash
+python -m Space_OdT.cli v11_inventory_ui --out-dir .artifacts --v21-ui-port 8772
+```
+
+- Abre: `http://127.0.0.1:8772`.
+- Si no pasas `--token`, el comando usa `WEBEX_ACCESS_TOKEN` (por variable de entorno o `.env`).
+- Desde la UI puedes lanzar el retrieval por secciones y revisar el resultado en `.artifacts/v11/`.
+
+
+## UI v2.1.1 operación técnica (`v211_softphone_ui`)
+
+Para arrancar la UI v2.1.1 (operación técnica experta):
+
+```bash
+python -m Space_OdT.cli v211_softphone_ui --out-dir .artifacts --v21-ui-port 8771
+```
+
+- Abre: `http://127.0.0.1:8771`.
+- Si no pasas `--token`, el comando usa `WEBEX_ACCESS_TOKEN` (por variable de entorno o `.env`).
+- La ejecución técnica de acciones queda registrada en `Space_OdT/v21/transformacion/logs/`.
