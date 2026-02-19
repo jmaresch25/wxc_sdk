@@ -459,6 +459,11 @@ def _html_page() -> str:
     .submenu button.active { background:#2d7dae; }
     pre { background:#0b1b28; border:1px solid #2a5575; border-radius:8px; padding:10px; max-height:320px; overflow:auto; }
     .row { display:flex; gap:8px; flex-wrap:wrap; }
+    .bulk-box { margin-top:10px; border:1px solid #356585; border-radius:8px; padding:10px; background:#123149; }
+    .bulk-box h3 { margin:0 0 8px; font-size:16px; }
+    .bulk-grid { display:grid; grid-template-columns:repeat(3, minmax(140px, 1fr)); gap:8px; align-items:end; }
+    .bulk-grid label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted); }
+    .bulk-grid input[type=number] { width:100%; background:#0c2030; color:var(--text); border:1px solid #2b5878; border-radius:8px; padding:6px 8px; }
     .hidden { display:none; }
   </style>
 </head>
@@ -504,10 +509,21 @@ def _html_page() -> str:
           <button onclick="previewAction()">Preview parámetros</button>
           <button onclick="applyAction()">Aplicar</button>
         </div>
-        <div class="row" style="margin-top:8px;">
-          <label><input type="checkbox" id="bulk-enabled" /> Modo bulk</label>
-          <label>Tamaño lote <input id="bulk-chunk-size" type="number" value="200" min="1" style="width:80px;" /></label>
-          <label>Workers <input id="bulk-max-workers" type="number" value="4" min="1" style="width:70px;" /></label>
+        <div class="bulk-box">
+          <h3>Tema bulk v2.1.1</h3>
+          <p class="hint">Activa ejecución asíncrona por lotes según PLAN_BULK_V211_ASYNC.md.</p>
+          <div class="bulk-grid">
+            <label>
+              <span><input type="checkbox" id="bulk-enabled" /> Modo bulk</span>
+            </label>
+            <label>Tamaño lote
+              <input id="bulk-chunk-size" type="number" value="200" min="1" />
+            </label>
+            <label>Workers
+              <input id="bulk-max-workers" type="number" value="4" min="1" />
+            </label>
+          </div>
+          <p class="hint" id="bulk-summary">Bulk desactivado.</p>
         </div>
       </section>
 
@@ -579,6 +595,7 @@ function selectAction(actionId, label){
   document.querySelectorAll('.submenu button').forEach(b => b.classList.remove('active'));
   const active = document.querySelector(`.submenu button[data-action="${actionId}"]`);
   if(active){ active.classList.add('active'); }
+  updateBulkSummary();
 }
 
 function openSection(section){
@@ -663,6 +680,7 @@ async function loadMaster(){
   };
   const res = await api('/api/master/upload', 'POST', {datasets});
   document.getElementById('response-box').textContent = JSON.stringify(res, null, 2);
+  updateBulkSummary();
 }
 
 async function saveMapping(){
@@ -679,6 +697,62 @@ async function saveMapping(){
 async function refreshState(){
   const res = await api('/api/master/state');
   document.getElementById('response-box').textContent = JSON.stringify(res, null, 2);
+  updateBulkSummary();
+}
+
+function readPositiveInt(id, fallbackValue){
+  const input = document.getElementById(id);
+  const value = Number(input?.value || fallbackValue);
+  if(!Number.isFinite(value) || value < 1){
+    if(input){ input.value = String(fallbackValue); }
+    return fallbackValue;
+  }
+  return Math.floor(value);
+}
+
+function rowsForSelectedAction(){
+  const box = document.getElementById('response-box');
+  if(!box || !selectedAction){ return 0; }
+  try{
+    const payload = JSON.parse(box.textContent || '{}');
+    const sections = payload.datasets || {};
+    const actionToDataset = {
+      ubicacion_configurar_pstn: 'locations',
+      ubicacion_alta_numeraciones_desactivadas: 'numbers',
+      ubicacion_actualizar_cabecera: 'locations',
+      ubicacion_configurar_llamadas_internas: 'locations',
+      ubicacion_configurar_permisos_salientes_defecto: 'locations',
+      usuarios_alta_people: 'users',
+      usuarios_alta_scim: 'users',
+      usuarios_modificar_licencias: 'users',
+      usuarios_anadir_intercom_legacy: 'users',
+      usuarios_configurar_desvio_prefijo53: 'users',
+      usuarios_configurar_perfil_saliente_custom: 'users',
+      workspaces_alta: 'numbers',
+      workspaces_anadir_intercom_legacy: 'numbers',
+      workspaces_configurar_desvio_prefijo53: 'numbers',
+      workspaces_configurar_perfil_saliente_custom: 'numbers'
+    };
+    const key = actionToDataset[selectedAction];
+    return key ? Number(sections[key]?.count || 0) : 0;
+  }catch(_err){
+    return 0;
+  }
+}
+
+function updateBulkSummary(){
+  const summary = document.getElementById('bulk-summary');
+  if(!summary){ return; }
+  const enabled = !!document.getElementById('bulk-enabled')?.checked;
+  const chunkSize = readPositiveInt('bulk-chunk-size', 200);
+  const maxWorkers = readPositiveInt('bulk-max-workers', 4);
+  const totalRows = rowsForSelectedAction();
+  if(!enabled){
+    summary.textContent = 'Bulk desactivado. Se ejecutará fila a fila.';
+    return;
+  }
+  const estimatedOrders = totalRows > 0 ? Math.ceil(totalRows / chunkSize) : 0;
+  summary.textContent = `Bulk activado: ${estimatedOrders} lotes estimados para ${totalRows} filas · chunk=${chunkSize} · workers=${maxWorkers}.`;
 }
 
 async function previewAction(){
@@ -690,16 +764,22 @@ async function previewAction(){
 async function applyAction(){
   if(!selectedAction){ return; }
   const bulkEnabled = !!document.getElementById('bulk-enabled')?.checked;
-  const chunkSize = Number(document.getElementById('bulk-chunk-size')?.value || 200);
-  const maxWorkers = Number(document.getElementById('bulk-max-workers')?.value || 4);
+  const chunkSize = readPositiveInt('bulk-chunk-size', 200);
+  const maxWorkers = readPositiveInt('bulk-max-workers', 4);
   const res = await api('/api/action/apply', 'POST', {
     action_id: selectedAction,
     bulk: {enabled: bulkEnabled, chunk_size: chunkSize, max_workers: maxWorkers}
   });
   document.getElementById('response-box').textContent = JSON.stringify(res, null, 2);
+  updateBulkSummary();
 }
 
+document.getElementById('bulk-enabled').addEventListener('change', updateBulkSummary);
+document.getElementById('bulk-chunk-size').addEventListener('input', updateBulkSummary);
+document.getElementById('bulk-max-workers').addEventListener('input', updateBulkSummary);
+
 buildMenu();
+refreshState();
 </script>
 </body>
 </html>"""
