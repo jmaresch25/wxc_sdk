@@ -9,6 +9,7 @@ from typing import Any
 
 from .transformacion.generar_csv_candidatos_desde_artifacts import SCRIPT_DEPENDENCIES
 from .transformacion.launcher_csv_dependencias import HANDLERS
+from .transformacion.bulk_runner import execute_bulk_orders
 
 CANONICAL_PARAMS = [
     'location_id',
@@ -56,6 +57,16 @@ ACTION_CATALOG = {
     ],
 }
 
+EN_DESARROLLO_ACTIONS = {
+    'ubicacion_configurar_pstn',
+    'usuarios_alta_people',
+    'usuarios_alta_scim',
+    'workspaces_alta',
+    'workspaces_anadir_intercom_legacy',
+    'workspaces_configurar_desvio_prefijo53',
+    'workspaces_configurar_perfil_saliente_custom',
+}
+
 ACTION_DESCRIPTIONS: dict[str, str] = {
     'ubicacion_configurar_pstn': 'Configura la conexión PSTN de la ubicación mediante premise route.',
     'ubicacion_alta_numeraciones_desactivadas': 'Da de alta numeraciones en estado desactivado para la ubicación.',
@@ -73,6 +84,14 @@ ACTION_DESCRIPTIONS: dict[str, str] = {
     'workspaces_configurar_desvio_prefijo53': 'Configura desvío prefijo 53 en workspace.',
     'workspaces_configurar_perfil_saliente_custom': 'Configura perfil saliente personalizado en workspace.',
 }
+
+for _section_actions in ACTION_CATALOG.values():
+    for _action in _section_actions:
+        if _action['id'] in EN_DESARROLLO_ACTIONS:
+            _action['label'] = f"{_action['label']} · en desarrollo"
+
+for _action_id in EN_DESARROLLO_ACTIONS:
+    ACTION_DESCRIPTIONS[_action_id] = '... en desarrollo ...'
 
 DATASET_NAMES = {
     'locations': 'CSV 1 · Ubicaciones',
@@ -151,7 +170,18 @@ def launch_v211_ui(*, token: str, host: str = '127.0.0.1', port: int = 8771) -> 
                 action_id = payload.get('action_id')
                 try:
                     rows = _rows_for_action(action_id=action_id, state=state)
-                    self._send(_apply_action(action_id=action_id, rows=rows, mapping=state['mapping'], token=token))
+                    bulk_settings = payload.get('bulk') or {}
+                    self._send(
+                        _apply_action(
+                            action_id=action_id,
+                            rows=rows,
+                            mapping=state['mapping'],
+                            token=token,
+                            bulk=bool(bulk_settings.get('enabled')),
+                            chunk_size=int(bulk_settings.get('chunk_size', 200) or 200),
+                            max_workers=int(bulk_settings.get('max_workers', 4) or 4),
+                        )
+                    )
                 except Exception as exc:  # noqa: BLE001
                     self._send({'error': str(exc)}, status=400)
                 return
@@ -192,6 +222,11 @@ def _rows_for_action(*, action_id: str | None, state: dict[str, Any]) -> list[di
     raise ValueError(f'Acción no soportada: {action_id}')
 
 
+def _ensure_action_available(action_id: str) -> None:
+    if action_id in EN_DESARROLLO_ACTIONS:
+        raise ValueError(f'Acción {action_id} ... en desarrollo ...')
+
+
 def _extract(row: dict[str, Any], source: str | None) -> Any:
     if not source:
         return None
@@ -225,7 +260,7 @@ def _build_params(action_id: str, row: dict[str, Any], mapping: dict[str, str]) 
     params: dict[str, Any] = {}
     missing: list[str] = []
     for req in required:
-        value = _normalize_for_param(req, _extract(row, mapping.get(req)))
+        value = _normalize_for_param(req, _extract(row, mapping.get(req, req)))
         if value in (None, '', []):
             missing.append(req)
         else:
@@ -234,7 +269,7 @@ def _build_params(action_id: str, row: dict[str, Any], mapping: dict[str, str]) 
     for key in accepted:
         if key in params:
             continue
-        value = _normalize_for_param(key, _extract(row, mapping.get(key)))
+        value = _normalize_for_param(key, _extract(row, mapping.get(key, key)))
         if value not in (None, '', []):
             params[key] = value
 
@@ -242,6 +277,7 @@ def _build_params(action_id: str, row: dict[str, Any], mapping: dict[str, str]) 
 
 
 def _preview_action(action_id: str, rows: list[dict[str, Any]], mapping: dict[str, str]) -> dict[str, Any]:
+    _ensure_action_available(action_id)
     detailed_rows = []
     for idx, row in enumerate(rows, start=1):
         params, missing = _build_params(action_id, row, mapping)
@@ -256,43 +292,97 @@ def _preview_action(action_id: str, rows: list[dict[str, Any]], mapping: dict[st
     }
 
 
-def _apply_action(*, action_id: str, rows: list[dict[str, Any]], mapping: dict[str, str], token: str) -> dict[str, Any]:
+def _execute_row(*, action_id: str, row: dict[str, Any], row_index: int, mapping: dict[str, str], token: str) -> dict[str, Any]:
+    params, missing = _build_params(action_id, row, mapping)
+    if missing:
+        return {
+            'row_index': row_index,
+            'status': 'missing_dependencies',
+            'http_status': 'MISSING_PARAMS',
+            'missing': missing,
+            'params': params,
+        }
+
+    try:
+        api_response = HANDLERS[action_id](token=token, **params)
+        return {
+            'row_index': row_index,
+            'status': 'ok',
+            'http_status': _extract_status_code(api_response),
+            'params': params,
+            'api_response': api_response,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            'row_index': row_index,
+            'status': 'error',
+            'http_status': _extract_status_code(exc),
+            'params': params,
+            'error': str(exc),
+        }
+
+
+def _run_bulk_orders(
+    *,
+    action_id: str,
+    rows: list[dict[str, Any]],
+    mapping: dict[str, str],
+    token: str,
+    chunk_size: int,
+    max_workers: int,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    def _run_order(order_index: int, chunk: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        order_rows = [
+            _execute_row(
+                action_id=action_id,
+                row=row,
+                row_index=((order_index - 1) * chunk_size) + offset,
+                mapping=mapping,
+                token=token,
+            )
+            for offset, row in enumerate(chunk, start=1)
+        ]
+        summary = {
+            'status': 'completed',
+            'rows_total': len(order_rows),
+            'rows_ok': sum(1 for item in order_rows if item['status'] == 'ok'),
+            'rows_error': sum(1 for item in order_rows if item['status'] == 'error'),
+            'rows_missing': sum(1 for item in order_rows if item['status'] == 'missing_dependencies'),
+        }
+        return order_rows, summary
+
+    return execute_bulk_orders(
+        rows=rows,
+        chunk_size=chunk_size,
+        max_workers=max_workers,
+        order_callable=_run_order,
+    )
+
+
+def _apply_action(*, action_id: str, rows: list[dict[str, Any]], mapping: dict[str, str], token: str, bulk: bool = False, chunk_size: int = 200, max_workers: int = 4) -> dict[str, Any]:
+    _ensure_action_available(action_id)
     logs_dir = Path(__file__).resolve().parent / 'transformacion' / 'logs'
     logs_dir.mkdir(parents=True, exist_ok=True)
     log_path = logs_dir / f'{action_id}.log'
 
-    results: list[dict[str, Any]] = []
-    for idx, row in enumerate(rows, start=1):
-        params, missing = _build_params(action_id, row, mapping)
-        if missing:
-            row_result = {
-                'row_index': idx,
-                'status': 'missing_dependencies',
-                'http_status': 'MISSING_PARAMS',
-                'missing': missing,
-                'params': params,
-            }
-        else:
-            try:
-                api_response = HANDLERS[action_id](token=token, **params)
-                row_result = {
-                    'row_index': idx,
-                    'status': 'ok',
-                    'http_status': _extract_status_code(api_response),
-                    'params': params,
-                    'api_response': api_response,
-                }
-            except Exception as exc:  # noqa: BLE001
-                row_result = {
-                    'row_index': idx,
-                    'status': 'error',
-                    'http_status': _extract_status_code(exc),
-                    'params': params,
-                    'error': str(exc),
-                }
+    if bulk:
+        orders, results = _run_bulk_orders(
+            action_id=action_id,
+            rows=rows,
+            mapping=mapping,
+            token=token,
+            chunk_size=chunk_size,
+            max_workers=max_workers,
+        )
+    else:
+        orders = []
+        results = [
+            _execute_row(action_id=action_id, row=row, row_index=idx, mapping=mapping, token=token)
+            for idx, row in enumerate(rows, start=1)
+        ]
 
-        results.append(row_result)
-        with log_path.open('a', encoding='utf-8') as handle:
+    with log_path.open('a', encoding='utf-8') as handle:
+        for row_result in results:
             handle.write(json.dumps(row_result, ensure_ascii=False) + '\n')
 
     ui_rows = [
@@ -311,6 +401,13 @@ def _apply_action(*, action_id: str, rows: list[dict[str, Any]], mapping: dict[s
         'total_rows': len(ui_rows),
         'rows_preview': ui_rows[:10] if len(ui_rows) > 5 else ui_rows,
         'log_path': str(log_path),
+        'bulk': {
+            'enabled': bool(bulk),
+            'chunk_size': chunk_size if bulk else None,
+            'max_workers': max_workers if bulk else None,
+            'orders': orders if bulk else [],
+            'orders_total': len(orders) if bulk else 0,
+        },
     }
 
 
@@ -406,6 +503,11 @@ def _html_page() -> str:
         <div class="row">
           <button onclick="previewAction()">Preview parámetros</button>
           <button onclick="applyAction()">Aplicar</button>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <label><input type="checkbox" id="bulk-enabled" /> Modo bulk</label>
+          <label>Tamaño lote <input id="bulk-chunk-size" type="number" value="200" min="1" style="width:80px;" /></label>
+          <label>Workers <input id="bulk-max-workers" type="number" value="4" min="1" style="width:70px;" /></label>
         </div>
       </section>
 
@@ -587,7 +689,13 @@ async function previewAction(){
 
 async function applyAction(){
   if(!selectedAction){ return; }
-  const res = await api('/api/action/apply', 'POST', {action_id: selectedAction});
+  const bulkEnabled = !!document.getElementById('bulk-enabled')?.checked;
+  const chunkSize = Number(document.getElementById('bulk-chunk-size')?.value || 200);
+  const maxWorkers = Number(document.getElementById('bulk-max-workers')?.value || 4);
+  const res = await api('/api/action/apply', 'POST', {
+    action_id: selectedAction,
+    bulk: {enabled: bulkEnabled, chunk_size: chunkSize, max_workers: maxWorkers}
+  });
   document.getElementById('response-box').textContent = JSON.stringify(res, null, 2);
 }
 
