@@ -12,7 +12,7 @@ import time
 import traceback
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, get_args, get_origin, get_type_hints
 
 from .common import get_token, load_runtime_env
 from .generar_csv_candidatos_desde_artifacts import SCRIPT_DEPENDENCIES
@@ -145,6 +145,29 @@ def _is_missing_value(value: Any) -> bool:
     return False
 
 
+def _accepts_list(annotation: Any) -> bool:
+    """Devuelve True si la anotación acepta una lista (p.ej. list[str] o list[str] | None)."""
+    if annotation is inspect._empty:
+        return False
+    origin = get_origin(annotation)
+    if origin is list:
+        return True
+    if origin in {None, str, int, float, bool, dict, tuple, set}:
+        return False
+    return any(_accepts_list(arg) for arg in get_args(annotation))
+
+
+def _coerce_param_value(value: Any, annotation: Any) -> Any:
+    """Normaliza tipos para alinear CSV de entrada con la firma del handler."""
+    if not _accepts_list(annotation):
+        return value
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(',') if item.strip()]
+    return value
+
+
 def _read_parameter_map(csv_path: Path) -> dict[str, Any]:
     """Lee CSV generado por `generar_csv_candidatos_desde_artifacts`: headers=parámetros, 1 fila de datos."""
     with csv_path.open('r', encoding='utf-8', newline='') as handle:
@@ -180,16 +203,30 @@ def _params_for_script(script_name: str, parameter_map: dict[str, Any]) -> tuple
     if missing:
         return {}, missing
 
-    accepted_params = set(inspect.signature(HANDLERS[script_name]).parameters.keys()) - {'token'}
+    handler = HANDLERS[script_name]
+    accepted_params = set(inspect.signature(handler).parameters.keys()) - {'token'}
+    signature = inspect.signature(handler)
+    try:
+        type_hints = get_type_hints(handler)
+    except Exception:  # noqa: BLE001
+        type_hints = {}
     params = {
-        key: value
+        key: _coerce_param_value(value, type_hints.get(key, signature.parameters[key].annotation))
         for key, value in parameter_map.items()
         if key in accepted_params and not _is_missing_value(value)
     }
     return params, []
 
 
-def _run_script(*, script_name: str, parameter_map: dict[str, Any], token: str, auto_confirm: bool, dry_run: bool, precheck_workspace_permissions: bool) -> dict[str, Any]:
+def _run_script(
+    *,
+    script_name: str,
+    parameter_map: dict[str, Any],
+    token: str,
+    auto_confirm: bool,
+    dry_run: bool,
+    precheck_workspace_permissions: bool = False,
+) -> dict[str, Any]:
     if script_name not in HANDLERS:
         return {'script_name': script_name, 'status': 'rejected', 'reason': 'unsupported_script'}
 
