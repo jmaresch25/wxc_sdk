@@ -100,6 +100,27 @@ def test_run_script_parses_and_uses_supported_params(monkeypatch):
     assert 'active' not in result['params']
 
 
+def test_run_script_coerces_comma_separated_values_for_list_params(monkeypatch):
+    def _fake_handler(token, location_id: str, phone_numbers: list[str]):
+        return {'status': 'ok'}
+
+    monkeypatch.setitem(launcher.HANDLERS, 'ubicacion_alta_numeraciones_desactivadas', _fake_handler)
+
+    result = launcher._run_script(
+        script_name='ubicacion_alta_numeraciones_desactivadas',
+        parameter_map={
+            'location_id': 'loc-1',
+            'phone_numbers': '+34932847561,+34935173024',
+        },
+        token='tkn',
+        auto_confirm=True,
+        dry_run=True,
+    )
+
+    assert result['status'] == 'dry_run'
+    assert result['params']['phone_numbers'] == ['+34932847561', '+34935173024']
+
+
 def test_launcher_supports_workspace_forwarding_telephony_script():
     assert 'workspaces_configurar_desvio_prefijo53_telephony' in launcher.HANDLERS
 
