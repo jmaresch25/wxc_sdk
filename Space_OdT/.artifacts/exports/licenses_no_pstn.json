@@ -1,5 +1,12 @@
 [
   {
+    "entity_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8xZWZiZjQ1Ny0zZWRkLTQ0MDUtYWNhYi1hNGZjMjY4ZmMyM2I",
+    "entity_type": "user",
+    "license_id": "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOlJUVF9lMjIyYWY1My05ZWJiLTQ3ZTEtOWMyYS04ZGIzNDQ3OTkxNTY",
+    "license_name": "Real-Time Translations",
+    "is_pstn": false
+  },
+  {
     "entity_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
     "entity_type": "user",
     "license_id": "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOlJUVF9lMjIyYWY1My05ZWJiLTQ3ZTEtOWMyYS04ZGIzNDQ3OTkxNTY",
@@ -14,10 +21,24 @@
     "is_pstn": false
   },
   {
+    "entity_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8xZWZiZjQ1Ny0zZWRkLTQ0MDUtYWNhYi1hNGZjMjY4ZmMyM2I",
+    "entity_type": "user",
+    "license_id": "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOk1TXzVhYjk0OTBlLTRjMmQtNDExMi1iNjQ4LTVmZTg2MTAzZDBiOA",
+    "license_name": "Advanced Messaging",
+    "is_pstn": false
+  },
+  {
     "entity_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS82NzNhMThmMC04Mzg5LTQyYjEtYTgwOS1iODE4M2I1ODJjZTM",
     "entity_type": "user",
     "license_id": "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOk1TXzVhYjk0OTBlLTRjMmQtNDExMi1iNjQ4LTVmZTg2MTAzZDBiOA",
     "license_name": "Advanced Messaging",
+    "is_pstn": false
+  },
+  {
+    "entity_id": "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8xZWZiZjQ1Ny0zZWRkLTQ0MDUtYWNhYi1hNGZjMjY4ZmMyM2I",
+    "entity_type": "user",
+    "license_id": "Y2lzY29zcGFyazovL3VzL0xJQ0VOU0UvZTVmN2Q5NzMtYjI2OS00Njg2LTk5N2UtNDUxMTkxNjhjZWQyOkVFX2NkYzUxNWNlLWU4MjEtNGEwNC04NzUyLTJkMDQzZjA3NjQyY19qbWFyZXNjaGxvcC02eGxyLndlYmV4LmNvbQ",
+    "license_name": "Webex Meetings Suite",
     "is_pstn": false
   },
   {

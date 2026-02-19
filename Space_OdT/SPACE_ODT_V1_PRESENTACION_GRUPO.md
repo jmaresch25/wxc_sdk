@@ -1,4 +1,4 @@
-# Space_OdT v1 — Documento de presentación (audiencia técnica intermedia)
+# Space_OdT v1 — Documento de presentación
 
 > Alcance: **solo v1** (inventario determinista de lectura para Webex). No cubre v2 ni v2.1.
 

@@ -37,7 +37,7 @@ def configurar_permisos_salientes_defecto_ubicacion(
     if profile_payload is not None:
         settings = OutgoingPermissions.model_validate(profile_payload)
     else:
-        settings = OutgoingPermissions(use_custom_enabled=False, use_custom_permissions=False)
+        settings = OutgoingPermissions(use_custom_enabled=True, use_custom_permissions=True)
     # 2) Payload final: registramos exactamente qué se enviará al endpoint.
     request = {
         'entity_id': location_id,

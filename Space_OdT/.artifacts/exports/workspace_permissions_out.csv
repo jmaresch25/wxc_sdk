@@ -2,3 +2,6 @@ id,name,first_name,last_name,member_id,member_type,location_id,person_id,workspa
 ,,,,,,,,,,,,,,,,,,,,,False,workspace_settings.permissions_out.read,,{}
 ,,,,,,,,,,,,,,,,,,,,,False,workspace_settings.permissions_out.read,,{}
 ,,,,,,,,,,,,,,,,,,,,,False,workspace_settings.permissions_out.read,,{}
+,,,,,,,,,,,,,,,,,,,,,False,workspace_settings.permissions_out.read,,{}
+,,,,,,,,,,,,,,,,,,,,,False,workspace_settings.permissions_out.read,,{}
+,,,,,,,,,,,,,,,,,,,,,False,workspace_settings.permissions_out.read,,{}

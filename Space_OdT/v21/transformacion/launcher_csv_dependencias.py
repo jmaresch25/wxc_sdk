@@ -46,30 +46,31 @@ DEFAULT_CSV = REPO_ROOT / '.artifacts' / 'report' / 'results_manual.csv'
 
 
 HANDLERS: dict[str, ActionFn] = {
-    'ubicacion_actualizar_cabecera': actualizar_cabecera_ubicacion,
+
     'ubicacion_alta_numeraciones_desactivadas': alta_numeraciones_desactivadas,
+    'ubicacion_actualizar_cabecera': actualizar_cabecera_ubicacion,
     'ubicacion_configurar_llamadas_internas': configurar_llamadas_internas_ubicacion,
     'ubicacion_configurar_permisos_salientes_defecto': configurar_permisos_salientes_defecto_ubicacion,
-    'ubicacion_configurar_pstn': configurar_pstn_ubicacion,
-    'usuarios_alta_people': alta_usuario_people,
-    'usuarios_alta_scim': alta_usuario_scim,
+    #'ubicacion_configurar_pstn': configurar_pstn_ubicacion,
+    #'usuarios_alta_people': alta_usuario_people,
+    #'usuarios_alta_scim': alta_usuario_scim,
     'usuarios_anadir_intercom_legacy': anadir_intercom_legacy_usuario,
     'usuarios_asignar_location_desde_csv': assign_users_to_locations,
     'usuarios_configurar_desvio_prefijo53': configurar_desvio_prefijo53_usuario,
     'usuarios_configurar_perfil_saliente_custom': configurar_perfil_saliente_custom_usuario,
     'usuarios_modificar_licencias': modificar_licencias_usuario,
-    'workspaces_alta': alta_workspace,
-    'workspaces_anadir_intercom_legacy': anadir_intercom_legacy_workspace,
-    'workspaces_configurar_desvio_prefijo53': configurar_desvio_prefijo53_workspace,
-    'workspaces_configurar_desvio_prefijo53_telephony': configurar_desvio_prefijo53_workspace_telephony,
-    'workspaces_configurar_perfil_saliente_custom': configurar_perfil_saliente_custom_workspace,
-    'workspaces_validar_estado_permisos': validar_estado_permisos_workspace,
+    #'workspaces_alta': alta_workspace,
+    #'workspaces_anadir_intercom_legacy': anadir_intercom_legacy_workspace,
+    #'workspaces_configurar_desvio_prefijo53': configurar_desvio_prefijo53_workspace,
+    #'workspaces_configurar_desvio_prefijo53_telephony': configurar_desvio_prefijo53_workspace_telephony,
+    #'workspaces_configurar_perfil_saliente_custom': configurar_perfil_saliente_custom_workspace,
+    #'workspaces_validar_estado_permisos': validar_estado_permisos_workspace,
 }
 
 LOCAL_SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
     # Se alimenta por defecto de su propio CSV de control.
     'usuarios_asignar_location_desde_csv': [],
-    'workspaces_validar_estado_permisos': ['workspace_id'],
+    #'workspaces_validar_estado_permisos': ['workspace_id'],
 }
 
 LOGGER = logging.getLogger(__name__)
