@@ -7,6 +7,7 @@ import pytest
 from Space_OdT.v21.transformacion.ubicacion_actualizar_cabecera import actualizar_cabecera_ubicacion
 from Space_OdT.v21.transformacion.ubicacion_alta_numeraciones_desactivadas import alta_numeraciones_desactivadas
 from Space_OdT.v21.transformacion.ubicacion_configurar_pstn import configurar_pstn_ubicacion
+from Space_OdT.v21.transformacion.usuarios_alta_people import alta_usuario_people
 
 
 class _Model:
@@ -136,3 +137,54 @@ def test_configurar_pstn_requires_local_gateway_option(monkeypatch):
             premise_route_type='ROUTE_GROUP',
             premise_route_id='rg',
         )
+
+def test_alta_usuario_people_normalizes_string_licenses(monkeypatch):
+    captured = {}
+
+    class PeopleApi:
+        def list(self, email, org_id=None):
+            return []
+
+        def create(self, settings, calling_data=True):
+            captured['licenses'] = settings.licenses
+            return _Model({'id': 'person-1'})
+
+    fake_api = SimpleNamespace(people=PeopleApi())
+    monkeypatch.setattr('Space_OdT.v21.transformacion.usuarios_alta_people.create_api', lambda token: fake_api)
+
+    result = alta_usuario_people(
+        token='tkn',
+        email='zulema@example.com',
+        first_name='Zulema',
+        last_name='Tal',
+        licenses='Webex Calling Professional',
+    )
+
+    assert result['status'] == 'success'
+    assert captured['licenses'] == ['Webex Calling Professional']
+
+
+def test_alta_usuario_people_normalizes_csv_string_licenses(monkeypatch):
+    captured = {}
+
+    class PeopleApi:
+        def list(self, email, org_id=None):
+            return []
+
+        def create(self, settings, calling_data=True):
+            captured['licenses'] = settings.licenses
+            return _Model({'id': 'person-2'})
+
+    fake_api = SimpleNamespace(people=PeopleApi())
+    monkeypatch.setattr('Space_OdT.v21.transformacion.usuarios_alta_people.create_api', lambda token: fake_api)
+
+    alta_usuario_people(
+        token='tkn',
+        email='zulema@example.com',
+        first_name='Zulema',
+        last_name='Tal',
+        licenses=' lic-a, lic-b ',
+    )
+
+    assert captured['licenses'] == ['lic-a', 'lic-b']
+
