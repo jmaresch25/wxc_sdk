@@ -196,3 +196,200 @@ Space_OdT/v21/transformacion/
 
 ### 7.3 Moonshot
 - Control plane de transformaciones con scheduling, dry-run integral y diff automático pre/post sobre estado Webex.
+
+
+---
+
+## 8) Diseño detallado launcher multi-CSV + bulk + resiliencia 24h
+
+### 8.1 Definición de lo que se construye
+- Se implementa una evolución de `launcher_csv_dependencias.py` para cargar parámetros desde **4 CSV fijos** en una única raíz (`--input_dir`):
+  - `global.csv` (parámetros transversales)
+  - `ubicaciones.csv`
+  - `usuarios.csv`
+  - `workspaces.csv` (opcional en MVP actual)
+- Problema que resuelve:
+  1. Evitar mezclar columnas de dominios distintos en un único CSV.
+  2. Permitir ejecución por lote real (múltiples filas) en usuarios y ubicaciones (y opcionalmente workspaces).
+  3. Mantener el proceso estable hasta 24h frente a 429 y fallos de red.
+- Modelo simplificado (distilled):
+  - **Dataset global (1 fila)** + **dataset de dominio (N filas)**
+  - **Script** consume sólo las claves que declare.
+  - **Bulk mode** = iteración fila a fila con reintentos y reporte acumulado (`ok/error logs`).
+
+### 8.2 UX operativa (cómo se usará)
+
+#### Story principal
+1. El operador lanza el launcher con `--input_dir .artifacts/...`.
+2. El launcher carga `global.csv` al inicio y, por cada script, detecta su dominio (`ubicacion_`, `usuarios_`, `workspaces_`).
+3. Antes de ejecutar cada script, pregunta: **¿ejecución bulk para este script?**
+4. Si respuesta = sí, procesa todas las filas del CSV de dominio; si no, usa la primera fila o la fila filtrada.
+5. Genera un informe final con éxitos/errores por fila.
+
+#### Logging operativo para >4000 filas (detalle requerido)
+- Para volumen alto se separa en dos salidas append-only por script/ejecución:
+  - `*_ok.csv`: una línea por operación aplicada correctamente (mínimo `row_index`, `script_name`, `entity_id/person_id/workspace_id`, `timestamp`, `payload_hash`).
+  - `*_error.jsonl`: una línea JSON por fallo con error completo (`traceback`, respuesta remota completa, parámetros de entrada normalizados).
+- Razón de diseño: CSV facilita recálculo/reproceso manual de éxitos; JSONL preserva errores completos sin truncado y evita un JSON gigante en memoria.
+- Convención MVP: nunca se sobreescriben logs, solo append; cada ejecución crea sufijo de fecha/hora para auditoría.
+
+#### Flujos alternativos
+- Si falta `global.csv` o el CSV de dominio: error explícito (`missing_input_csv`).
+- Si hay columnas desconocidas: warning + ignorar (modo tolerante), o fail-fast en `--strict-schema`.
+- Si proceso se interrumpe: en MVP se reanuda manualmente depurando el CSV (eliminar filas ya exitosas) y relanzando.
+
+#### Confirmación de lectura de parámetros (estado actual)
+- CSV detectados para extracción real de parámetros en `Space_OdT/.artifacts/exports` (estos se toman como **campos core** de partida, aunque podrán ampliarse en el tiempo):
+  - `locations.csv` → `location_id, name, org_id, timezone, language, address_1, city, state, postal_code, country`
+  - `people.csv` → `person_id, email, display_name, status, roles, licenses, location_id, webex_calling_enabled`
+  - `workspaces.csv` → `id, workspace_id, name, location_id, extension, phone_number, webex_calling_enabled`
+- Decisión de transición:
+  1. Mantener compatibilidad temporal para leer desde `Space_OdT/.artifacts/exports`.
+  2. Objetivo final: mover contrato a `Space_OdT/input_data/{global,ubicaciones,usuarios,workspaces}.csv`.
+  3. Añadir validación estricta de headers en arranque para detectar drift.
+
+### 8.3 Contrato de datos y carga inicial
+
+#### Ubicación de entrada
+- A partir de ahora se considera una sola jerarquía de artifacts bajo `Space_OdT/.artifacts`.
+- `--input_dir` apunta al directorio que contiene los 4 CSV con nombres fijos indicados arriba.
+
+#### Política de merge
+- `params_finales = merge(global_row, domain_row)`
+- Regla: **dominio sobreescribe global** cuando coinciden claves.
+- El launcher conserva metadatos de origen (`source_map`) para trazabilidad en logs.
+
+#### Campos de referencia
+- La clasificación de campos debe alinearse con los CSV ya distribuidos por área en `.artifacts`.
+- Si un campo aparece en dos áreas (ej. `extension`), se acepta duplicación intencional: cada script tomará sólo lo que necesite.
+
+### 8.4 Diseño técnico del launcher
+
+#### Resolución dominio por script
+- `ubicacion_*` → `ubicaciones.csv`
+- `usuarios_*` → `usuarios.csv`
+- `workspaces_*` → pendiente (de momento scripts de workspace no activos en launcher; dejar preparado para activación posterior).
+
+#### Pregunta de bulk por script
+- Nuevo prompt por script (si no `--auto-confirm`):
+  - `¿Ejecutar <script> en modo BULK con todas las filas del CSV de dominio? [y/N]`
+- Flags no interactivos:
+  - `--bulk-all`: fuerza bulk para todos los scripts seleccionados.
+  - `--no-bulk-all`: fuerza modo single para todos.
+
+#### Estrategia de ejecución
+- **Single mode**: 1 payload (primera fila o fila filtrada por `--row-index`/`--match key=value`).
+- **Bulk mode**: 1 payload por fila válida del CSV de dominio.
+- Cada payload pasa por:
+  1. validación dependencias del script,
+  2. confirmación,
+  3. ejecución con política de reintentos,
+  4. persistencia de resultado.
+
+#### Reporte y trazabilidad
+- Salida JSON final con estructura:
+  - `script_name`
+  - `bulk_mode`
+  - `total_rows`, `executed`, `skipped`, `errors`
+  - `results[]` con `row_index`, `params_hash`, `status`, `error_type`, `error`
+- Para MVP no se introduce motor de checkpoint automático (evitar boilerplate):
+  - se persiste `*_ok.csv` y `*_error.jsonl` por ejecución,
+  - la reanudación se hace ajustando manualmente el CSV de entrada según `*_ok.csv`.
+
+### 8.5 Resiliencia 24h (429 + conectividad remota)
+
+#### Política de reintentos recomendada
+- Priorizar ventajas del SDK (`wxc_sdk`) para reducir boilerplate:
+  - encapsular acceso API vía métodos SDK (no HTTP manual salvo gaps puntuales),
+  - centralizar retry/backoff en helper común reutilizable por todos los scripts,
+  - evaluar `asyncio`/API asíncrona del SDK para bulk I/O-bound con concurrencia limitada y controlada.
+- Reintentar en:
+  - HTTP `429`, `500`, `502`, `503`, `504`
+  - excepciones de red (`ConnectionError`, `Timeout`, DNS/transient socket errors)
+- Backoff:
+  - Si `Retry-After` existe: respetarlo.
+  - Si no existe: `base * 2^attempt + jitter` (cap por espera máxima).
+- Límites sugeridos:
+  - `max_retries_per_call`: 12
+  - `max_sleep_seconds`: 300
+  - `max_elapsed_per_row`: 1800s
+
+#### Gestión de salud de ejecución larga
+- Heartbeat de progreso cada X minutos (filas procesadas, ETA, tasa error).
+- Pausa automática si ratio de error > umbral en ventana móvil.
+- Reanudación manual guiada por `*_ok.csv` para no repetir filas ya exitosas.
+- Opción `--fail-fast` para entornos donde no conviene continuar tras primer error grave.
+
+#### Idempotencia y seguridad
+- No loguear token ni secretos.
+- Registrar hash de payload para deduplicar reintentos.
+- Marcar explícitamente operaciones potencialmente no idempotentes (`create`) y ofrecer `--dry-run` previo.
+
+### 8.6 Standalone en cada script (`--bulk` + `--input_dir`)
+
+Cada script de `transformacion/` debe soportar:
+- `--bulk` (itera filas del CSV de su dominio)
+- `--input_dir` (directorio con `global.csv` + CSV de dominio)
+
+#### Contrato runtime standalone
+1. Determinar dominio por nombre del propio script.
+2. Cargar `global.csv` y `<dominio>.csv`.
+3. Construir payload por fila con merge `global <- dominio`.
+4. Ejecutar función principal del script con:
+   - modo single: fila 0
+   - modo bulk: todas las filas válidas
+5. Emitir resumen final homogéneo con launcher.
+
+#### Compatibilidad
+- Mantener argumentos explícitos actuales (CLI individual) con prioridad superior al CSV.
+- Regla de prioridad final:
+  - `CLI > dominio.csv > global.csv > default interno`
+
+### 8.7 Testing y quality gates
+
+#### Unit tests mínimos
+- resolución de CSV por dominio
+- merge de parámetros y precedencia
+- parser de bulk/single
+- backoff + parser de `Retry-After`
+- lectura multi-fila y filtrado de filas inválidas
+
+#### Integration/smoke tests
+- dry-run de 1 script por dominio en single y bulk
+- simulación de 429 (mock) para validar reintentos + escritura de logs `ok/error`
+- test de reanudación manual tras interrupción (filtrado de CSV usando `*_ok.csv`)
+
+#### Criterio DoD
+- launcher con soporte 4 CSV y pregunta bulk por script
+- scripts standalone compatibles con `--bulk --input_dir`
+- reintentos robustos + logs `ok/error` + reporte agregado
+- documentación operativa actualizada
+
+### 8.8 Plan de trabajo y riesgos
+
+#### Estimación
+- 3–5 días técnicos:
+  1. Refactor common I/O + retry policy (1 día)
+  2. Launcher multi-CSV + bulk orchestration (1 día)
+  3. Adaptación de scripts standalone (1–2 días)
+  4. Tests + hardening + docs (1 día)
+
+#### Riesgos clave
+- inconsistencias de headers entre CSV por área
+- operaciones no idempotentes en bulk
+- límite de rate API en ventanas largas
+
+#### Mitigaciones
+- validación de schema al arranque
+- logs `ok/error` y reintento por fila
+- throttle configurable (`--min-interval-ms`)
+
+### 8.9 Ripple effects
+- Actualizar runbooks de operación y ejemplos de comando.
+- Comunicar cambio de contrato de entrada (4 CSV + input_dir).
+- Ajustar generadores para mantener nombres/headers estables en `Space_OdT/.artifacts`.
+
+### 8.10 Contexto amplio
+- Limitación actual: el modelo de campos seguirá evolucionando con nuevas acciones.
+- Extensión futura: versionado de esquema (`schema_version`) y validador automático previo a ejecución.
+- Moonshot: orquestador declarativo de pipelines con diff pre/post por entidad y ventana horaria de ejecución.
