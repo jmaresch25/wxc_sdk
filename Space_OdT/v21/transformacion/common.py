@@ -41,8 +41,7 @@ def create_api(token: str) -> WebexSimpleApi:
 
 
 def load_report_json(filename: str) -> dict[str, Any] | None:
-    """Carga un JSON opcional desde ROOTDIR/.ARTIFACTS/REPORT/<filename>."""
-    report_file = Path(__file__).resolve().parents[3] / '.ARTIFACTS' / 'REPORT' / filename
+    report_file = Path(__file__).resolve().parents[3] / '.artifacts' / 'report' / filename
     if not report_file.is_file():
         return None
     with report_file.open('r', encoding='utf-8') as handle:
