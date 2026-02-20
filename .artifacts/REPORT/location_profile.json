@@ -7,53 +7,53 @@
     },
     {
       "callType": "TOLL_FREE",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "NATIONAL",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "INTERNATIONAL",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "OPERATOR_ASSISTED",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "CHARGEABLE_DIRECTORY_ASSISTED",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "SPECIAL_SERVICES_I",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "SPECIAL_SERVICES_II",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "PREMIUM_SERVICES_I",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "PREMIUM_SERVICES_II",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     },
     {
       "callType": "MOBILE",
-      "action": "BLOCK",
-      "transferEnabled": false
+      "action": "ALLOW",
+      "transferEnabled": true
     }
   ]
 }
