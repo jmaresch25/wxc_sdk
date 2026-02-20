@@ -215,3 +215,25 @@ def test_apply_with_license_assignment_uses_existing_extension():
     req = captured['licenses'][0]
     assert req.properties.location_id == 'loc-new'
     assert req.properties.extension == '6101'
+
+
+def test_run_script_supports_usuarios_remover_licencias(monkeypatch):
+    def _fake_handler(token, person_id: str, remove_license_ids: list[str], org_id=None):
+        return {'status': 'ok'}
+
+    monkeypatch.setitem(launcher.HANDLERS, 'usuarios_remover_licencias', _fake_handler)
+
+    result = launcher._run_script(
+        script_name='usuarios_remover_licencias',
+        parameter_map={
+            'person_id': 'person-1',
+            'remove_license_ids': 'lic-old-1,lic-old-2',
+            'org_id': 'org-1',
+        },
+        token='tkn',
+        auto_confirm=True,
+        dry_run=True,
+    )
+
+    assert result['status'] == 'dry_run'
+    assert result['params']['remove_license_ids'] == ['lic-old-1', 'lic-old-2']

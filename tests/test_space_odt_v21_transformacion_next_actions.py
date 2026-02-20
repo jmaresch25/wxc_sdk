@@ -235,11 +235,16 @@ def test_launcher_tester_api_remota_executes_supported_and_rejects_unknown(monke
         'Space_OdT.v21.transformacion.launcher_tester_api_remota.modificar_licencias_usuario',
         lambda token, **kwargs: {'status': 'success', 'kind': 'licenses'},
     )
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.launcher_tester_api_remota.remover_licencias_usuario',
+        lambda token, **kwargs: {'status': 'success', 'kind': 'remove'},
+    )
 
     payload = {
         'acciones': [
             {'action': 'ubicacion_configurar_llamadas_internas', 'params': {'location_id': 'loc1', 'enable_unknown_extension_route_policy': False}},
             {'action': 'usuarios_modificar_licencias', 'params': {'person_id': 'p1', 'add_license_ids': ['lic-a']}},
+            {'action': 'usuarios_remover_licencias', 'params': {'person_id': 'p1', 'remove_license_ids': ['lic-old']}},
             {'action': 'desconocida', 'params': {}},
         ]
     }
@@ -248,7 +253,8 @@ def test_launcher_tester_api_remota_executes_supported_and_rejects_unknown(monke
 
     assert report['results'][0]['result']['kind'] == 'internal'
     assert report['results'][1]['result']['kind'] == 'licenses'
-    assert report['results'][2]['status'] == 'rejected'
+    assert report['results'][2]['result']['kind'] == 'remove'
+    assert report['results'][3]['status'] == 'rejected'
 
 
 def test_launcher_tester_api_remota_supports_first_three_location_actions(monkeypatch):
@@ -299,6 +305,35 @@ def test_launcher_tester_api_remota_supports_first_three_location_actions(monkey
     assert report['results'][2]['result']['kind'] == 'header'
 
 
+
+
+def test_usuarios_remover_licencias_calls_assign_with_remove_operation(monkeypatch):
+    from Space_OdT.v21.transformacion.usuarios_remover_licencias import remover_licencias_usuario
+
+    class LicensesApi:
+        def __init__(self):
+            self.last = None
+
+        def assign_licenses_to_users(self, person_id, licenses, org_id=None):
+            self.last = (person_id, licenses, org_id)
+            return _Model({'personId': person_id, 'licenses': []})
+
+    licenses = LicensesApi()
+    fake_api = SimpleNamespace(licenses=licenses)
+    monkeypatch.setattr('Space_OdT.v21.transformacion.usuarios_modificar_licencias.create_api', lambda token: fake_api)
+
+    result = remover_licencias_usuario(
+        token='tkn',
+        person_id='person-1',
+        remove_license_ids=['lic-z'],
+        org_id='org1',
+    )
+
+    assert result['status'] == 'success'
+    person_id, requests, org_id = licenses.last
+    assert person_id == 'person-1'
+    assert org_id == 'org1'
+    assert requests[0].operation == 'remove'
 def test_configurar_perfil_saliente_custom_workspace_uses_report_json(monkeypatch):
     from Space_OdT.v21.transformacion.workspaces_configurar_perfil_saliente_custom import (
         configurar_perfil_saliente_custom_workspace,

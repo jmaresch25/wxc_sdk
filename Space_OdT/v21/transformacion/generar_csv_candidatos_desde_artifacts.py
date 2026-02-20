@@ -30,6 +30,7 @@ SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
     'usuarios_configurar_desvio_prefijo53': ['person_id', 'extension', 'destination'],
     'usuarios_configurar_perfil_saliente_custom': ['person_id'],
     'usuarios_modificar_licencias': ['person_id', 'add_license_ids'],
+    'usuarios_remover_licencias': ['person_id', 'remove_license_ids'],
     'workspaces_alta': ['display_name', 'location_id'],
     'workspaces_anadir_intercom_legacy': ['workspace_id', 'legacy_phone_number'],
     'workspaces_configurar_desvio_prefijo53': ['workspace_id', 'extension', 'destination'],
@@ -127,6 +128,7 @@ def build_parameter_row(exports_dir: Path) -> tuple[list[str], dict[str, Any]]:
         'last_name': None,
         'licenses': _split_semicolon_list(first_person.get('licenses')),
         'add_license_ids': [r['license_id'] for r in licenses if (r.get('license_id') or '').strip()][:2],
+        'remove_license_ids': [r['license_id'] for r in licenses if (r.get('license_id') or '').strip()][:1],
         'display_name': (first_workspace.get('name') or first_person.get('display_name') or '').strip() or None,
         'workspaces_lote_json': [
             {
