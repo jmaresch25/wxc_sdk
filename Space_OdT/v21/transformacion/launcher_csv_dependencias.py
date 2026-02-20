@@ -34,7 +34,6 @@ from .usuarios_asignar_location_desde_csv import (
 from .usuarios_configurar_desvio_prefijo53 import configurar_desvio_prefijo53_usuario
 from .usuarios_configurar_perfil_saliente_custom import configurar_perfil_saliente_custom_usuario
 from .usuarios_modificar_licencias import modificar_licencias_usuario
-from .usuarios_remover_licencias import remover_licencias_usuario
 from .workspaces_alta import alta_workspace
 from .workspaces_anadir_intercom_legacy import anadir_intercom_legacy_workspace
 from .workspaces_configurar_desvio_prefijo53 import configurar_desvio_prefijo53_workspace
@@ -61,12 +60,11 @@ HANDLERS: dict[str, ActionFn] = {
     'usuarios_configurar_desvio_prefijo53': configurar_desvio_prefijo53_usuario,
     'usuarios_configurar_perfil_saliente_custom': configurar_perfil_saliente_custom_usuario,
     'usuarios_modificar_licencias': modificar_licencias_usuario,
-    'usuarios_remover_licencias': remover_licencias_usuario,
     #'workspaces_alta': alta_workspace,
     #'workspaces_anadir_intercom_legacy': anadir_intercom_legacy_workspace,
     #'workspaces_configurar_desvio_prefijo53': configurar_desvio_prefijo53_workspace,
-    'workspaces_configurar_desvio_prefijo53_telephony': configurar_desvio_prefijo53_workspace_telephony,
-    #'workspaces_configurar_perfil_saliente_custom': configurar_perfil_saliente_custom_workspace,
+    #'workspaces_configurar_desvio_prefijo53_telephony': configurar_desvio_prefijo53_workspace_telephony,
+    'workspaces_configurar_perfil_saliente_custom': configurar_perfil_saliente_custom_workspace,
     #'workspaces_validar_estado_permisos': validar_estado_permisos_workspace,
 }
 

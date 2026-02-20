@@ -17,18 +17,18 @@
     },
     {
       "callType": "INTERNATIONAL",
-      "action": "ALLOW",
-      "transferEnabled": true
+      "action": "BLOCK",
+      "transferEnabled": false
     },
     {
       "callType": "OPERATOR_ASSISTED",
-      "action": "ALLOW",
-      "transferEnabled": true
+      "action": "BLOCK",
+      "transferEnabled": false
     },
     {
       "callType": "CHARGEABLE_DIRECTORY_ASSISTED",
-      "action": "ALLOW",
-      "transferEnabled": true
+      "action": "BLOCK",
+      "transferEnabled": false
     },
     {
       "callType": "SPECIAL_SERVICES_I",
@@ -37,18 +37,18 @@
     },
     {
       "callType": "SPECIAL_SERVICES_II",
-      "action": "ALLOW",
-      "transferEnabled": true
+      "action": "BLOCK",
+      "transferEnabled": false
     },
     {
       "callType": "PREMIUM_SERVICES_I",
-      "action": "ALLOW",
-      "transferEnabled": true
+      "action": "BLOCK",
+      "transferEnabled": false
     },
     {
       "callType": "PREMIUM_SERVICES_II",
-      "action": "ALLOW",
-      "transferEnabled": true
+      "action": "BLOCK",
+      "transferEnabled": false
     },
     {
       "callType": "MOBILE",

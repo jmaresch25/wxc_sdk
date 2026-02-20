@@ -1,5 +1,5 @@
 {
-  "useCustomEnabled": false,
+  "useCustomEnabled": true,
   "useCustomPermissions": true,
   "callingPermissions": [
     {
