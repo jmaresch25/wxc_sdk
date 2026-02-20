@@ -174,3 +174,44 @@ def test_launcher_includes_people_to_location_csv_head_in_invocation(monkeypatch
     assert preview['exists'] is True
     assert preview['columns'] == ['selected', 'person_id', 'target_location_id']
     assert preview['head'][0]['person_id'] == 'p-1'
+
+
+def test_apply_with_license_assignment_skips_if_user_already_in_target_location():
+    person = SimpleNamespace(location_id='loc-1', extension='6101')
+    api = SimpleNamespace(
+        people=SimpleNamespace(details=lambda **_: person),
+        licenses=SimpleNamespace(assign_licenses_to_users=lambda **_: (_ for _ in ()).throw(AssertionError('should not call api'))),
+    )
+
+    result = users_csv._apply_with_license_assignment(
+        api,
+        {'person_id': 'p-1', 'target_location_id': 'loc-1'},
+        calling_license_id='lic-calling',
+    )
+
+    assert result['status'] == 'unchanged'
+    assert result['reason'] == 'already_in_target_location'
+
+
+def test_apply_with_license_assignment_uses_existing_extension():
+    captured: dict[str, object] = {}
+    person = SimpleNamespace(location_id='loc-old', extension='6101')
+
+    def _assign(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(model_dump=lambda **__: {'ok': True})
+
+    api = SimpleNamespace(
+        people=SimpleNamespace(details=lambda **_: person),
+        licenses=SimpleNamespace(assign_licenses_to_users=_assign),
+    )
+
+    users_csv._apply_with_license_assignment(
+        api,
+        {'person_id': 'p-1', 'target_location_id': 'loc-new'},
+        calling_license_id='lic-calling',
+    )
+
+    req = captured['licenses'][0]
+    assert req.properties.location_id == 'loc-new'
+    assert req.properties.extension == '6101'
