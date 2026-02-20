@@ -1,4 +1,0 @@
-location_id,name,address1,city,state,postal_code,premise_route_type,premise_route_id,enable_unknown_extension_route_policy,route_identity,phone_numbers_1,phone_number_2,phone_numbers_3,phone_numbers_4,phone_numbers,calling_line_id,"""=phone_number""",
-,CUV93470292900,CARRER LLUIS MILLET 2-4  ESPLUGUES DE,Esplugues De Llobregat,Barcelona,08950,ROUTE_GROUP,Y2lzY29zcGFyazovL3VzL1JPVVRFX0dST1VQL2UyZGM5YTkxLWI3MjQtNGI2Ni04ZDJmLWU2ZTBkMWQ0YjBlZA,TRUE,RG_TEST,,,,,"+34516789012,+34517890123,+34518901234,+34939012345,+34940123456,+34941234567",+34935678901,,
-,CUV93516754500,CARRER TRAVESSERA DE LES CORTS 131-159 131-159,Barcelona,Barcelona,08028,ROUTE_GROUP,Y2lzY29zcGFyazovL3VzL1JPVVRFX0dST1VQL2UyZGM5YTkxLWI3MjQtNGI2Ni04ZDJmLWU2ZTBkMWQ0YjBlZA,TRUE,RG_TEST,,,,,"+34513456789,+34514567890,+34515678901,+34936789012,+34937890123,+34938901234",+34934567890,,
-,,,,,,,,,,,,,,,,,
