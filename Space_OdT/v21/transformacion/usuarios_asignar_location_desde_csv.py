@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from wxc_sdk.licenses import LicenseProperties, LicenseRequest, LicenseRequestOperation
+from wxc_sdk.telephony.jobs import MoveUser, MoveUsersList
 
 if __package__ in {None, ''}:
     sys.path.append(str(Path(__file__).resolve().parents[3]))
@@ -30,7 +30,9 @@ CSV_HEADERS = [
     'target_location_id',
 ]
 
-_CALLING_LICENSE_IDS_CACHE: set[str] | None = None
+def _normalize_location_id(raw: str | None) -> str:
+    """Normaliza IDs tipo Webex para comparación estable (con/sin padding base64)."""
+    return (raw or '').strip().rstrip('=')
 
 
 def _load_people(path: Path) -> list[dict[str, Any]]:
@@ -104,24 +106,11 @@ def _apply_with_people_update(api: Any, row: dict[str, str], *, person: Any | No
     }
 
 
-def _calling_license_id_for_person(api: Any, person: Any) -> str | None:
-    """Devuelve el ID de licencia calling asignada al usuario, si existe."""
-    global _CALLING_LICENSE_IDS_CACHE
-
-    if _CALLING_LICENSE_IDS_CACHE is None:
-        _CALLING_LICENSE_IDS_CACHE = {
-            lic.license_id
-            for lic in api.licenses.list()
-            if getattr(lic, 'webex_calling', False)
-        }
-
-    for license_id in getattr(person, 'licenses', []) or []:
-        if license_id in _CALLING_LICENSE_IDS_CACHE:
-            return license_id
-    return None
+def _is_calling_user(person: Any) -> bool:
+    return bool(getattr(person, 'location_id', None) or getattr(person, 'extension', None))
 
 
-def _apply_with_license_assignment(api: Any, row: dict[str, str], *, calling_license_id: str) -> dict[str, Any]:
+def _apply_with_move_users_job(api: Any, row: dict[str, str], *, person: Any) -> dict[str, Any]:
     person_id = row['person_id'].strip()
     target_location_id = row['target_location_id'].strip()
     person = api.people.details(person_id=person_id, calling_data=True)
@@ -152,6 +141,14 @@ def _apply_with_license_assignment(api: Any, row: dict[str, str], *, calling_lic
         ],
     )
 
+    users_list = [
+        MoveUsersList(
+            location_id=target_location_id,
+            validate_only=False,
+            users=[MoveUser(user_id=person_id, extension=person.extension)],
+        )
+    ]
+    response = api.telephony.jobs.move_users.validate_or_initiate(users_list=users_list)
     return {
         'person_id': person_id,
         'to_location_id': target_location_id,
@@ -166,9 +163,8 @@ def _apply_with_license_assignment(api: Any, row: dict[str, str], *, calling_lic
 def _apply_location_change(api: Any, row: dict[str, str]) -> dict[str, Any]:
     person_id = row['person_id'].strip()
     person = api.people.details(person_id=person_id, calling_data=True)
-    calling_license_id = _calling_license_id_for_person(api, person)
-    if calling_license_id:
-        return _apply_with_license_assignment(api, row, calling_license_id=calling_license_id)
+    if _is_calling_user(person):
+        return _apply_with_move_users_job(api, row, person=person)
     return _apply_with_people_update(api, row, person=person)
 
 
@@ -185,14 +181,12 @@ def assign_users_to_locations(*, csv_path: Path, token: str | None = None, dry_r
         preview = []
         for row in rows:
             person = api.people.details(person_id=row['person_id'].strip(), calling_data=True)
-            calling_license_id = _calling_license_id_for_person(api, person)
-            sdk_path = 'licenses.assign_licenses_to_users' if calling_license_id else 'people.update'
+            sdk_path = 'telephony.jobs.move_users.validate_or_initiate' if _is_calling_user(person) else 'people.update'
             preview.append(
                 {
                     'person_id': row['person_id'].strip(),
                     'to_location_id': row['target_location_id'].strip(),
                     'sdk_path': sdk_path,
-                    'calling_license_id': calling_license_id,
                 }
             )
         print(json.dumps({'dry_run': True, 'changes': preview}, indent=2, ensure_ascii=False))
