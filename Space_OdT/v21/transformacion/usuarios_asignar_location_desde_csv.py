@@ -113,16 +113,33 @@ def _is_calling_user(person: Any) -> bool:
 def _apply_with_move_users_job(api: Any, row: dict[str, str], *, person: Any) -> dict[str, Any]:
     person_id = row['person_id'].strip()
     target_location_id = row['target_location_id'].strip()
+    person = api.people.details(person_id=person_id, calling_data=True)
 
-    if _normalize_location_id(person.location_id) == _normalize_location_id(target_location_id):
+    if (person.location_id or '').strip() == target_location_id:
         return {
             'person_id': person_id,
             'from_location_id': person.location_id,
             'to_location_id': target_location_id,
-            'path': 'telephony.jobs.move_users.validate_or_initiate',
+            'calling_license_id': calling_license_id,
+            'path': 'licenses.assign_licenses_to_users',
             'status': 'unchanged',
             'reason': 'already_in_target_location',
         }
+
+    license_properties = LicenseProperties(location_id=target_location_id)
+    if person.extension:
+        license_properties.extension = person.extension
+
+    response = api.licenses.assign_licenses_to_users(
+        person_id=person_id,
+        licenses=[
+            LicenseRequest(
+                id=calling_license_id,
+                operation=LicenseRequestOperation.add,
+                properties=license_properties,
+            )
+        ],
+    )
 
     users_list = [
         MoveUsersList(
@@ -135,8 +152,9 @@ def _apply_with_move_users_job(api: Any, row: dict[str, str], *, person: Any) ->
     return {
         'person_id': person_id,
         'to_location_id': target_location_id,
+        'calling_license_id': calling_license_id,
         'extension': person.extension,
-        'path': 'telephony.jobs.move_users.validate_or_initiate',
+        'path': 'licenses.assign_licenses_to_users',
         'status': 'updated',
         'response': model_to_dict(response),
     }

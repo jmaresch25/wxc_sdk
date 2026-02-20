@@ -176,96 +176,64 @@ def test_launcher_includes_people_to_location_csv_head_in_invocation(monkeypatch
     assert preview['head'][0]['person_id'] == 'p-1'
 
 
-def test_apply_with_move_users_job_skips_if_user_already_in_target_location():
+def test_apply_with_license_assignment_skips_if_user_already_in_target_location():
     person = SimpleNamespace(location_id='loc-1', extension='6101')
     api = SimpleNamespace(
-        telephony=SimpleNamespace(
-            jobs=SimpleNamespace(
-                move_users=SimpleNamespace(validate_or_initiate=lambda **_: (_ for _ in ()).throw(AssertionError('should not call api')))
-            )
-        )
+        people=SimpleNamespace(details=lambda **_: person),
+        licenses=SimpleNamespace(assign_licenses_to_users=lambda **_: (_ for _ in ()).throw(AssertionError('should not call api'))),
     )
 
-    result = users_csv._apply_with_move_users_job(
+    result = users_csv._apply_with_license_assignment(
         api,
         {'person_id': 'p-1', 'target_location_id': 'loc-1'},
-        person=person,
+        calling_license_id='lic-calling',
     )
 
     assert result['status'] == 'unchanged'
     assert result['reason'] == 'already_in_target_location'
 
 
-def test_apply_with_move_users_job_uses_existing_extension():
+def test_apply_with_license_assignment_uses_existing_extension():
     captured: dict[str, object] = {}
     person = SimpleNamespace(location_id='loc-old', extension='6101')
 
-    def _move_validate_or_initiate(**kwargs):
+    def _assign(**kwargs):
         captured.update(kwargs)
         return SimpleNamespace(model_dump=lambda **__: {'ok': True})
 
     api = SimpleNamespace(
-        telephony=SimpleNamespace(
-            jobs=SimpleNamespace(
-                move_users=SimpleNamespace(validate_or_initiate=_move_validate_or_initiate)
-            )
-        )
+        people=SimpleNamespace(details=lambda **_: person),
+        licenses=SimpleNamespace(assign_licenses_to_users=_assign),
     )
 
-    result = users_csv._apply_with_move_users_job(
+    users_csv._apply_with_license_assignment(
         api,
         {'person_id': 'p-1', 'target_location_id': 'loc-new'},
-        person=person,
+        calling_license_id='lic-calling',
     )
 
-    users_list = captured['users_list']
-    assert users_list[0].location_id == 'loc-new'
-    assert users_list[0].users[0].extension == '6101'
-    assert result['path'] == 'telephony.jobs.move_users.validate_or_initiate'
+    req = captured['licenses'][0]
+    assert req.properties.location_id == 'loc-new'
+    assert req.properties.extension == '6101'
 
 
-def test_normalize_location_id_ignores_base64_padding():
-    assert users_csv._normalize_location_id('abc==') == 'abc'
-    assert users_csv._normalize_location_id('abc') == 'abc'
+def test_run_script_supports_usuarios_remover_licencias(monkeypatch):
+    def _fake_handler(token, person_id: str, remove_license_ids: list[str], org_id=None):
+        return {'status': 'ok'}
 
+    monkeypatch.setitem(launcher.HANDLERS, 'usuarios_remover_licencias', _fake_handler)
 
-def test_apply_location_change_for_calling_user_uses_move_users_job(monkeypatch):
-    person = SimpleNamespace(location_id='loc-a', extension='6101')
-    monkeypatch.setattr(users_csv, '_is_calling_user', lambda _: True)
-    monkeypatch.setattr(users_csv, '_apply_with_move_users_job', lambda api, row, person: {'status': 'updated', 'path': 'telephony.jobs.move_users.validate_or_initiate'})
-
-    api = SimpleNamespace(people=SimpleNamespace(details=lambda **_: person))
-    result = users_csv._apply_location_change(api, {'person_id': 'p-1', 'target_location_id': 'loc-b'})
-
-    assert result['path'] == 'telephony.jobs.move_users.validate_or_initiate'
-
-
-def test_assign_users_to_locations_applies_all_rows(monkeypatch, tmp_path):
-    csv_path = tmp_path / 'people_to_location.csv'
-    csv_path.write_text(
-        'selected,person_id,target_location_id\n1,p-1,loc-1\n1,p-2,loc-1\n',
-        encoding='utf-8',
+    result = launcher._run_script(
+        script_name='usuarios_remover_licencias',
+        parameter_map={
+            'person_id': 'person-1',
+            'remove_license_ids': 'lic-old-1,lic-old-2',
+            'org_id': 'org-1',
+        },
+        token='tkn',
+        auto_confirm=True,
+        dry_run=True,
     )
 
-    monkeypatch.setattr(users_csv, 'load_runtime_env', lambda: None)
-    monkeypatch.setattr(users_csv, 'get_token', lambda token: token or 'tkn')
-
-    def _apply(api, row):
-        return {'person_id': row['person_id'], 'status': 'updated'}
-
-    logs: list[tuple[str, dict[str, object]]] = []
-
-    def _logger(_name):
-        return lambda event, payload: logs.append((event, payload))
-
-    monkeypatch.setattr(users_csv, 'action_logger', _logger)
-    monkeypatch.setattr(users_csv, '_apply_location_change', _apply)
-    monkeypatch.setattr(users_csv, 'create_api', lambda _token: object())
-
-    results = users_csv.assign_users_to_locations(csv_path=csv_path, token='tkn', dry_run=False)
-
-    assert len(results) == 2
-    assert results[0]['status'] == 'updated'
-    assert results[1]['status'] == 'updated'
-    assert logs[0][0] == 'user_location_updated'
-    assert logs[1][0] == 'user_location_updated'
+    assert result['status'] == 'dry_run'
+    assert result['params']['remove_license_ids'] == ['lic-old-1', 'lic-old-2']
