@@ -210,6 +210,46 @@ def test_apply_with_license_assignment_skips_if_user_already_in_target_location(
     assert result['reason'] == 'already_in_target_location'
 
 
+def test_apply_with_license_assignment_skips_if_location_differs_only_by_base64_padding():
+    person = SimpleNamespace(location_id='loc-1==', extension='6101')
+    api = SimpleNamespace(
+        people=SimpleNamespace(details=lambda **_: person),
+        licenses=SimpleNamespace(assign_licenses_to_users=lambda **_: (_ for _ in ()).throw(AssertionError('should not call api'))),
+    )
+
+    result = users_csv._apply_with_license_assignment(
+        api,
+        {'person_id': 'p-1', 'target_location_id': 'loc-1'},
+        calling_license_id='lic-calling',
+    )
+
+    assert result['status'] == 'unchanged'
+    assert result['reason'] == 'already_in_target_location'
+
+
+def test_apply_with_move_users_job_skips_if_location_differs_only_by_base64_padding():
+    person = SimpleNamespace(location_id='loc-1', extension='6101')
+    captured = {'called': False}
+
+    def _should_not_call(**kwargs):
+        captured['called'] = True
+        raise AssertionError('should not call api')
+
+    api = SimpleNamespace(
+        telephony=SimpleNamespace(jobs=SimpleNamespace(move_users=SimpleNamespace(validate_or_initiate=_should_not_call))),
+    )
+
+    result = users_csv._apply_with_move_users_job(
+        api,
+        {'person_id': 'p-1', 'target_location_id': 'loc-1=='},
+        person=person,
+    )
+
+    assert captured['called'] is False
+    assert result['status'] == 'unchanged'
+    assert result['reason'] == 'already_in_target_location'
+
+
 def test_apply_with_license_assignment_uses_existing_extension():
     captured: dict[str, object] = {}
     person = SimpleNamespace(location_id='loc-old', extension='6101')

@@ -116,7 +116,7 @@ def _apply_with_move_users_job(api: Any, row: dict[str, str], *, person: Any) ->
     target_location_id = row['target_location_id'].strip()
     source_location_id = (person.location_id or '').strip()
 
-    if source_location_id == target_location_id:
+    if _normalize_location_id(source_location_id) == _normalize_location_id(target_location_id):
         return {
             'person_id': person_id,
             'from_location_id': source_location_id,
@@ -151,7 +151,7 @@ def _apply_with_license_assignment(api: Any, row: dict[str, str], *, calling_lic
     target_location_id = row['target_location_id'].strip()
     person = api.people.details(person_id=person_id, calling_data=True)
 
-    if (person.location_id or '').strip() == target_location_id:
+    if _normalize_location_id(person.location_id) == _normalize_location_id(target_location_id):
         return {
             'person_id': person_id,
             'from_location_id': person.location_id,
