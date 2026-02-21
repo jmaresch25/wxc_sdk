@@ -148,41 +148,65 @@ Se añadieron acciones desacopladas en `Space_OdT/v21/transformacion/`:
 - `ubicacion_configurar_pstn.py`
 - `ubicacion_alta_numeraciones_desactivadas.py`
 - `ubicacion_actualizar_cabecera.py`
-- `launcher_prueba_real.py` (ejecución secuencial real contra API)
 - `ubicacion_configurar_llamadas_internas.py`
 - `ubicacion_configurar_permisos_salientes_defecto.py`
 - `usuarios_alta_people.py`
 - `usuarios_alta_scim.py`
+- `usuarios_asignar_location_desde_csv.py`
 - `usuarios_modificar_licencias.py`
+- `usuarios_remover_licencias.py`
 - `usuarios_anadir_intercom_legacy.py`
 - `usuarios_configurar_desvio_prefijo53.py`
 - `usuarios_configurar_perfil_saliente_custom.py`
 - `workspaces_alta.py`
 - `workspaces_anadir_intercom_legacy.py`
 - `workspaces_configurar_desvio_prefijo53.py`
+- `workspaces_configurar_desvio_prefijo53_telephony.py`
 - `workspaces_configurar_perfil_saliente_custom.py`
-- `launcher_tester_api_remota.py` (tester que recibe acciones desde API remota, incluyendo las 3 acciones iniciales de Ubicación + resto de acciones backend)
+- `workspaces_validar_estado_permisos.py`
+- `generar_csv_candidatos_desde_artifacts.py` (genera CSV base con parámetros desde `.artifacts/exports/`)
+- `launcher_csv_dependencias.py` (ejecutor por acción leyendo una fila CSV con columnas=parámetros)
 
-Todos los scripts hacen `load_dotenv()` al iniciar y escriben log propio en:
+Los scripts operativos de transformación (acciones y launcher) cargan `.env` al iniciar y escriben log propio en:
 
 - `Space_OdT/v21/transformacion/logs/<nombre_script>.log`
 
-Ejemplo launcher real:
+Ejemplo generar CSV de parámetros:
 
 ```bash
-python -m Space_OdT.v21.transformacion.launcher_prueba_real   --location-id <LOCATION_ID>   --premise-route-id <ROUTE_GROUP_ID>   --phone-number +34910000001   --phone-number +34910000002   --header-phone-number +34910000001
+python -m Space_OdT.v21.transformacion.generar_csv_candidatos_desde_artifacts \
+  --output .artifacts/exports/v21_transformacion_candidatos.csv
 ```
 
-Ejemplo launcher tester API remota:
+Ejemplo launcher CSV por dependencias:
 
 ```bash
-python -m Space_OdT.v21.transformacion.launcher_tester_api_remota \
-  --remote-url http://127.0.0.1:8080/v21/actions
+python -m Space_OdT.v21.transformacion.launcher_csv_dependencias \
+  --csv-path .artifacts/exports/v21_transformacion_candidatos.csv \
+  --script-name ubicacion_actualizar_cabecera \
+  --auto-confirm
 ```
 
 ### ¿De qué archivos sale la configuración de cada caso en v2.1?
 
-La estructura quedó así para que cada configuración sea simple de modificar:
+La configuración para **v2.1 transformación backend** sale de estos archivos:
+
+- `Space_OdT/v21/transformacion/generar_csv_candidatos_desde_artifacts.py`
+  - Define `SCRIPT_DEPENDENCIES` (parámetros requeridos por cada caso/acción).
+  - Rellena valores sugeridos leyendo exports existentes.
+- `Space_OdT/v21/transformacion/launcher_csv_dependencias.py`
+  - Define `HANDLERS` (qué acciones están habilitadas en el launcher).
+  - Lee el CSV (`--csv-path`, por defecto `Space_OdT/.artifacts/report/results_manual.csv`) y ejecuta la acción seleccionada con validación de dependencias.
+- `Space_OdT/v21/transformacion/common.py`
+  - Carga `.env` en runtime (`load_runtime_env`) y centraliza el log por acción (`action_logger`) en `Space_OdT/v21/transformacion/logs/<nombre_script>.log`.
+
+Archivos de entrada/salida más usados en este flujo:
+
+- Entrada para generar candidatos: `Space_OdT/.artifacts/exports/*.csv`
+- CSV de candidatos recomendado: `Space_OdT/.artifacts/exports/v21_transformacion_candidatos.csv`
+- CSV de ejecución manual (default launcher): `Space_OdT/.artifacts/report/results_manual.csv`
+
+La estructura de orquestación asíncrona general v2.1 sigue así para plan/jobs de locations:
 
 - `Space_OdT/v21/models.py`
   - Define entidades y etapa principal de location.
