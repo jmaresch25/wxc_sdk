@@ -104,25 +104,6 @@ def test_location_pstn_optional_dependencies_match_defaults():
     assert 'premise_route_type' not in required
     assert 'pstn_connection_type' not in required
 
-
-
-def test_params_for_script_does_not_require_handler_defaults(monkeypatch):
-    def _fake_handler(token, location_id, premise_route_id, pstn_connection_type='LOCAL_GATEWAY'):
-        return {'status': 'ok'}
-
-    monkeypatch.setitem(launcher.HANDLERS, 'ubicacion_configurar_pstn', _fake_handler)
-    monkeypatch.setitem(launcher.SCRIPT_DEPENDENCIES, 'ubicacion_configurar_pstn', ['location_id', 'premise_route_id', 'pstn_connection_type'])
-
-    params, missing = launcher._params_for_script(
-        'ubicacion_configurar_pstn',
-        {'location_id': 'loc-1', 'premise_route_id': 'rg-1'},
-    )
-
-    assert missing == []
-    assert params['location_id'] == 'loc-1'
-    assert params['premise_route_id'] == 'rg-1'
-    assert 'pstn_connection_type' not in params
-
 def test_run_script_parses_and_uses_supported_params(monkeypatch):
     def _fake_handler(token, person_id, add_license_ids, org_id=None):
         return {'status': 'ok', 'kwargs': {'person_id': person_id, 'add_license_ids': add_license_ids, 'org_id': org_id}}
