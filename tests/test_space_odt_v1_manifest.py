@@ -158,6 +158,42 @@ def test_manifest_includes_artifacts_for_requested_calling_fields() -> None:
     assert by_module['workspace_call_forwarding'].method_path == 'workspace_settings.forwarding.read'
 
 
+def test_run_artifact_location_details_does_not_emit_person_name_fields() -> None:
+    def details(*, location_id: str):
+        return {
+            'id': location_id,
+            'name': 'HQ',
+            'firstName': 'Wrong',
+            'lastName': 'Field',
+            'preferredLanguage': 'es_ES',
+            'address': {
+                'address1': 'Main St 1',
+                'city': 'Madrid',
+                'state': 'MD',
+                'postalCode': '28001',
+                'country': 'ES',
+            },
+        }
+
+    api = SimpleNamespace(locations=SimpleNamespace(details=details))
+    spec = ArtifactSpec(
+        module='location_details',
+        method_path='locations.details',
+        static_kwargs={},
+        param_sources=(ParamSource('location_id', 'locations', 'location_id'),),
+    )
+    cache = {'locations': [{'location_id': 'loc-1'}]}
+
+    result = run_artifact(api, spec, cache)
+
+    assert result.count == 1
+    row = result.rows[0]
+    assert 'last_name' not in row
+    assert 'first_name' not in row
+    assert row['location_id'] == 'loc-1'
+    assert row['name'] == 'HQ'
+
+
 class _FakePydantic:
     def __iter__(self):
         # Mimics pydantic/BaseModel iter behavior returning key/value tuples.
