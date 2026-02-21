@@ -53,6 +53,25 @@ class ArtifactSpec:
     param_sources: tuple[ParamSource, ...] = ()
 
 
+class ParamSourceValidationError(ValueError):
+    """Raised when an artifact cannot run due to missing required source IDs."""
+
+
+def _build_source_id_diagnostic(cache: dict[str, list[dict]], source: ParamSource) -> dict[str, Any]:
+    rows = cache.get(source.module, [])
+    values = _id_values(cache, source)
+    return {
+        'source_module': source.module,
+        'param_name': source.name,
+        'field': source.field,
+        'required_field': source.required_field,
+        'min_required': 1,
+        'valid_ids_detected': len(values),
+        'cache_rows': len(rows),
+        'sample_ids': values[:5],
+    }
+
+
 def _id_values(cache: dict[str, list[dict]], source: ParamSource) -> list[Any]:
     rows = cache.get(source.module, [])
     values = [
@@ -70,12 +89,22 @@ def _id_values(cache: dict[str, list[dict]], source: ParamSource) -> list[Any]:
     return uniq
 
 
-def _iter_kwargs(cache: dict[str, list[dict]], spec: ArtifactSpec) -> list[dict[str, Any]]:
+def _iter_kwargs(
+    cache: dict[str, list[dict]],
+    spec: ArtifactSpec,
+    *,
+    diagnostics: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     if not spec.param_sources:
         return [dict(spec.static_kwargs)]
+    source_diagnostics = [_build_source_id_diagnostic(cache, src) for src in spec.param_sources]
     value_lists = [_id_values(cache, src) for src in spec.param_sources]
     if any(not vals for vals in value_lists):
+        if diagnostics is not None:
+            diagnostics.extend(source_diagnostics)
         return []
+    if diagnostics is not None:
+        diagnostics.extend(source_diagnostics)
     keys = [s.name for s in spec.param_sources]
     out: list[dict[str, Any]] = []
     for combo in product(*value_lists):
@@ -83,6 +112,46 @@ def _iter_kwargs(cache: dict[str, list[dict]], spec: ArtifactSpec) -> list[dict[
         kwargs.update(dict(zip(keys, combo)))
         out.append(kwargs)
     return out
+
+
+def required_source_ids_per_artifact(spec: ArtifactSpec) -> list[dict[str, str | int | None]]:
+    if not spec.param_sources:
+        return []
+    table: list[dict[str, str | int | None]] = []
+    for source in spec.param_sources:
+        table.append({
+            'artifact': spec.module,
+            'source_module': source.module,
+            'param_name': source.name,
+            'field': source.field,
+            'required_field': source.required_field,
+            'min_required': 1,
+        })
+    return table
+
+
+def validate_param_sources(cache: dict[str, list[dict]], spec: ArtifactSpec) -> None:
+    diagnostics: list[dict[str, Any]] = []
+    _iter_kwargs(cache, spec, diagnostics=diagnostics)
+    missing = [d for d in diagnostics if d['valid_ids_detected'] < d['min_required']]
+    if not missing:
+        return
+
+    requirements = required_source_ids_per_artifact(spec)
+    details: list[str] = []
+    for item in missing:
+        details.append(
+            f"{item['source_module']} ({item['field']} -> {item['param_name']}): "
+            f"{item['valid_ids_detected']}/{item['min_required']} IDs válidos"
+        )
+    requirements_json = json.dumps(requirements, ensure_ascii=False, sort_keys=True)
+    diagnostics_json = json.dumps(missing, ensure_ascii=False, sort_keys=True)
+    raise ParamSourceValidationError(
+        f"Artifact '{spec.module}' no ejecutable por IDs fuente insuficientes. "
+        f"Detalles: {', '.join(details)}. "
+        f"required_source_ids_per_artifact={requirements_json}; "
+        f"source_diagnostics={diagnostics_json}"
+    )
 
 
 def _canonical_item(item: dict[str, Any]) -> dict[str, Any]:
@@ -154,7 +223,9 @@ def _is_user_access_error(exc: Exception) -> bool:
 def run_artifact(api, spec: ArtifactSpec, cache: dict[str, list[dict]]) -> ModuleResult:
     method = resolve_attr(api, spec.method_path)
     rows: list[dict] = []
-    for kwargs in _iter_kwargs(cache, spec):
+    validate_param_sources(cache, spec)
+    kwargs_diagnostics: list[dict[str, Any]] = []
+    for kwargs in _iter_kwargs(cache, spec, diagnostics=kwargs_diagnostics):
         try:
             payload = call_with_supported_kwargs(method, **kwargs)
         except Exception as exc:
