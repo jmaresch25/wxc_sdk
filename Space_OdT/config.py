@@ -3,10 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+PACKAGE_ROOT = Path(__file__).resolve().parent
+DEFAULT_OUT_DIR = PACKAGE_ROOT / '.artifacts'
+
 
 @dataclass(frozen=True)
 class Settings:
-    out_dir: Path = Path('Space_OdT/.artifacts')
+    out_dir: Path = DEFAULT_OUT_DIR
     include_group_members: bool = True
     write_cache: bool = True
     write_report: bool = True
