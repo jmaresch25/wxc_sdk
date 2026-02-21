@@ -123,6 +123,24 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
     def _iter_kwargs_for_async(cache: dict[str, list[dict]], spec):
         return _iter_kwargs(cache, spec)
 
+    def _pick_first_value(data: dict, *keys: str):
+        for key in keys:
+            value = data.get(key)
+            if value not in (None, ''):
+                return value
+        return None
+
+    def _extract_identifier(raw_item, *keys: str):
+        data = model_to_dict(raw_item)
+        value = _pick_first_value(data, *keys)
+        if value not in (None, ''):
+            return value
+        for key in keys:
+            attr_value = getattr(raw_item, key, None)
+            if attr_value not in (None, ''):
+                return attr_value
+        return None
+
     def _write_csv(*, csv_path: Path, rows: list[dict]) -> None:
         headers = sorted({k for row in rows for k in row.keys()}) if rows else ['id']
         csv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -131,29 +149,66 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
             writer.writeheader()
             writer.writerows(rows)
 
+    async def _load_routing_groups() -> list[dict]:
+        method = resolve_attr(api, 'telephony.prem_pstn.route_group.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [model_to_dict(x) for x in as_list(payload)]
+
+    async def _load_licenses() -> list[dict]:
+        method = resolve_attr(api, 'licenses.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [model_to_dict(x) for x in as_list(payload)]
+
+    async def _load_person_ids() -> list[dict]:
+        method = resolve_attr(api, 'people.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method, calling_data=True)
+        return [
+            {'person_id': _extract_identifier(x, 'person_id', 'personId', 'id')}
+            for x in as_list(payload)
+        ]
+
+    async def _load_group_ids() -> list[dict]:
+        method = resolve_attr(api, 'groups.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [
+            {'group_id': _extract_identifier(x, 'group_id', 'groupId', 'id')}
+            for x in as_list(payload)
+        ]
+
+    async def _load_location_ids() -> list[dict]:
+        method = resolve_attr(api, 'locations.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [
+            {'location_id': _extract_identifier(x, 'location_id', 'locationId', 'id')}
+            for x in as_list(payload)
+        ]
+
+    async def _load_workspace_ids() -> list[dict]:
+        method = resolve_attr(api, 'workspaces.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [
+            {'workspace_id': _extract_identifier(x, 'workspace_id', 'workspaceId', 'id')}
+            for x in as_list(payload)
+        ]
+
+    json_item_loaders = {
+        'routing_groups': _load_routing_groups,
+        'licenses': _load_licenses,
+        'person_ids': _load_person_ids,
+        'group_ids': _load_group_ids,
+        'location_ids': _load_location_ids,
+        'workspace_ids': _load_workspace_ids,
+    }
+
     async def _load_json_item(item: str) -> list[dict]:
         if item in cached_json:
             return cached_json[item]
 
-        if item == 'routing_groups':
-            method = resolve_attr(api, 'telephony.prem_pstn.route_group.list')
-            payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-            rows = [model_to_dict(x) for x in as_list(payload)]
-        elif item == 'licenses':
-            method = resolve_attr(api, 'licenses.list')
-            payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-            rows = [model_to_dict(x) for x in as_list(payload)]
-        elif item == 'person_ids':
-            method = resolve_attr(api, 'people.list')
-            payload = await asyncio.to_thread(call_with_supported_kwargs, method, calling_data=True)
-            rows = [{'person_id': model_to_dict(x).get('id')} for x in as_list(payload)]
-        elif item == 'workspace_ids':
-            method = resolve_attr(api, 'workspaces.list')
-            payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-            rows = [{'workspace_id': model_to_dict(x).get('id')} for x in as_list(payload)]
-        else:
+        loader = json_item_loaders.get(item)
+        if loader is None:
             raise ValueError(f'Consulta JSON no soportada: {item}')
 
+        rows = await loader()
         cached_json[item] = rows
         return rows
 
@@ -294,6 +349,8 @@ pre{background:#0a1320;border:1px solid #2b4061;padding:12px;border-radius:8px;m
         <option value=\"routing_groups\">Lista de routing groups</option>
         <option value=\"licenses\">Listado de licencias</option>
         <option value=\"person_ids\">Obtener person_id de personas</option>
+        <option value=\"group_ids\">Obtener group_id de grupos</option>
+        <option value=\"location_ids\">Obtener location_id de ubicaciones</option>
         <option value=\"workspace_ids\">Lista de workspace_id</option>
       </select>
       <input id=\"page\" type=\"number\" min=\"1\" value=\"1\" />
