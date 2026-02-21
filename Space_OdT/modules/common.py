@@ -21,7 +21,13 @@ def model_to_dict(value: Any) -> dict:
         return value
     dump = getattr(value, 'model_dump', None)
     if callable(dump):
-        return dump(by_alias=False, exclude_none=True)
+        try:
+            return dump(mode='json', by_alias=True, exclude_none=True)
+        except TypeError:
+            return dump(by_alias=True, exclude_none=True)
+    to_dict = getattr(value, 'to_dict', None)
+    if callable(to_dict):
+        return to_dict()
     return dict(value.__dict__) if hasattr(value, '__dict__') else {}
 
 
@@ -30,6 +36,10 @@ def as_list(value: Any) -> list:
         return []
     if isinstance(value, list):
         return value
+    # SDK models (pydantic-based) are iterable and yield field tuples, which would
+    # incorrectly fan out a single API object into many pseudo-items.
+    if callable(getattr(value, 'model_dump', None)) or callable(getattr(value, 'to_dict', None)):
+        return [value]
     if isinstance(value, Iterable) and not isinstance(value, (str, bytes, dict)):
         return list(value)
     return [value]
