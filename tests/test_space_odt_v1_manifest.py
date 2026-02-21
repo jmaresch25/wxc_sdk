@@ -10,6 +10,7 @@ from Space_OdT.modules.v1_manifest import (
     _iter_kwargs,
     required_source_ids_per_artifact,
     run_artifact,
+    hydrate_lookup_sources,
     validate_param_sources,
     V1_ARTIFACT_SPECS,
 )
@@ -141,6 +142,52 @@ def test_run_artifact_skips_resterror_4003() -> None:
     assert result.count == 1
     assert result.rows[0]['id'] == 'row-good'
     assert result.rows[0]['source_method'] == 'person_settings.permissions_in.read'
+
+
+def test_hydrate_lookup_sources_populates_people_cache_with_calling_data() -> None:
+    def people_list(*, calling_data: bool = False):
+        assert calling_data is True
+        return [{'id': 'p1', 'callingData': {'locationId': 'loc-1'}}]
+
+    api = SimpleNamespace(people=SimpleNamespace(list=people_list))
+    spec = ArtifactSpec(
+        module='person_numbers',
+        method_path='person_settings.numbers.read',
+        static_kwargs={},
+        param_sources=(ParamSource('person_id', 'people', 'person_id', required_field='location_id'),),
+    )
+    cache: dict[str, list[dict]] = {'people': []}
+
+    hydrate_lookup_sources(api, spec, cache)
+
+    assert len(cache['people']) == 1
+    assert cache['people'][0]['id'] == 'p1'
+    assert cache['people'][0]['person_id'] == 'p1'
+    assert cache['people'][0]['location_id'] == 'loc-1'
+
+
+def test_run_artifact_auto_hydrates_lookup_sources_before_validating() -> None:
+    def people_list(*, calling_data: bool = False):
+        return [{'id': 'p1', 'callingData': {'locationId': 'loc-1'}}]
+
+    def numbers_read(*, person_id: str):
+        return [{'id': f'n-{person_id}', 'directNumber': '+349999'}]
+
+    api = SimpleNamespace(
+        people=SimpleNamespace(list=people_list),
+        person_settings=SimpleNamespace(numbers=SimpleNamespace(read=numbers_read)),
+    )
+    spec = ArtifactSpec(
+        module='person_numbers',
+        method_path='person_settings.numbers.read',
+        static_kwargs={},
+        param_sources=(ParamSource('person_id', 'people', 'person_id', required_field='location_id'),),
+    )
+
+    result = run_artifact(api, spec, cache={'people': []})
+
+    assert result.count == 1
+    assert result.rows[0]['direct_number'] == '+349999'
 
 
 def test_manifest_includes_artifacts_for_requested_calling_fields() -> None:
