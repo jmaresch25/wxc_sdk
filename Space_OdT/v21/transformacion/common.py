@@ -62,6 +62,7 @@ def action_logger(script_name: str):
         }
         with log_file.open('a', encoding='utf-8') as handle:
             handle.write(json.dumps(line, ensure_ascii=False, sort_keys=True) + '\n')
+        log_console_step(script_name, event, payload)
 
     return _log
 
@@ -91,11 +92,10 @@ def apply_csv_arguments(
     required: list[str],
     list_fields: list[str] | None = None,
 ) -> Namespace:
-    """Aplica parámetros desde --csv si existe y valida requeridos tras merge CLI/CSV."""
+    """Aplica parámetros desde --csv o input_data por defecto, sin bloquear standalone por requeridos."""
     csv_file = getattr(args, 'csv', None)
     if not csv_file:
-        _assert_required_args(args, required)
-        return args
+        return _apply_default_input_dir_arguments(args, required=required, list_fields=list_fields)
 
     with Path(csv_file).open('r', encoding='utf-8-sig', newline='') as handle:
         row = next(csv.DictReader(handle), None)
@@ -116,7 +116,7 @@ def apply_csv_arguments(
         else:
             setattr(args, field, raw_value)
 
-    _assert_required_args(args, required)
+    _warn_missing_args(args, required)
     return args
 
 
@@ -200,7 +200,7 @@ def apply_standalone_input_arguments(
         else:
             setattr(args, field, raw_value)
 
-    _assert_required_args(args, required)
+    _warn_missing_args(args, required)
     log(
         'input_merge_result',
         {field: getattr(args, field, None) for field in sorted(set(required + list_fields))},
@@ -230,7 +230,64 @@ def _find_csv_case_insensitive(input_dir: Path, expected_name: str) -> Path | No
 
 
 def _assert_required_args(args: Namespace, required: list[str]) -> None:
-    missing = [field for field in required if getattr(args, field, None) in (None, '', [])]
+    missing = _missing_args(args, required)
     if missing:
         names = ', '.join(f'--{name.replace("_", "-")}' for name in missing)
         raise ValueError(f'Faltan parámetros requeridos: {names}')
+
+
+def _missing_args(args: Namespace, required: list[str]) -> list[str]:
+    missing = [field for field in required if getattr(args, field, None) in (None, '', [])]
+    return missing
+
+
+def _warn_missing_args(args: Namespace, required: list[str]) -> None:
+    missing = _missing_args(args, required)
+    if missing:
+        setattr(args, '_missing_required_args', missing)
+
+
+def _apply_default_input_dir_arguments(
+    args: Namespace,
+    *,
+    required: list[str],
+    list_fields: list[str] | None = None,
+) -> Namespace:
+    input_dir = Path(getattr(args, 'input_dir', '') or Path(__file__).resolve().parents[3] / 'input_data')
+    setattr(args, 'input_dir', str(input_dir))
+
+    if not input_dir.is_dir():
+        _warn_missing_args(args, required)
+        return args
+
+    rows: list[dict[str, str]] = []
+    for csv_path in sorted(input_dir.iterdir()):
+        if not csv_path.is_file() or csv_path.suffix.lower() != '.csv':
+            continue
+        row = _first_csv_row(csv_path)
+        if row:
+            rows.append(row)
+
+    list_fields = list_fields or []
+    for field in required + list_fields:
+        current_value = getattr(args, field, None)
+        if current_value not in (None, [], ''):
+            continue
+
+        raw_value = None
+        for row in rows:
+            value = row.get(field)
+            if value not in (None, ''):
+                raw_value = value
+                break
+        if raw_value in (None, ''):
+            continue
+
+        if field in list_fields:
+            normalized = [item.strip() for item in raw_value.replace('|', ',').split(',') if item.strip()]
+            setattr(args, field, normalized)
+        else:
+            setattr(args, field, raw_value)
+
+    _warn_missing_args(args, required)
+    return args
