@@ -36,3 +36,20 @@ python -m Space_OdT.v21.transformacion.launcher_csv_dependencias \
 ```
 
 Cambia `--csv-path` a `Space_OdT/input_data/Usuarios.csv` y `--script-name` por la acción de usuario correspondiente.
+
+## Modo standalone (v21 · primeras 3 transformaciones de ubicación)
+
+Estos scripts ahora resuelven automáticamente `Global.csv` + `Ubicaciones.csv` desde `Space_OdT/input_data` si no indicas `--input-dir` ni `--csv`.
+
+```bash
+python -m Space_OdT.v21.transformacion.ubicacion_configurar_pstn
+python -m Space_OdT.v21.transformacion.ubicacion_alta_numeraciones_desactivadas
+python -m Space_OdT.v21.transformacion.ubicacion_actualizar_cabecera
+```
+
+Opcionalmente puedes apuntar a otro set de CSV:
+
+```bash
+python -m Space_OdT.v21.transformacion.ubicacion_alta_numeraciones_desactivadas \
+  --input-dir /ruta/a/mis_csv
+```

@@ -7,7 +7,14 @@ from typing import Any
 
 from wxc_sdk.telephony.location import CallingLineId, TelephonyLocation
 
-from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
+from .common import (
+    action_logger,
+    apply_standalone_input_arguments,
+    create_api,
+    get_token,
+    load_runtime_env,
+    model_to_dict,
+)
 
 SCRIPT_NAME = 'ubicacion_actualizar_cabecera'
 
@@ -58,13 +65,20 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Añadir/actualizar cabecera de ubicación (calling_line_id.phone_number)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--csv', default=None, help='CSV explícito (override); si no se informa se usa --input-dir')
+    parser.add_argument('--input-dir', default=None, help='Directorio con Global.csv y Ubicaciones.csv (default: Space_OdT/input_data)')
     parser.add_argument('--location-id', default=None)
     parser.add_argument('--phone-number', default=None)
     parser.add_argument('--calling-line-name', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
-    args = apply_csv_arguments(args, required=['location_id', 'phone_number'], list_fields=[])
+    args = apply_standalone_input_arguments(
+        args,
+        required=['location_id', 'phone_number'],
+        list_fields=[],
+        domain_csv_name='Ubicaciones.csv',
+        script_name=SCRIPT_NAME,
+    )
 
     payload = actualizar_cabecera_ubicacion(
         token=get_token(args.token),

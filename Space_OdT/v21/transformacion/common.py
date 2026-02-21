@@ -113,6 +113,99 @@ def apply_csv_arguments(
     return args
 
 
+def apply_standalone_input_arguments(
+    args: Namespace,
+    *,
+    required: list[str],
+    list_fields: list[str] | None = None,
+    domain_csv_name: str,
+    script_name: str,
+) -> Namespace:
+    """Resuelve input_dir standalone y aplica merge de Global.csv + CSV de dominio.
+
+    Prioridad para cada campo:
+      1) CLI explícito del argumento (por ejemplo --location-id)
+      2) primera fila del CSV de dominio (Ubicaciones/Usuarios/Workspaces)
+      3) primera fila de Global.csv
+    """
+    log = action_logger(script_name)
+    input_dir = Path(getattr(args, 'input_dir', '') or Path(__file__).resolve().parents[2] / 'input_data')
+    setattr(args, 'input_dir', str(input_dir))
+
+    csv_argument = getattr(args, 'csv', None)
+    if csv_argument:
+        log('input_resolution', {'mode': 'explicit_csv', 'csv': csv_argument})
+        return apply_csv_arguments(args, required=required, list_fields=list_fields)
+
+    global_path = _find_csv_case_insensitive(input_dir, 'Global.csv')
+    domain_path = _find_csv_case_insensitive(input_dir, domain_csv_name)
+
+    if global_path is None:
+        raise ValueError(f'No se encontró Global.csv dentro de input_dir={input_dir}')
+    if domain_path is None:
+        raise ValueError(f'No se encontró {domain_csv_name} dentro de input_dir={input_dir}')
+
+    global_row = _first_csv_row(global_path)
+    domain_row = _first_csv_row(domain_path)
+    if global_row is None:
+        raise ValueError(f'CSV vacío: {global_path}')
+    if domain_row is None:
+        raise ValueError(f'CSV vacío: {domain_path}')
+
+    list_fields = list_fields or []
+    log(
+        'input_resolution',
+        {
+            'mode': 'input_dir_auto',
+            'input_dir': str(input_dir),
+            'global_csv': str(global_path),
+            'domain_csv': str(domain_path),
+            'required': required,
+            'list_fields': list_fields,
+        },
+    )
+
+    for field in required + list_fields:
+        current_value = getattr(args, field, None)
+        if current_value not in (None, [], ''):
+            continue
+
+        raw_value = domain_row.get(field)
+        if raw_value in (None, ''):
+            raw_value = global_row.get(field)
+        if raw_value in (None, ''):
+            continue
+
+        if field in list_fields:
+            normalized = [item.strip() for item in raw_value.replace('|', ',').split(',') if item.strip()]
+            setattr(args, field, normalized)
+        else:
+            setattr(args, field, raw_value)
+
+    _assert_required_args(args, required)
+    log(
+        'input_merge_result',
+        {field: getattr(args, field, None) for field in sorted(set(required + list_fields))},
+    )
+    return args
+
+
+def _first_csv_row(path: Path) -> dict[str, str] | None:
+    with path.open('r', encoding='utf-8-sig', newline='') as handle:
+        return next(csv.DictReader(handle), None)
+
+
+def _find_csv_case_insensitive(input_dir: Path, expected_name: str) -> Path | None:
+    if not input_dir.is_dir():
+        return None
+
+    expected_lower = expected_name.lower()
+    for entry in input_dir.iterdir():
+        if entry.is_file() and entry.name.lower() == expected_lower:
+            return entry
+    return None
+
+
 def _assert_required_args(args: Namespace, required: list[str]) -> None:
     missing = [field for field in required if getattr(args, field, None) in (None, '', [])]
     if missing:

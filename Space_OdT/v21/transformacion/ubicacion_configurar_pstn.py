@@ -7,7 +7,14 @@ from typing import Any
 
 from wxc_sdk.rest import RestError
 
-from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
+from .common import (
+    action_logger,
+    apply_standalone_input_arguments,
+    create_api,
+    get_token,
+    load_runtime_env,
+    model_to_dict,
+)
 
 SCRIPT_NAME = 'ubicacion_configurar_pstn'
 
@@ -138,14 +145,21 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Configurar PSTN de una ubicación (SDK-first)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--csv', default=None, help='CSV explícito (override); si no se informa se usa --input-dir')
+    parser.add_argument('--input-dir', default=None, help='Directorio con Global.csv y Ubicaciones.csv (default: Space_OdT/input_data)')
     parser.add_argument('--location-id', default=None)
     parser.add_argument('--premise-route-type', default='ROUTE_GROUP')
     parser.add_argument('--premise-route-id', default=None)
     parser.add_argument('--org-id', default=None)
     parser.add_argument('--pstn-connection-type', default='LOCAL_GATEWAY')
     args = parser.parse_args()
-    args = apply_csv_arguments(args, required=['location_id', 'premise_route_id'], list_fields=[])
+    args = apply_standalone_input_arguments(
+        args,
+        required=['location_id', 'premise_route_id'],
+        list_fields=[],
+        domain_csv_name='Ubicaciones.csv',
+        script_name=SCRIPT_NAME,
+    )
 
     payload = configurar_pstn_ubicacion(
         token=get_token(args.token),
