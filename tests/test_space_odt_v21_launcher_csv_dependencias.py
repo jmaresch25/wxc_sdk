@@ -94,6 +94,16 @@ def test_run_script_skips_when_required_dependency_is_missing():
     assert result['missing_dependencies'] == 'phone_number'
 
 
+
+
+def test_location_pstn_optional_dependencies_match_defaults():
+    required = launcher.SCRIPT_DEPENDENCIES['ubicacion_configurar_pstn']
+
+    assert 'location_id' in required
+    assert 'premise_route_id' in required
+    assert 'premise_route_type' not in required
+    assert 'pstn_connection_type' not in required
+
 def test_run_script_parses_and_uses_supported_params(monkeypatch):
     def _fake_handler(token, person_id, add_license_ids, org_id=None):
         return {'status': 'ok', 'kwargs': {'person_id': person_id, 'add_license_ids': add_license_ids, 'org_id': org_id}}

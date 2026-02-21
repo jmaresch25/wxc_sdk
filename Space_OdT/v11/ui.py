@@ -123,6 +123,24 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
     def _iter_kwargs_for_async(cache: dict[str, list[dict]], spec):
         return _iter_kwargs(cache, spec)
 
+    def _pick_first_value(data: dict, *keys: str):
+        for key in keys:
+            value = data.get(key)
+            if value not in (None, ''):
+                return value
+        return None
+
+    def _extract_identifier(raw_item, *keys: str):
+        data = model_to_dict(raw_item)
+        value = _pick_first_value(data, *keys)
+        if value not in (None, ''):
+            return value
+        for key in keys:
+            attr_value = getattr(raw_item, key, None)
+            if attr_value not in (None, ''):
+                return attr_value
+        return None
+
     def _write_csv(*, csv_path: Path, rows: list[dict]) -> None:
         headers = sorted({k for row in rows for k in row.keys()}) if rows else ['id']
         csv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -142,36 +160,24 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
         return [model_to_dict(x) for x in as_list(payload)]
 
     async def _load_person_ids() -> list[dict]:
-        rows = await asyncio.to_thread(run_spec, api, module_specs['people'])
-        return [
-            {'person_id': row.get('person_id')}
-            for row in rows.rows
-            if row.get('person_id')
-        ]
+        method = resolve_attr(api, 'people.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method, calling_data=True)
+        return [{'person_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_group_ids() -> list[dict]:
-        rows = await asyncio.to_thread(run_spec, api, module_specs['groups'])
-        return [
-            {'group_id': row.get('group_id')}
-            for row in rows.rows
-            if row.get('group_id')
-        ]
+        method = resolve_attr(api, 'groups.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [{'group_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_location_ids() -> list[dict]:
-        rows = await asyncio.to_thread(run_spec, api, module_specs['locations'])
-        return [
-            {'location_id': row.get('location_id')}
-            for row in rows.rows
-            if row.get('location_id')
-        ]
+        method = resolve_attr(api, 'locations.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [{'location_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_workspace_ids() -> list[dict]:
-        rows = await asyncio.to_thread(run_spec, api, module_specs['workspaces'])
-        return [
-            {'workspace_id': row.get('workspace_id')}
-            for row in rows.rows
-            if row.get('workspace_id')
-        ]
+        method = resolve_attr(api, 'workspaces.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [{'workspace_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     json_item_loaders = {
         'routing_groups': _load_routing_groups,

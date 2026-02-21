@@ -53,7 +53,7 @@ HANDLERS: dict[str, ActionFn] = {
     'ubicacion_actualizar_cabecera': actualizar_cabecera_ubicacion,
     'ubicacion_configurar_llamadas_internas': configurar_llamadas_internas_ubicacion,
     'ubicacion_configurar_permisos_salientes_defecto': configurar_permisos_salientes_defecto_ubicacion,
-    #'ubicacion_configurar_pstn': configurar_pstn_ubicacion,
+    'ubicacion_configurar_pstn': configurar_pstn_ubicacion,
     #'usuarios_alta_people': alta_usuario_people,
     #'usuarios_alta_scim': alta_usuario_scim,
     'usuarios_anadir_intercom_legacy': anadir_intercom_legacy_usuario,
@@ -230,13 +230,24 @@ def _params_for_script(script_name: str, parameter_map: dict[str, Any]) -> tuple
         if not _is_missing_value(singular_value):
             parameter_map = {**parameter_map, 'remove_license_ids': singular_value}
 
-    missing = [dep for dep in required if _is_missing_value(parameter_map.get(dep))]
+    handler = HANDLERS[script_name]
+    signature = inspect.signature(handler)
+
+    # No exigir dependencias con valor por defecto en la firma del handler.
+    # Esto evita falsos "missing_dependencies" cuando el CSV no incluye
+    # parámetros opcionales (p.ej. pstn_connection_type/premise_route_type).
+    effective_required = [
+        dep
+        for dep in required
+        if dep not in signature.parameters
+        or signature.parameters[dep].default is inspect._empty
+    ]
+
+    missing = [dep for dep in effective_required if _is_missing_value(parameter_map.get(dep))]
     if missing:
         return {}, missing
 
-    handler = HANDLERS[script_name]
     accepted_params = set(inspect.signature(handler).parameters.keys()) - {'token'}
-    signature = inspect.signature(handler)
     try:
         type_hints = get_type_hints(handler)
     except Exception:  # noqa: BLE001

@@ -90,6 +90,8 @@ def _parameter_columns() -> list[str]:
         'people_json',
         'overwrite_csv',
         'generate_only',
+        'premise_route_type',
+        'pstn_connection_type',
     ]:
         if optional_param not in seen:
             ordered.append(optional_param)
