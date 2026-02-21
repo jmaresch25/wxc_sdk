@@ -131,29 +131,66 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
             writer.writeheader()
             writer.writerows(rows)
 
+    async def _load_routing_groups() -> list[dict]:
+        method = resolve_attr(api, 'telephony.prem_pstn.route_group.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [model_to_dict(x) for x in as_list(payload)]
+
+    async def _load_licenses() -> list[dict]:
+        method = resolve_attr(api, 'licenses.list')
+        payload = await asyncio.to_thread(call_with_supported_kwargs, method)
+        return [model_to_dict(x) for x in as_list(payload)]
+
+    async def _load_person_ids() -> list[dict]:
+        rows = await asyncio.to_thread(run_spec, api, module_specs['people'])
+        return [
+            {'person_id': row.get('person_id')}
+            for row in rows.rows
+            if row.get('person_id')
+        ]
+
+    async def _load_group_ids() -> list[dict]:
+        rows = await asyncio.to_thread(run_spec, api, module_specs['groups'])
+        return [
+            {'group_id': row.get('group_id')}
+            for row in rows.rows
+            if row.get('group_id')
+        ]
+
+    async def _load_location_ids() -> list[dict]:
+        rows = await asyncio.to_thread(run_spec, api, module_specs['locations'])
+        return [
+            {'location_id': row.get('location_id')}
+            for row in rows.rows
+            if row.get('location_id')
+        ]
+
+    async def _load_workspace_ids() -> list[dict]:
+        rows = await asyncio.to_thread(run_spec, api, module_specs['workspaces'])
+        return [
+            {'workspace_id': row.get('workspace_id')}
+            for row in rows.rows
+            if row.get('workspace_id')
+        ]
+
+    json_item_loaders = {
+        'routing_groups': _load_routing_groups,
+        'licenses': _load_licenses,
+        'person_ids': _load_person_ids,
+        'group_ids': _load_group_ids,
+        'location_ids': _load_location_ids,
+        'workspace_ids': _load_workspace_ids,
+    }
+
     async def _load_json_item(item: str) -> list[dict]:
         if item in cached_json:
             return cached_json[item]
 
-        if item == 'routing_groups':
-            method = resolve_attr(api, 'telephony.prem_pstn.route_group.list')
-            payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-            rows = [model_to_dict(x) for x in as_list(payload)]
-        elif item == 'licenses':
-            method = resolve_attr(api, 'licenses.list')
-            payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-            rows = [model_to_dict(x) for x in as_list(payload)]
-        elif item == 'person_ids':
-            method = resolve_attr(api, 'people.list')
-            payload = await asyncio.to_thread(call_with_supported_kwargs, method, calling_data=True)
-            rows = [{'person_id': model_to_dict(x).get('id')} for x in as_list(payload)]
-        elif item == 'workspace_ids':
-            method = resolve_attr(api, 'workspaces.list')
-            payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-            rows = [{'workspace_id': model_to_dict(x).get('id')} for x in as_list(payload)]
-        else:
+        loader = json_item_loaders.get(item)
+        if loader is None:
             raise ValueError(f'Consulta JSON no soportada: {item}')
 
+        rows = await loader()
         cached_json[item] = rows
         return rows
 
@@ -294,6 +331,8 @@ pre{background:#0a1320;border:1px solid #2b4061;padding:12px;border-radius:8px;m
         <option value=\"routing_groups\">Lista de routing groups</option>
         <option value=\"licenses\">Listado de licencias</option>
         <option value=\"person_ids\">Obtener person_id de personas</option>
+        <option value=\"group_ids\">Obtener group_id de grupos</option>
+        <option value=\"location_ids\">Obtener location_id de ubicaciones</option>
         <option value=\"workspace_ids\">Lista de workspace_id</option>
       </select>
       <input id=\"page\" type=\"number\" min=\"1\" value=\"1\" />
