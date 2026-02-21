@@ -162,34 +162,22 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
     async def _load_person_ids() -> list[dict]:
         method = resolve_attr(api, 'people.list')
         payload = await asyncio.to_thread(call_with_supported_kwargs, method, calling_data=True)
-        return [
-            {'person_id': _extract_identifier(x, 'person_id', 'personId', 'id')}
-            for x in as_list(payload)
-        ]
+        return [{'person_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_group_ids() -> list[dict]:
         method = resolve_attr(api, 'groups.list')
         payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-        return [
-            {'group_id': _extract_identifier(x, 'group_id', 'groupId', 'id')}
-            for x in as_list(payload)
-        ]
+        return [{'group_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_location_ids() -> list[dict]:
         method = resolve_attr(api, 'locations.list')
         payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-        return [
-            {'location_id': _extract_identifier(x, 'location_id', 'locationId', 'id')}
-            for x in as_list(payload)
-        ]
+        return [{'location_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_workspace_ids() -> list[dict]:
         method = resolve_attr(api, 'workspaces.list')
         payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-        return [
-            {'workspace_id': _extract_identifier(x, 'workspace_id', 'workspaceId', 'id')}
-            for x in as_list(payload)
-        ]
+        return [{'workspace_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     json_item_loaders = {
         'routing_groups': _load_routing_groups,
