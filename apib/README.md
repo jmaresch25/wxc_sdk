@@ -13,3 +13,10 @@ using Pydantic models.
 ## read dict
 
 ## understand the structure of the dict and parse
+
+
+## Nota de alcance
+Este directorio documenta el pipeline de generación de código desde API Blueprint.
+Para flujos operativos de ejecución (CLI/UI, artifacts de jobs y operación v2.1), consultar:
+
+- `Space_OdT/README.md`

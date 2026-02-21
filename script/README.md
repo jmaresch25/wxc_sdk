@@ -73,3 +73,10 @@ The GitHub Engineering Team: [Scripts to Rule Them All](https://githubengineerin
 [ci]: ci
 [ci-bootstrap]: ci-bootstrap
 [console]: console
+
+
+## Nota para operadores Space_OdT
+Los scripts de esta carpeta cubren ciclo de vida de proyecto (setup/test/build/ci).
+La guía funcional/operativa de comandos de producto (V2/V2.1/v21 UI jobs) está en:
+
+- `Space_OdT/README.md`

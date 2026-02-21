@@ -45,6 +45,13 @@ Documentation
 Documentation is available at:
 http://wxc-sdk.readthedocs.io
 
+Project operation guides
+------------------------
+
+For operational workflows and UI commands (including V2/V2.1 and async bulk location jobs), see:
+
+- ``Space_OdT/README.md``
+
 Examples
 --------
 
