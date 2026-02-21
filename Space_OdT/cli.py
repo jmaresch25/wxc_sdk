@@ -11,11 +11,11 @@ from dotenv import load_dotenv
 
 if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from Space_OdT.config import Settings
+    from Space_OdT.config import DEFAULT_OUT_DIR, Settings
     from Space_OdT.export_runner import run_exports
     from Space_OdT.sdk_client import MissingTokenError, create_api, resolve_access_token
 else:
-    from .config import Settings
+    from .config import DEFAULT_OUT_DIR, Settings
     from .export_runner import run_exports
     from .sdk_client import MissingTokenError, create_api, resolve_access_token
 
@@ -36,10 +36,18 @@ def load_runtime_env() -> None:
             load_dotenv(dotenv_path=env_path, override=True)
 
 
+
+
+def resolve_out_dir(out_dir: Path) -> Path:
+    """Resolve relative paths from package root to avoid writing artifacts in repo root."""
+    if out_dir.is_absolute():
+        return out_dir
+    return DEFAULT_OUT_DIR if out_dir == Path('.artifacts') else (DEFAULT_OUT_DIR.parent / out_dir)
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='Space_OdT deterministic Webex read-only exporter')
     parser.add_argument('command', choices=['inventory_run', 'v2_bulk_run', 'v21_softphone_bulk_run', 'v21_softphone_ui', 'v211_softphone_ui', 'v11_inventory_ui'])
-    parser.add_argument('--out-dir', default='Space_OdT/.artifacts')
+    parser.add_argument('--out-dir', type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument('--no-report', action='store_true')
     parser.add_argument('--no-cache', action='store_true')
     parser.add_argument('--skip-group-members', action='store_true')
@@ -58,7 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
 def inventory_run(args) -> int:
 
     settings = Settings(
-        out_dir=Path(args.out_dir),
+        out_dir=resolve_out_dir(args.out_dir),
         include_group_members=not args.skip_group_members,
         write_cache=not args.no_cache,
         write_report=not args.no_report,
@@ -112,7 +120,7 @@ def main() -> None:
             decision_provider = _decision_provider_from_file(Path(args.decisions_file))
         runner = V2Runner(
             token=token,
-            out_dir=Path(args.out_dir),
+            out_dir=resolve_out_dir(args.out_dir),
             concurrent_requests=args.concurrent_requests,
             debug_har=args.debug_har,
             decision_provider=decision_provider,
@@ -133,7 +141,7 @@ def main() -> None:
             token = resolve_access_token(args.token)
         except MissingTokenError as exc:
             raise SystemExit(str(exc))
-        launch_v21_ui(token=token, out_dir=Path(args.out_dir), host=args.v21_ui_host, port=args.v21_ui_port)
+        launch_v21_ui(token=token, out_dir=resolve_out_dir(args.out_dir), host=args.v21_ui_host, port=args.v21_ui_port)
         raise SystemExit(0)
 
 
@@ -154,7 +162,7 @@ def main() -> None:
             token = resolve_access_token(args.token)
         except MissingTokenError as exc:
             raise SystemExit(str(exc))
-        launch_v11_ui(token=token, out_dir=Path(args.out_dir), host=args.v21_ui_host, port=args.v21_ui_port, open_browser=args.open_report)
+        launch_v11_ui(token=token, out_dir=resolve_out_dir(args.out_dir), host=args.v21_ui_host, port=args.v21_ui_port, open_browser=args.open_report)
         raise SystemExit(0)
 
 
@@ -167,7 +175,7 @@ def main() -> None:
             raise SystemExit(str(exc))
         runner = V21Runner(
             token=token,
-            out_dir=Path(args.out_dir),
+            out_dir=resolve_out_dir(args.out_dir),
         )
         try:
             summary = asyncio.run(runner.run(dry_run=not args.v21_apply))

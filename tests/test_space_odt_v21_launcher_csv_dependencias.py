@@ -326,3 +326,26 @@ def test_run_script_supports_usuarios_remover_licencias_alias_param(monkeypatch)
 
     assert result['status'] == 'dry_run'
     assert result['params']['remove_license_ids'] == ['lic-old-1', 'lic-old-2']
+
+
+def test_read_parameter_map_from_sources_multiple_csv_priority(tmp_path):
+    first = tmp_path / 'a.csv'
+    second = tmp_path / 'b.csv'
+    first.write_text('location_id,org_id\nloc-1,\n', encoding='utf-8')
+    second.write_text('location_id,org_id\nloc-2,org-1\n', encoding='utf-8')
+
+    parameter_map = launcher._read_parameter_map_from_sources(csv_paths=[first, second], input_data_dir=None)
+
+    assert parameter_map['location_id'] == 'loc-1'
+    assert parameter_map['org_id'] == 'org-1'
+
+
+def test_read_parameter_map_from_sources_directory(tmp_path):
+    (tmp_path / '01_global.csv').write_text('org_id,premise_route_id\norg-1,\n', encoding='utf-8')
+    (tmp_path / '02_locations.csv').write_text('location_id,premise_route_id\nloc-1,rg-1\n', encoding='utf-8')
+
+    parameter_map = launcher._read_parameter_map_from_sources(csv_paths=None, input_data_dir=tmp_path)
+
+    assert parameter_map['org_id'] == 'org-1'
+    assert parameter_map['location_id'] == 'loc-1'
+    assert parameter_map['premise_route_id'] == 'rg-1'

@@ -209,6 +209,34 @@ def _read_parameter_map(csv_path: Path) -> dict[str, Any]:
     return parameter_map
 
 
+def _read_parameter_map_from_sources(*, csv_paths: list[Path] | None = None, input_data_dir: Path | None = None) -> dict[str, Any]:
+    """Combina parámetros desde múltiples CSV, tomando el primer valor no vacío por columna.
+
+    Prioridad de fuentes:
+    1) `csv_paths` en el orden recibido.
+    2) CSVs descubiertos en `input_data_dir` en orden alfabético.
+    """
+    combined: dict[str, Any] = {}
+    source_paths: list[Path] = []
+    if csv_paths:
+        source_paths.extend(csv_paths)
+    if input_data_dir is not None:
+        source_paths.extend(sorted(input_data_dir.glob('*.csv')))
+
+    if not source_paths:
+        return combined
+
+    for path in source_paths:
+        if not path.exists():
+            continue
+        source_map = _read_parameter_map(path)
+        for key, value in source_map.items():
+            if key in combined or _is_missing_value(value):
+                continue
+            combined[key] = value
+    return combined
+
+
 def _confirm(script_name: str, auto_confirm: bool) -> bool:
     if auto_confirm:
         return True
@@ -364,7 +392,8 @@ def _run_script(
 def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Launcher v21 que usa CSV de parámetros y confirma antes de ejecutar')
-    parser.add_argument('--csv-path', type=Path, default=DEFAULT_CSV)
+    parser.add_argument('--csv-path', type=Path, action='append', default=None, help='CSV de parámetros (repetible)')
+    parser.add_argument('--input-data-dir', type=Path, default=None, help='Directorio con múltiples CSV (*.csv) para combinar parámetros')
     parser.add_argument('--token', default=None)
     parser.add_argument('--script-name', action='append', default=None, help='Filtra por script_name (repetible)')
     parser.add_argument('--auto-confirm', action='store_true', help='Evita input() y confirma todo automáticamente')
@@ -374,7 +403,8 @@ def main() -> None:
 
     _setup_debug_logging()
 
-    parameter_map = _read_parameter_map(args.csv_path)
+    csv_paths = args.csv_path or [DEFAULT_CSV]
+    parameter_map = _read_parameter_map_from_sources(csv_paths=csv_paths, input_data_dir=args.input_data_dir)
     scripts = args.script_name or sorted(HANDLERS.keys())
 
     token = '' if args.dry_run else get_token(args.token)
@@ -382,7 +412,11 @@ def main() -> None:
     for script_name in scripts:
         report.append(_run_script(script_name=script_name, parameter_map=parameter_map, token=token, auto_confirm=args.auto_confirm, dry_run=args.dry_run, precheck_workspace_permissions=args.precheck_workspace_permissions))
 
-    print(json.dumps({'csv_path': str(args.csv_path), 'results': report}, indent=2, ensure_ascii=False, sort_keys=True))
+    print(json.dumps({
+        'csv_paths': [str(path) for path in csv_paths],
+        'input_data_dir': str(args.input_data_dir) if args.input_data_dir else None,
+        'results': report,
+    }, indent=2, ensure_ascii=False, sort_keys=True))
 
 
 if __name__ == '__main__':

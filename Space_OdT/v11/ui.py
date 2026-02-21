@@ -21,6 +21,7 @@ from ..modules.v1_manifest import (
     ParamSourceValidationError,
     _iter_kwargs,
     _row_from_item,
+    hydrate_lookup_sources,
     validate_param_sources,
 )
 from ..sdk_client import create_api
@@ -89,6 +90,7 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
 
     async def _run_single_spec_async(*, spec, cache: dict[str, list[dict]]) -> list[dict]:
         method = resolve_attr(api, spec.method_path)
+        await asyncio.to_thread(hydrate_lookup_sources, api, spec, cache)
         validate_param_sources(cache, spec)
         kwargs_list = _iter_kwargs_for_async(cache=cache, spec=spec)
         if not kwargs_list:

@@ -165,7 +165,7 @@ Se añadieron acciones desacopladas en `Space_OdT/v21/transformacion/`:
 - `workspaces_configurar_perfil_saliente_custom.py`
 - `workspaces_validar_estado_permisos.py`
 - `generar_csv_candidatos_desde_artifacts.py` (genera CSV base con parámetros desde `.artifacts/exports/`)
-- `launcher_csv_dependencias.py` (ejecutor por acción leyendo una fila CSV con columnas=parámetros)
+- `launcher_csv_dependencias.py` (ejecutor por acción leyendo parámetros desde uno o varios CSV, o un directorio con CSV)
 
 Los scripts operativos de transformación (acciones y launcher) cargan `.env` al iniciar y escriben log propio en:
 
@@ -185,6 +185,12 @@ python -m Space_OdT.v21.transformacion.launcher_csv_dependencias \
   --csv-path .artifacts/exports/v21_transformacion_candidatos.csv \
   --script-name ubicacion_actualizar_cabecera \
   --auto-confirm
+
+# Variante multi-CSV por directorio (combina *.csv tomando el primer valor no vacío por columna)
+python -m Space_OdT.v21.transformacion.launcher_csv_dependencias \
+  --input-data-dir Space_OdT/input_data \
+  --script-name ubicacion_configurar_pstn \
+  --auto-confirm
 ```
 
 ### ¿De qué archivos sale la configuración de cada caso en v2.1?
@@ -196,7 +202,8 @@ La configuración para **v2.1 transformación backend** sale de estos archivos:
   - Rellena valores sugeridos leyendo exports existentes.
 - `Space_OdT/v21/transformacion/launcher_csv_dependencias.py`
   - Define `HANDLERS` (qué acciones están habilitadas en el launcher).
-  - Lee el CSV (`--csv-path`, por defecto `Space_OdT/.artifacts/report/results_manual.csv`) y ejecuta la acción seleccionada con validación de dependencias.
+  - Lee parámetros desde `--csv-path` (repetible) y/o desde `--input-data-dir` (`*.csv`); combina columnas tomando el primer valor no vacío y ejecuta la acción seleccionada con validación de dependencias.
+  - Si no pasas `--csv-path`, usa por defecto `Space_OdT/.artifacts/report/results_manual.csv`.
 - `Space_OdT/v21/transformacion/common.py`
   - Carga `.env` en runtime (`load_runtime_env`) y centraliza el log por acción (`action_logger`) en `Space_OdT/v21/transformacion/logs/<nombre_script>.log`.
 

@@ -3,6 +3,7 @@ import sys
 from types import ModuleType, SimpleNamespace
 
 import pytest
+from pathlib import Path
 
 
 def _import_cli_with_stubs():
@@ -12,6 +13,7 @@ def _import_cli_with_stubs():
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
 
+    fake_config.DEFAULT_OUT_DIR = Path('Space_OdT/.artifacts')
     fake_config.Settings = Settings
 
     fake_export_runner = ModuleType('Space_OdT.export_runner')
@@ -79,7 +81,7 @@ def test_inventory_run_passes_token_to_create_api(monkeypatch) -> None:
     monkeypatch.setattr(cli, 'create_api', fake_create_api)
 
     args = SimpleNamespace(
-        out_dir='.artifacts',
+        out_dir=Path('Space_OdT/.artifacts'),
         skip_group_members=False,
         no_cache=False,
         no_report=False,
@@ -147,3 +149,9 @@ def test_main_v2_reports_missing_templates_and_exits_2(monkeypatch, capsys, tmp_
 
     assert exc.value.code == 2
     assert 'Se crearon archivos plantilla requeridos para V2' in capsys.readouterr().out
+
+
+def test_resolve_out_dir_maps_dot_artifacts_to_package_root() -> None:
+    cli = _import_cli_with_stubs()
+
+    assert cli.resolve_out_dir(Path('.artifacts')) == Path('Space_OdT/.artifacts')
