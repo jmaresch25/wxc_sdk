@@ -20,9 +20,9 @@ else:
     from .common import action_logger, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'usuarios_asignar_location_desde_csv'
-REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_USERS_EXPORT = REPO_ROOT / '.artifacts' / 'exports' / 'people.json'
-DEFAULT_REPORT_CSV = REPO_ROOT / '.artifacts' / 'report' / 'people_to_location.csv'
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_USERS_EXPORT = PACKAGE_ROOT / '.artifacts' / 'exports' / 'people.json'
+DEFAULT_REPORT_CSV = PACKAGE_ROOT / '.artifacts' / 'report' / 'people_to_location.csv'
 
 CSV_HEADERS = [
     'selected',
