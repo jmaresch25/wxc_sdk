@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
+from wxc_sdk.rest import RestError
+
 from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
 
 SCRIPT_NAME = 'ubicacion_configurar_pstn'
@@ -16,6 +18,32 @@ def _find_local_gateway_connection_id(options: list[dict[str, Any]]) -> str:
         if option.get('pstn_connection_type') == 'LOCAL_GATEWAY' and option.get('id'):
             return str(option['id'])
     raise ValueError('No se encontró una opción PSTN LOCAL_GATEWAY con id para la ubicación indicada.')
+
+
+def _enable_location_for_calling(*, api, location_id: str, org_id: str | None, log) -> dict[str, Any]:
+    """Garantiza que la location esté habilitada para Webex Calling antes de configurar PSTN."""
+    try:
+        calling_location = model_to_dict(api.telephony.locations.details(location_id=location_id, org_id=org_id))
+        payload = {
+            'status': 'already_enabled',
+            'location_id': location_id,
+            'calling_location': calling_location,
+        }
+        log('enable_calling_response', payload)
+        return payload
+    except RestError as error:
+        status_code = getattr(getattr(error, 'response', None), 'status_code', None)
+        if status_code not in {400, 404}:
+            raise
+
+    location = api.locations.details(location_id=location_id, org_id=org_id)
+    enabled_location_id = api.telephony.locations.enable_for_calling(location=location, org_id=org_id)
+    payload = {
+        'status': 'enabled',
+        'location_id': enabled_location_id,
+    }
+    log('enable_calling_response', payload)
+    return payload
 
 
 def configurar_pstn_ubicacion(
@@ -32,6 +60,14 @@ def configurar_pstn_ubicacion(
     # 1) Inicialización: logger por acción y cliente API autenticado.
     log = action_logger(SCRIPT_NAME)
     api = create_api(token)
+
+    enable_request = {'location_id': location_id, 'org_id': org_id}
+    log('enable_calling_request', enable_request)
+    enable_result = _enable_location_for_calling(api=api, location_id=location_id, org_id=org_id, log=log)
+
+    if enable_result.get('status') not in {'enabled', 'already_enabled'}:
+        raise RuntimeError('No se pudo habilitar la location para Webex Calling; se cancela configuración PSTN.')
+
     options = model_to_dict(api.telephony.pstn.list(location_id=location_id, org_id=org_id))
     connection_id = _find_local_gateway_connection_id(options)
 
@@ -54,7 +90,14 @@ def configurar_pstn_ubicacion(
         org_id=org_id,
     )
     # 4) Resultado normalizado para logs/pipelines aguas abajo.
-    result = {'status': 'success', 'api_response': {'options': options, 'request': request}}
+    result = {
+        'status': 'success',
+        'api_response': {
+            'calling_enablement': enable_result,
+            'options': options,
+            'request': request,
+        },
+    }
     log('configure_response', result)
     return result
 
