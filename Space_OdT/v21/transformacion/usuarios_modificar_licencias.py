@@ -35,6 +35,31 @@ def modificar_licencias_usuario(
     if assign_fn is None:
         raise RuntimeError('El cliente SDK no expone api.licenses.assign_licenses_to_users()')
 
+    requested_remove_ids = list(remove_license_ids or [])
+    effective_remove_ids = requested_remove_ids
+    details_fn = getattr(getattr(api, 'people', None), 'details', None)
+    if requested_remove_ids and details_fn is not None:
+        person_details = details_fn(person_id=person_id, calling_data=True, org_id=org_id)
+        assigned_license_ids = set(getattr(person_details, 'licenses', None) or [])
+        if assigned_license_ids:
+            effective_remove_ids = [license_id for license_id in requested_remove_ids if license_id in assigned_license_ids]
+            skipped_remove_ids = [license_id for license_id in requested_remove_ids if license_id not in assigned_license_ids]
+            if skipped_remove_ids:
+                log('licenses_remove_not_present', {
+                    'person_id': person_id,
+                    'skipped_remove_license_ids': skipped_remove_ids,
+                })
+
+    if not add_license_ids and not effective_remove_ids:
+        result = {
+            'status': 'skipped',
+            'reason': 'remove_license_ids_not_assigned',
+            'person_id': person_id,
+            'skipped_remove_license_ids': requested_remove_ids,
+        }
+        log('licenses_response', result)
+        return result
+
     license_requests: list[LicenseRequest] = []
     for license_id in add_license_ids or []:
         props = None
@@ -43,7 +68,7 @@ def modificar_licencias_usuario(
         license_requests.append(
             LicenseRequest(id=license_id, operation=LicenseRequestOperation.add, properties=props)
         )
-    for license_id in remove_license_ids or []:
+    for license_id in effective_remove_ids:
         license_requests.append(LicenseRequest(id=license_id, operation=LicenseRequestOperation.remove))
 
     # 3) Payload final: registramos exactamente qué se enviará al endpoint.

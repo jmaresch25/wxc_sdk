@@ -76,6 +76,7 @@ LOCAL_SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
     #'workspaces_validar_estado_permisos': ['workspace_id'],
 }
 
+
 LOGGER = logging.getLogger(__name__)
 MAX_RETRIES_ON_RETRY_AFTER = 3
 
@@ -187,19 +188,25 @@ def _preview_csv_head(csv_path: Path, *, max_rows: int = 5) -> dict[str, Any]:
         }
 
 def _read_parameter_map(csv_path: Path) -> dict[str, Any]:
-    """Lee CSV generado por `generar_csv_candidatos_desde_artifacts`: headers=parámetros, 1 fila de datos."""
-    with csv_path.open('r', encoding='utf-8', newline='') as handle:
+    """Lee CSV generado por `generar_csv_candidatos_desde_artifacts`: headers=parámetros."""
+    with csv_path.open('r', encoding='utf-8-sig', newline='') as handle:
         rows = list(csv.DictReader(handle))
 
     if not rows:
         return {}
 
-    first_row = rows[0]
-    return {
-        key: _parse_param_value(value)
-        for key, value in first_row.items()
-        if key != 'script_name' and (value or '').strip() != ''
-    }
+    # CSV multipropósito: tomamos el primer valor no vacío por columna.
+    # Esto evita perder parámetros cuando la primera fila no está poblada.
+    parameter_map: dict[str, Any] = {}
+    for row in rows:
+        for key, value in row.items():
+            if key == 'script_name' or key in parameter_map:
+                continue
+            if (value or '').strip() == '':
+                continue
+            parameter_map[key] = _parse_param_value(value)
+
+    return parameter_map
 
 
 def _confirm(script_name: str, auto_confirm: bool) -> bool:
@@ -216,6 +223,12 @@ def _params_for_script(script_name: str, parameter_map: dict[str, Any]) -> tuple
     # `workspaces_lote_json` sin requerir `display_name`/`location_id`.
     if script_name == 'workspaces_alta' and not _is_missing_value(parameter_map.get('workspaces_lote_json')):
         required = ['workspaces_lote_json']
+
+    # Compatibilidad puntual: algunos CSV usan `remove_license_id` (singular).
+    if script_name == 'usuarios_remover_licencias' and _is_missing_value(parameter_map.get('remove_license_ids')):
+        singular_value = parameter_map.get('remove_license_id')
+        if not _is_missing_value(singular_value):
+            parameter_map = {**parameter_map, 'remove_license_ids': singular_value}
 
     missing = [dep for dep in required if _is_missing_value(parameter_map.get(dep))]
     if missing:

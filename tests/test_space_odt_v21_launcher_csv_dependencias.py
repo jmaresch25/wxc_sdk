@@ -63,6 +63,23 @@ def test_read_parameter_map_from_columns_csv(tmp_path):
     assert parameter_map['person_id'] == 'person-1'
 
 
+
+
+def test_read_parameter_map_uses_first_non_empty_value_per_column(tmp_path):
+    csv_path = tmp_path / 'params_rows.csv'
+    csv_path.write_text(
+        'person_id,remove_license_ids,org_id\n'
+        ',,org-1\n'
+        'person-2,"lic-a,lic-b",\n',
+        encoding='utf-8',
+    )
+
+    parameter_map = launcher._read_parameter_map(csv_path)
+
+    assert parameter_map['person_id'] == 'person-2'
+    assert parameter_map['remove_license_ids'] == 'lic-a,lic-b'
+    assert parameter_map['org_id'] == 'org-1'
+
 def test_run_script_skips_when_required_dependency_is_missing():
     result = launcher._run_script(
         script_name='ubicacion_actualizar_cabecera',
@@ -228,6 +245,28 @@ def test_run_script_supports_usuarios_remover_licencias(monkeypatch):
         parameter_map={
             'person_id': 'person-1',
             'remove_license_ids': 'lic-old-1,lic-old-2',
+            'org_id': 'org-1',
+        },
+        token='tkn',
+        auto_confirm=True,
+        dry_run=True,
+    )
+
+    assert result['status'] == 'dry_run'
+    assert result['params']['remove_license_ids'] == ['lic-old-1', 'lic-old-2']
+
+
+def test_run_script_supports_usuarios_remover_licencias_alias_param(monkeypatch):
+    def _fake_handler(token, person_id: str, remove_license_ids: list[str], org_id=None):
+        return {'status': 'ok'}
+
+    monkeypatch.setitem(launcher.HANDLERS, 'usuarios_remover_licencias', _fake_handler)
+
+    result = launcher._run_script(
+        script_name='usuarios_remover_licencias',
+        parameter_map={
+            'person_id': 'person-1',
+            'remove_license_id': 'lic-old-1,lic-old-2',
             'org_id': 'org-1',
         },
         token='tkn',
