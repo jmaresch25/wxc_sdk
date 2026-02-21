@@ -10,6 +10,7 @@ from Space_OdT.modules.v1_manifest import (
     run_artifact,
     V1_ARTIFACT_SPECS,
 )
+from Space_OdT.modules.common import as_list, model_to_dict
 
 
 class _FakeError(Exception):
@@ -86,3 +87,28 @@ def test_manifest_includes_artifacts_for_requested_calling_fields() -> None:
     assert by_module['workspace_details'].method_path == 'workspaces.details'
     assert by_module['workspace_numbers'].method_path == 'workspace_settings.numbers.read'
     assert by_module['workspace_call_forwarding'].method_path == 'workspace_settings.forwarding.read'
+
+
+class _FakePydantic:
+    def __iter__(self):
+        # Mimics pydantic/BaseModel iter behavior returning key/value tuples.
+        return iter([('id', 'p1'), ('displayName', 'Ana')])
+
+    def model_dump(self, **kwargs):
+        return {'id': 'p1', 'displayName': 'Ana', 'emails': ['ana@example.com']}
+
+
+def test_as_list_keeps_single_model_object() -> None:
+    model = _FakePydantic()
+
+    rows = as_list(model)
+
+    assert rows == [model]
+
+
+def test_model_to_dict_prefers_alias_dump_for_sdk_models() -> None:
+    payload = model_to_dict(_FakePydantic())
+
+    assert payload['id'] == 'p1'
+    assert payload['displayName'] == 'Ana'
+    assert payload['emails'] == ['ana@example.com']
