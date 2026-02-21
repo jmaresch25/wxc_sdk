@@ -15,11 +15,7 @@ Deterministic, read-only Webex inventory exporter focused on CSV/JSON outputs.
 # Option A: pass token directly (highest priority)
 python -m Space_OdT.cli inventory_run --token "<WEBEX_ACCESS_TOKEN>" --out-dir .artifacts --open-report
 
-# Option B: export the token
-export WEBEX_ACCESS_TOKEN=...
-python -m Space_OdT.cli inventory_run --out-dir .artifacts --open-report
-
-# Option C: place WEBEX_ACCESS_TOKEN in a .env file
+# Option B: place WEBEX_ACCESS_TOKEN in a .env file
 # (supported in the current folder, any parent folder, or project root)
 python -m Space_OdT.cli inventory_run --out-dir .artifacts --open-report
 
@@ -86,7 +82,7 @@ Cubrir el alta/actualización de sedes en modo bulk con ejecución asíncrona y 
 ### Comando
 
 ```bash
-python -m Space_OdT.cli v21_softphone_bulk_run --out-dir .artifacts --token "<WEBEX_ACCESS_TOKEN>"
+  python -m Space_OdT.cli v21_softphone_bulk_run --out-dir .artifacts --token "<WEBEX_ACCESS_TOKEN>"
 ```
 
 Por defecto ejecuta **dry-run** y genera plan en:
