@@ -37,6 +37,82 @@ STANDARD_COLUMNS = [
 ]
 
 
+ARTIFACT_COLUMNS: dict[str, list[str]] = {
+    'calling_locations': [
+        'location_id', 'name', 'language', 'address_1', 'city', 'state', 'postal_code', 'country',
+        'webex_calling_enabled', 'source_method', 'raw_keys', 'raw_json',
+    ],
+    'calling_locations_details': [
+        'location_id', 'name', 'language', 'address_1', 'city', 'state', 'postal_code', 'country',
+        'webex_calling_enabled', 'source_method', 'raw_keys', 'raw_json',
+    ],
+    'location_details': [
+        'location_id', 'name', 'language', 'address_1', 'city', 'state', 'postal_code', 'country',
+        'webex_calling_enabled', 'source_method', 'raw_keys', 'raw_json',
+    ],
+    'location_pstn_connection': [
+        'location_id', 'id', 'name', 'route_group_id', 'connection_type',
+        'source_method', 'raw_keys', 'raw_json',
+    ],
+    'people_details': [
+        'person_id', 'name', 'first_name', 'last_name', 'location_id', 'language',
+        'address_1', 'city', 'state', 'postal_code', 'country', 'direct_number',
+        'webex_calling_enabled', 'source_method', 'raw_keys', 'raw_json',
+    ],
+    'person_call_forwarding': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'person_numbers': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'person_permissions_in': ['person_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'person_permissions_out': ['person_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'person_out_access_codes': ['person_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'person_out_digit_patterns': ['person_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'person_transfer_numbers': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'person_available_numbers_primary': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'person_available_numbers_secondary': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'person_available_numbers_call_forward': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'person_available_numbers_call_intercept': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'person_available_numbers_ecbn': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'person_available_numbers_fax_message': ['person_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_details': ['workspace_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_call_forwarding': ['workspace_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_capabilities': ['workspace_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_permissions_in': ['workspace_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_permissions_out': ['workspace_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_numbers': ['workspace_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_devices': ['workspace_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_available_numbers_available': ['workspace_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'workspace_available_numbers_secondary': ['workspace_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'group_members': ['group_id', 'id', 'name', 'member_id', 'member_type', 'person_id', 'workspace_id', 'source_method', 'raw_keys', 'raw_json'],
+    'license_assigned_users': ['license_id', 'id', 'name', 'member_id', 'member_type', 'person_id', 'workspace_id', 'source_method', 'raw_keys', 'raw_json'],
+    'auto_attendants': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'auto_attendant_details': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'auto_attendant_announcement_files': ['location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'auto_attendant_forwarding': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'hunt_groups': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'hunt_group_details': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'hunt_group_forwarding': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'call_queues': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'call_queue_details': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'call_queue_settings': ['location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'call_queue_agents': ['location_id', 'id', 'name', 'member_id', 'member_type', 'person_id', 'workspace_id', 'first_name', 'last_name', 'source_method', 'raw_keys', 'raw_json'],
+    'call_queue_forwarding': ['location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_lines': ['virtual_line_id', 'location_id', 'id', 'name', 'first_name', 'last_name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_line_details': ['virtual_line_id', 'location_id', 'id', 'name', 'first_name', 'last_name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_line_assigned_devices': ['virtual_line_id', 'location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_line_available_numbers_available': ['virtual_line_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_line_available_numbers_primary': ['virtual_line_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_line_available_numbers_secondary': ['virtual_line_id', 'location_id', 'id', 'name', 'direct_number', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_extensions': ['location_id', 'id', 'name', 'first_name', 'last_name', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_extension_details': ['location_id', 'id', 'name', 'first_name', 'last_name', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_extension_ranges': ['location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+    'virtual_extension_range_details': ['location_id', 'id', 'name', 'source_method', 'raw_keys', 'raw_json'],
+}
+
+
+
+def columns_for_artifact(module_name: str) -> list[str]:
+    return ARTIFACT_COLUMNS.get(module_name, STANDARD_COLUMNS)
+
+
 @dataclass(frozen=True)
 class ParamSource:
     name: str
@@ -195,15 +271,12 @@ def _canonical_item(item: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def _row_from_item(item: dict, method_path: str, kwargs: dict[str, Any]) -> dict:
+def _row_from_item(item: dict, method_path: str, kwargs: dict[str, Any], module_name: str) -> dict:
     canonical = _canonical_item(item)
-    row = {k: canonical.get(k, '') for k in STANDARD_COLUMNS}
+    row = {k: canonical.get(k, '') for k in columns_for_artifact(module_name)}
     for k in ('location_id', 'person_id', 'workspace_id', 'license_id', 'virtual_line_id', 'group_id', 'id', 'name'):
-        if not row.get(k) and kwargs.get(k):
+        if k in row and not row.get(k) and kwargs.get(k):
             row[k] = kwargs[k]
-    for k, v in kwargs.items():
-        if k.endswith('_id') and k not in row:
-            row[k] = v
     row['source_method'] = method_path
     row['raw_keys'] = ','.join(sorted(item.keys()))
     row['raw_json'] = json.dumps(item, ensure_ascii=False, sort_keys=True)
@@ -241,7 +314,7 @@ def run_artifact(api, spec: ArtifactSpec, cache: dict[str, list[dict]]) -> Modul
             if maybe:
                 items = [maybe]
         for item in items:
-            rows.append(_row_from_item(item, spec.method_path, kwargs))
+            rows.append(_row_from_item(item, spec.method_path, kwargs, spec.module))
     return ModuleResult(module=spec.module, method=spec.method_path, rows=rows, count=len(rows), raw_keys=[])
 
 
