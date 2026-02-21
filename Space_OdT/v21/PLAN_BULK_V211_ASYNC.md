@@ -1,69 +1,38 @@
-# Plan de evolución v2.1.1: ejecución batch/asíncrona por bulk order
+# Estado real v2.1.1: ejecución bulk en UI 211
 
-## 1) Definición de lo que se construye
+> Este documento reemplaza el plan original y describe **lo que existe hoy** en el repositorio.
 
-### Qué es
-Una ampliación de los scripts de `Space_OdT/v21/transformacion` para soportar **modo batch** mediante modificador `--bulk`, sin romper su comportamiento actual fila a fila.
+## 1) Qué está construido
 
-### Para quién es
-Operación técnica que ejecuta cargas masivas desde la UI 211 con CSVs potencialmente >4.000 registros para Ubicaciones y Usuarios.
+La UI `v2.1.1` ya permite ejecutar acciones en modo normal o en modo bulk con chunking y paralelismo en memoria.
 
-### Problema que resuelve
-Hoy la ejecución secuencial por fila no escala bien para volúmenes altos y no ofrece control robusto de trabajos asíncronos por lote (bulk order).
+- Backend UI: `Space_OdT/v21/ui_v211.py`
+- Runner bulk: `Space_OdT/v21/transformacion/bulk_runner.py`
+- Handlers disponibles: `Space_OdT/v21/transformacion/launcher_csv_dependencias.py`
 
-### Cómo funcionará
-- Se mantienen los scripts actuales (compatibilidad completa).
-- Se añade un wrapper común de ejecución bulk:
-  - ingestión de CSV,
-  - chunking configurable,
-  - envío asíncrono por lotes,
-  - polling de estado,
-  - reintentos,
-  - consolidación de resultados y logs.
+### Funcionamiento actual del bulk
 
-### Conceptos principales
-- **Dataset maestro**: `GLOBAL.CSV`, `UBICACIONES.CSV`, `USUARIOS.CSV`.
-- **Mapeo canónico**: si no se especifica, se usa el nombre del parámetro como nombre de columna por defecto.
-- **Bulk order**: unidad asíncrona de ejecución de N filas por acción.
-- **Batch runner**: orquestador para recursividad/chunking y seguimiento.
-- **Action adapter**: adaptador por script para traducir fila -> parámetros del método.
+1. Se cargan datasets (`locations`, `users`, `numbers`) en memoria.
+2. Se elige acción y mapeo (opcional).
+3. Si bulk está activo, las filas se dividen en chunks.
+4. Cada chunk se procesa en paralelo con `ThreadPoolExecutor`.
+5. Se consolida resultado por orden (`orders`) y por fila (`results`).
+6. Se escribe log en `Space_OdT/v21/transformacion/logs/<action_id>.log`.
 
----
+## 2) UX real de la UI 211
 
-## 2) Diseño de experiencia de usuario (UI 211)
+La UI sí incluye:
+- check de “Modo bulk”,
+- `chunk_size`,
+- `max_workers`,
+- resumen de ejecución con `orders_total`.
 
-### Historias de usuario
-- Como operador, subo los 3 CSV y lanzo una acción sin definir mapeo manual cuando las cabeceras ya son canónicas.
-- Como operador, activo `--bulk` y el sistema procesa automáticamente miles de filas en lotes asíncronos.
-- Como operador, veo progreso (creados/en curso/finalizados/error), trazabilidad por lote y resumen final exportable.
+También marca acciones fuera de alcance con etiqueta `en desarrollo` y bloquea su ejecución.
 
-### Happy flow
-1. Carga de CSVs.
-2. Selección de acción.
-3. (Opcional) mapeo custom.
-4. Activación modo bulk.
-5. Ejecución asíncrona por batches.
-6. Polling de estados.
-7. Resumen final + log por acción/lote.
+## 3) Estado de acciones (real)
 
-### Flujos alternativos
-- Reintentar solo lotes fallidos.
-- Pausar/reanudar ejecución.
-- Modo dry-run (solo validación de parámetros sin llamadas write).
+### Acciones ejecutables hoy (registradas en `HANDLERS`)
 
-### Impacto UI
-- Añadir selector “Modo bulk” y tamaño de lote.
-- Mostrar tablero de estado por lotes (queued/running/success/error).
-- En acciones no soportadas: mostrar explícitamente `... en desarrollo ...`.
-
----
-
-## 3) Necesidades técnicas
-
-### Entrada CSV (default)
-Se usará por defecto la cabecera de CSV como fuente de parámetro cuando no exista mapeo manual.
-
-### Scripts objetivo (soporte bulk prioritario)
 - `ubicacion_alta_numeraciones_desactivadas`
 - `ubicacion_actualizar_cabecera`
 - `ubicacion_configurar_llamadas_internas`
@@ -73,95 +42,37 @@ Se usará por defecto la cabecera de CSV como fuente de parámetro cuando no exi
 - `usuarios_configurar_desvio_prefijo53`
 - `usuarios_configurar_perfil_saliente_custom`
 - `usuarios_modificar_licencias`
+- `workspaces_configurar_perfil_saliente_custom`
 
-### Scripts fuera de alcance inmediato
-Todos los scripts no listados arriba deben mostrarse con estado: `... en desarrollo ...`.
+### Acciones visibles pero marcadas `en desarrollo`
 
-### Diseño técnico propuesto
-- Crear componente común `bulk_runner.py` (funciones, no clases salvo dataclass de estado):
-  - `iter_rows(dataset)`
-  - `build_chunks(rows, chunk_size)`
-  - `submit_bulk_order(action_id, chunk)`
-  - `poll_bulk_order(order_id)`
-  - `merge_bulk_results(orders)`
-- Extender cada script objetivo para aceptar `bulk=False` y `chunk_size`.
-- Mantener firma actual: `func(token=..., **params)` + nueva vía opcional `--bulk`.
-- Logging por lote en `transformacion/logs/<action_id>.log`.
+- `ubicacion_configurar_pstn`
+- `usuarios_alta_people`
+- `usuarios_alta_scim`
+- `workspaces_alta`
+- `workspaces_anadir_intercom_legacy`
+- `workspaces_configurar_desvio_prefijo53`
+- `workspaces_configurar_perfil_saliente_custom`
 
-### Dependencias
-Aprovechar SDK actual + utilidades existentes de `bulk_config/` cuando reduzcan duplicación real.
+> Nota: aunque `workspaces_configurar_perfil_saliente_custom` existe en `HANDLERS`, la UI la mantiene marcada como `en desarrollo` y no se puede aplicar desde la UI.
 
-### Edge cases críticos
-- Timeout de polling.
-- Retries con backoff para 429/5xx.
-- Registros parcialmente válidos dentro de un lote.
-- Idempotencia en reintentos.
+## 4) Diferencias respecto al plan original
 
----
+No existe actualmente un sistema de jobs persistentes ni polling contra órdenes asíncronas remotas del SDK.
 
-## 4) Testing y seguridad
+Lo que sí existe:
+- paralelización local por threads,
+- consolidación determinista de resultados,
+- tests unitarios para chunking/merge y flujo bulk de UI.
 
-### Tests
-- Unit:
-  - parsing CSV grande,
-  - fallback de mapeo por defecto,
-  - chunking,
-  - merge de resultados.
-- Integración (mock SDK):
-  - submit/poll asíncrono,
-  - recuperación tras fallos transitorios.
-- Regresión UI:
-  - acciones `en desarrollo` no ejecutables.
+Lo pendiente para un “bulk asíncrono full”:
+- cola persistente (Redis/RQ/Celery o similar),
+- reanudación tras reinicio,
+- estado duradero de órdenes,
+- retries/backoff transversales por lote en UI.
 
-### Seguridad
-- No loguear tokens.
-- Sanitizar payloads en logs.
-- Control de rate-limit y protección ante retries excesivos.
+## 5) Validación recomendada
 
----
+- `pytest -q tests/test_space_odt_v21_bulk_runner.py`
+- `pytest -q tests/test_space_odt_v21_ui_v211.py`
 
-## 5) Plan de trabajo
-
-### Estimación
-6–9 días hábiles (MVP robusto).
-
-### Milestones
-1. **Base bulk común** (1.5 días).
-2. **Fallback mapeo canónico + UI estados** (1 día).
-3. **Adaptación scripts objetivo** (2.5–3 días).
-4. **Asíncrono + retries + polling** (1.5 días).
-5. **Testing + hardening + docs** (1–2 días).
-
-### Riesgos
-- Límites/rate limiting API en cargas simultáneas.
-- Divergencias de comportamiento entre endpoints SDK.
-
-### Definition of Done
-- Scripts listados soportan `--bulk` sin romper modo actual.
-- Procesamiento recursivo de CSV completo.
-- Resumen final por bulk order + log por lote.
-- UI 211 distingue soportado vs `... en desarrollo ...`.
-
----
-
-## 6) Ripple effects
-
-- Actualizar runbook operativo de UI 211.
-- Comunicar tamaño de lote recomendado (p.ej. 100–300 filas).
-- Añadir plantilla de troubleshooting de fallos asíncronos.
-
----
-
-## 7) Contexto amplio
-
-### Limitaciones actuales
-- Scripts muy acoplados a ejecución inmediata por fila.
-- Falta de tracking unificado de trabajos largos.
-
-### Extensiones futuras
-- Cola de jobs persistente (Redis/RQ/Celery).
-- Reanudación tras reinicio.
-- Dashboard histórico de ejecuciones.
-
-### Moonshot
-- Motor declarativo de transformaciones con DAG de dependencias entre acciones y compensación automática de errores.
