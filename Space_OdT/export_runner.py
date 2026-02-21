@@ -10,7 +10,7 @@ from .io.artifact_paths import ensure_dirs
 from .io.csv_writer import write_csv
 from .io.json_writer import write_json
 from .modules.catalog import MODULE_SPECS, run_spec
-from .modules.v1_manifest import STANDARD_COLUMNS, V1_ARTIFACT_SPECS, run_artifact
+from .modules.v1_manifest import V1_ARTIFACT_SPECS, columns_for_artifact, run_artifact
 from .status import StatusRecord, StatusRecorder, classify_exception, timed_call
 
 
@@ -27,7 +27,9 @@ EXPORT_COLUMNS = {
 
 
 def _columns_for_module(module_name: str) -> list[str]:
-    return EXPORT_COLUMNS.get(module_name, STANDARD_COLUMNS)
+    if module_name in EXPORT_COLUMNS:
+        return EXPORT_COLUMNS[module_name]
+    return columns_for_artifact(module_name)
 
 
 def _write_module_exports(exports_dir: Path, module_name: str, rows: list[dict]) -> None:
