@@ -15,6 +15,7 @@ from .common import (
     get_token,
     load_runtime_env,
     model_to_dict,
+    log_console_step,
 )
 
 SCRIPT_NAME = 'ubicacion_alta_numeraciones_desactivadas'
@@ -76,6 +77,7 @@ def main() -> None:
     parser.add_argument('--number-type', default='DID', choices=['DID', 'TOLLFREE', 'MOBILE'])
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
+    log_console_step(SCRIPT_NAME, 'execution_start', {'mode': 'standalone'})
     args = apply_standalone_input_arguments(
         args,
         required=['location_id', 'phone_numbers'],
@@ -91,6 +93,7 @@ def main() -> None:
         number_type=TelephoneNumberType(args.number_type),
         org_id=args.org_id,
     )
+    log_console_step(SCRIPT_NAME, 'execution_end', {'status': payload.get('status')})
     print(payload)
 
 

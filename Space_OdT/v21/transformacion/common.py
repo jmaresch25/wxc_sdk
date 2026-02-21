@@ -66,6 +66,13 @@ def action_logger(script_name: str):
     return _log
 
 
+def log_console_step(script_name: str, event: str, payload: dict[str, Any] | None = None) -> None:
+    message = f'[{script_name}] {event}'
+    if payload is not None:
+        message += f': {json.dumps(payload, ensure_ascii=False, sort_keys=True)}'
+    print(message)
+
+
 def model_to_dict(value: Any) -> Any:
     # Serialización defensiva compatible con modelos pydantic y listas anidadas.
     if hasattr(value, 'model_dump'):
@@ -129,12 +136,13 @@ def apply_standalone_input_arguments(
       3) primera fila de Global.csv
     """
     log = action_logger(script_name)
-    input_dir = Path(getattr(args, 'input_dir', '') or Path(__file__).resolve().parents[2] / 'input_data')
+    input_dir = Path(getattr(args, 'input_dir', '') or Path(__file__).resolve().parents[3] / 'input_data')
     setattr(args, 'input_dir', str(input_dir))
 
     csv_argument = getattr(args, 'csv', None)
     if csv_argument:
         log('input_resolution', {'mode': 'explicit_csv', 'csv': csv_argument})
+        log_console_step(script_name, 'input_resolution', {'mode': 'explicit_csv', 'csv': csv_argument})
         return apply_csv_arguments(args, required=required, list_fields=list_fields)
 
     global_path = _find_csv_case_insensitive(input_dir, 'Global.csv')
@@ -164,6 +172,16 @@ def apply_standalone_input_arguments(
             'list_fields': list_fields,
         },
     )
+    log_console_step(
+        script_name,
+        'input_resolution',
+        {
+            'mode': 'input_dir_auto',
+            'input_dir': str(input_dir),
+            'global_csv': str(global_path),
+            'domain_csv': str(domain_path),
+        },
+    )
 
     for field in required + list_fields:
         current_value = getattr(args, field, None)
@@ -184,6 +202,11 @@ def apply_standalone_input_arguments(
 
     _assert_required_args(args, required)
     log(
+        'input_merge_result',
+        {field: getattr(args, field, None) for field in sorted(set(required + list_fields))},
+    )
+    log_console_step(
+        script_name,
         'input_merge_result',
         {field: getattr(args, field, None) for field in sorted(set(required + list_fields))},
     )

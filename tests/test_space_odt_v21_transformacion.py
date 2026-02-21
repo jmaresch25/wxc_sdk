@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -226,3 +227,56 @@ def test_alta_usuario_people_normalizes_csv_string_licenses(monkeypatch):
 
     assert captured['licenses'] == ['lic-a', 'lic-b']
 
+
+
+from argparse import Namespace
+from Space_OdT.v21.transformacion import common as transform_common
+
+
+def test_apply_standalone_input_arguments_uses_repo_input_data_default(tmp_path, monkeypatch):
+    args = Namespace(csv=None, input_dir=None, location_id='loc-cli', phone_numbers=['+341'])
+    seen = {}
+
+    def fake_find_csv(input_dir, expected_name):
+        seen['input_dir'] = input_dir
+        if expected_name == 'Global.csv':
+            return tmp_path / 'Global.csv'
+        return tmp_path / 'Ubicaciones.csv'
+
+    monkeypatch.setattr(transform_common, '_find_csv_case_insensitive', fake_find_csv)
+    monkeypatch.setattr(transform_common, '_first_csv_row', lambda path: {'location_id': 'loc-csv', 'phone_numbers': '+3491'})
+
+    resolved = transform_common.apply_standalone_input_arguments(
+        args,
+        required=['location_id', 'phone_numbers'],
+        list_fields=['phone_numbers'],
+        domain_csv_name='Ubicaciones.csv',
+        script_name='test_script',
+    )
+
+    expected = Path(transform_common.__file__).resolve().parents[3] / 'input_data'
+    assert Path(resolved.input_dir) == expected
+    assert seen['input_dir'] == expected
+    assert resolved.location_id == 'loc-cli'
+    assert resolved.phone_numbers == ['+341']
+
+
+def test_apply_standalone_input_arguments_merges_domain_and_global(tmp_path):
+    input_dir = tmp_path / 'input_data'
+    input_dir.mkdir()
+    (input_dir / 'Global.csv').write_text('email,first_name,last_name,licenses\nfrom_global@example.com,Global,Fallback,"lic-a|lic-b"\n', encoding='utf-8')
+    (input_dir / 'Usuarios.csv').write_text('email,first_name,last_name\nfrom_domain@example.com,Domain,User\n', encoding='utf-8')
+
+    args = Namespace(csv=None, input_dir=str(input_dir), email=None, first_name=None, last_name=None, licenses=None)
+    resolved = transform_common.apply_standalone_input_arguments(
+        args,
+        required=['email', 'first_name', 'last_name'],
+        list_fields=['licenses'],
+        domain_csv_name='Usuarios.csv',
+        script_name='test_script',
+    )
+
+    assert resolved.email == 'from_domain@example.com'
+    assert resolved.first_name == 'Domain'
+    assert resolved.last_name == 'User'
+    assert resolved.licenses == ['lic-a', 'lic-b']
