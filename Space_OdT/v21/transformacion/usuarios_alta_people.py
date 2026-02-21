@@ -7,7 +7,15 @@ from typing import Any
 
 from wxc_sdk.people import PeopleApi, Person, PhoneNumber, PhoneNumberType
 
-from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
+from .common import (
+    action_logger,
+    apply_standalone_input_arguments,
+    create_api,
+    get_token,
+    load_runtime_env,
+    log_console_step,
+    model_to_dict,
+)
 
 SCRIPT_NAME = 'usuarios_alta_people'
 
@@ -84,7 +92,8 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Alta de usuarios en People API (SDK-first)')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--csv', default=None, help='CSV explícito (override); si no se informa se usa --input-dir')
+    parser.add_argument('--input-dir', default=None, help='Directorio con Global.csv y Usuarios.csv (default: input_data en raíz del repo)')
     parser.add_argument('--email', default=None)
     parser.add_argument('--first-name', default=None)
     parser.add_argument('--last-name', default=None)
@@ -95,7 +104,15 @@ def main() -> None:
     parser.add_argument('--phone-number', default=None)
     parser.add_argument('--org-id', default=None)
     args = parser.parse_args()
-    args = apply_csv_arguments(args, required=['email', 'first_name', 'last_name'], list_fields=['licenses'])
+
+    log_console_step(SCRIPT_NAME, 'execution_start', {'mode': 'standalone'})
+    args = apply_standalone_input_arguments(
+        args,
+        required=['email', 'first_name', 'last_name'],
+        list_fields=['licenses'],
+        domain_csv_name='Usuarios.csv',
+        script_name=SCRIPT_NAME,
+    )
 
     payload = alta_usuario_people(
         token=get_token(args.token),
@@ -109,6 +126,7 @@ def main() -> None:
         phone_number=args.phone_number,
         org_id=args.org_id,
     )
+    log_console_step(SCRIPT_NAME, 'execution_end', {'status': payload.get('status')})
     print(payload)
 
 

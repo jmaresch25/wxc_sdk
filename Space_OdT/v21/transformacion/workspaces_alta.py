@@ -9,7 +9,15 @@ from typing import Any
 from wxc_sdk.workspaces import Workspace
 from wxc_sdk.workspace_settings.numbers import UpdateWorkspacePhoneNumber
 
-from .common import action_logger, apply_csv_arguments, create_api, get_token, load_runtime_env, model_to_dict
+from .common import (
+    action_logger,
+    apply_standalone_input_arguments,
+    create_api,
+    get_token,
+    load_runtime_env,
+    log_console_step,
+    model_to_dict,
+)
 
 SCRIPT_NAME = 'workspaces_alta'
 
@@ -177,7 +185,8 @@ def main() -> None:
     load_runtime_env()
     parser = argparse.ArgumentParser(description='Alta de workspace en Webex Calling')
     parser.add_argument('--token', default=None)
-    parser.add_argument('--csv', default=None, help='CSV con parámetros de entrada (se usa primera fila)')
+    parser.add_argument('--csv', default=None, help='CSV explícito (override); si no se informa se usa --input-dir')
+    parser.add_argument('--input-dir', default=None, help='Directorio con Global.csv y Workspaces.csv (default: input_data en raíz del repo)')
     parser.add_argument('--display-name', default=None)
     parser.add_argument('--location-id', default=None)
     parser.add_argument('--org-id', default=None)
@@ -185,7 +194,8 @@ def main() -> None:
     parser.add_argument('--continue-on-error', action='store_true')
     parser.add_argument('--no-skip-existing', action='store_true')
     args = parser.parse_args()
-    args = apply_csv_arguments(args, required=[], list_fields=[])
+
+    log_console_step(SCRIPT_NAME, 'execution_start', {'mode': 'standalone'})
 
     if args.workspaces_lote_json:
         lote = args.workspaces_lote_json
@@ -198,10 +208,17 @@ def main() -> None:
             continue_on_error=args.continue_on_error,
             skip_existing=not args.no_skip_existing,
         )
+        log_console_step(SCRIPT_NAME, 'execution_end', {'status': payload.get('status')})
         print(payload)
         return
 
-    args = apply_csv_arguments(args, required=['display_name'], list_fields=[])
+    args = apply_standalone_input_arguments(
+        args,
+        required=['display_name'],
+        list_fields=[],
+        domain_csv_name='Workspaces.csv',
+        script_name=SCRIPT_NAME,
+    )
 
     payload = alta_workspace(
         token=get_token(args.token),
@@ -209,6 +226,7 @@ def main() -> None:
         location_id=args.location_id,
         org_id=args.org_id,
     )
+    log_console_step(SCRIPT_NAME, 'execution_end', {'status': payload.get('status')})
     print(payload)
 
 
