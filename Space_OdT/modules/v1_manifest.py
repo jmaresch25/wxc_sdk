@@ -154,8 +154,52 @@ def validate_param_sources(cache: dict[str, list[dict]], spec: ArtifactSpec) -> 
     )
 
 
+LOOKUP_METHODS: dict[str, tuple[str, dict[str, Any]]] = {
+    'people': ('people.list', {'calling_data': True}),
+    'workspaces': ('workspaces.list', {}),
+    'calling_locations': ('telephony.locations.list', {}),
+    'hunt_groups': ('telephony.huntgroup.list', {}),
+    'virtual_lines': ('telephony.virtual_lines.list', {}),
+    'virtual_extensions': ('telephony.virtual_extensions.list_extensions', {}),
+    'virtual_extension_ranges': ('telephony.virtual_extensions.list_range', {}),
+}
+
+
+def _enrich_lookup_row(module_name: str, raw_item: dict[str, Any]) -> dict[str, Any]:
+    row = _canonical_item(raw_item)
+    if module_name == 'people':
+        if not row.get('person_id'):
+            row['person_id'] = row.get('id')
+    if module_name == 'workspaces':
+        if not row.get('id'):
+            row['id'] = row.get('workspace_id')
+        if not row.get('workspace_id'):
+            row['workspace_id'] = row.get('id')
+    return row
+
+
+def hydrate_lookup_sources(api, spec: ArtifactSpec, cache: dict[str, list[dict]]) -> None:
+    for source in spec.param_sources:
+        if _id_values(cache, source):
+            continue
+        lookup = LOOKUP_METHODS.get(source.module)
+        if lookup is None:
+            continue
+        method_path, kwargs = lookup
+        try:
+            payload = call_with_supported_kwargs(resolve_attr(api, method_path), **kwargs)
+        except Exception:
+            continue
+        rows = [_enrich_lookup_row(source.module, model_to_dict(i)) for i in as_list(payload)]
+        if rows:
+            cache[source.module] = rows
+
+
 def _canonical_item(item: dict[str, Any]) -> dict[str, Any]:
     address = item.get('address') if isinstance(item.get('address'), dict) else {}
+    calling_data = item.get('calling_data') if isinstance(item.get('calling_data'), dict) else (
+        item.get('callingData') if isinstance(item.get('callingData'), dict) else {}
+    )
     out = dict(item)
 
     out.setdefault('id', item.get('id') or item.get('member_id') or item.get('person_id') or item.get('workspace_id'))
@@ -164,7 +208,8 @@ def _canonical_item(item: dict[str, Any]) -> dict[str, Any]:
     out.setdefault('last_name', item.get('last_name') or item.get('lastName'))
     out.setdefault('member_id', item.get('member_id') or item.get('memberId') or item.get('id'))
     out.setdefault('member_type', item.get('member_type') or item.get('memberType') or item.get('type'))
-    out.setdefault('location_id', item.get('location_id') or item.get('locationId'))
+    out.setdefault('location_id', item.get('location_id') or item.get('locationId')
+                   or calling_data.get('location_id') or calling_data.get('locationId'))
     out.setdefault('person_id', item.get('person_id') or item.get('personId'))
     out.setdefault('workspace_id', item.get('workspace_id') or item.get('workspaceId'))
     out.setdefault('license_id', item.get('license_id') or item.get('licenseId'))
@@ -217,12 +262,16 @@ def _is_user_access_error(exc: Exception) -> bool:
     detail = getattr(exc, "detail", None)
     if detail is not None and getattr(detail, "code", None) == 4003:
         return True
+    text = str(exc)
+    if '4003' in text and 'Unauthorized request' in text:
+        return True
     return False
 
 
 def run_artifact(api, spec: ArtifactSpec, cache: dict[str, list[dict]]) -> ModuleResult:
     method = resolve_attr(api, spec.method_path)
     rows: list[dict] = []
+    hydrate_lookup_sources(api, spec, cache)
     validate_param_sources(cache, spec)
     kwargs_diagnostics: list[dict[str, Any]] = []
     for kwargs in _iter_kwargs(cache, spec, diagnostics=kwargs_diagnostics):
