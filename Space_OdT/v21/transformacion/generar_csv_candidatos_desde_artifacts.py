@@ -22,7 +22,7 @@ SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
         'premise_route_type',
     ],
     'ubicacion_configurar_permisos_salientes_defecto': ['location_id'],
-    'ubicacion_configurar_pstn': ['location_id', 'premise_route_type', 'premise_route_id'],
+    'ubicacion_configurar_pstn': ['location_id', 'premise_route_id'],
     'usuarios_alta_people': ['email', 'first_name', 'last_name', 'location_id', 'licenses'],
     'usuarios_alta_scim': ['org_id', 'email', 'first_name', 'last_name'],
     'usuarios_anadir_intercom_legacy': ['person_id', 'legacy_phone_number'],
@@ -90,6 +90,8 @@ def _parameter_columns() -> list[str]:
         'people_json',
         'overwrite_csv',
         'generate_only',
+        'premise_route_type',
+        'pstn_connection_type',
     ]:
         if optional_param not in seen:
             ordered.append(optional_param)
@@ -122,6 +124,7 @@ def build_parameter_row(exports_dir: Path) -> tuple[list[str], dict[str, Any]]:
         'extension': _first_non_empty(person_numbers, 'name'),
         'premise_route_id': _first_non_empty(pstn_connections, 'id'),
         'premise_route_type': None,
+        'pstn_connection_type': 'LOCAL_GATEWAY',
         'enable_unknown_extension_route_policy': None,
         'email': (first_person.get('email') or '').strip() or None,
         'first_name': None,

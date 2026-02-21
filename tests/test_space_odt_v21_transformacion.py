@@ -35,6 +35,10 @@ def test_configurar_pstn_ubicacion_uses_sdk_calls(monkeypatch):
 
     fake_api = SimpleNamespace(telephony=SimpleNamespace(pstn=Pstn()))
     monkeypatch.setattr('Space_OdT.v21.transformacion.ubicacion_configurar_pstn.create_api', lambda token: fake_api)
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.ubicacion_configurar_pstn._enable_location_for_calling',
+        lambda **kwargs: {'status': 'already_enabled'},
+    )
 
     result = configurar_pstn_ubicacion(
         token='tkn',
@@ -129,6 +133,10 @@ def test_configurar_pstn_requires_local_gateway_option(monkeypatch):
 
     fake_api = SimpleNamespace(telephony=SimpleNamespace(pstn=Pstn()))
     monkeypatch.setattr('Space_OdT.v21.transformacion.ubicacion_configurar_pstn.create_api', lambda token: fake_api)
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.ubicacion_configurar_pstn._enable_location_for_calling',
+        lambda **kwargs: {'status': 'already_enabled'},
+    )
 
     with pytest.raises(ValueError, match='LOCAL_GATEWAY'):
         configurar_pstn_ubicacion(
@@ -137,6 +145,36 @@ def test_configurar_pstn_requires_local_gateway_option(monkeypatch):
             premise_route_type='ROUTE_GROUP',
             premise_route_id='rg',
         )
+
+
+
+def test_configurar_pstn_accepts_display_name_selector(monkeypatch):
+    calls = []
+
+    class Pstn:
+        def list(self, location_id, org_id=None):
+            return [_Model({'id': 'prem-1', 'displayName': 'Premises-based PSTN'})]
+
+        def configure(self, **kwargs):
+            calls.append(kwargs)
+
+    fake_api = SimpleNamespace(telephony=SimpleNamespace(pstn=Pstn()))
+    monkeypatch.setattr('Space_OdT.v21.transformacion.ubicacion_configurar_pstn.create_api', lambda token: fake_api)
+    monkeypatch.setattr(
+        'Space_OdT.v21.transformacion.ubicacion_configurar_pstn._enable_location_for_calling',
+        lambda **kwargs: {'status': 'already_enabled'},
+    )
+
+    result = configurar_pstn_ubicacion(
+        token='tkn',
+        location_id='loc1',
+        premise_route_type='ROUTE_GROUP',
+        premise_route_id='rg-new',
+        pstn_connection_type='LOCAL_GATEWAY',
+    )
+
+    assert result['status'] == 'success'
+    assert calls[0]['id'] == 'prem-1'
 
 def test_alta_usuario_people_normalizes_string_licenses(monkeypatch):
     captured = {}
