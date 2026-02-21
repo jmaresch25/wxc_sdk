@@ -139,18 +139,7 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
             attr_value = getattr(raw_item, key, None)
             if attr_value not in (None, ''):
                 return attr_value
-        if isinstance(raw_item, str) and raw_item.strip():
-            return raw_item.strip()
         return None
-
-    def _build_id_rows(items, output_key: str, *candidate_keys: str) -> list[dict]:
-        rows: list[dict] = []
-        for item in as_list(items):
-            found = _extract_identifier(item, *candidate_keys)
-            if found in (None, ''):
-                continue
-            rows.append({output_key: found})
-        return rows
 
     def _write_csv(*, csv_path: Path, rows: list[dict]) -> None:
         headers = sorted({k for row in rows for k in row.keys()}) if rows else ['id']
@@ -173,22 +162,22 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
     async def _load_person_ids() -> list[dict]:
         method = resolve_attr(api, 'people.list')
         payload = await asyncio.to_thread(call_with_supported_kwargs, method, calling_data=True)
-        return _build_id_rows(payload, 'person_id', 'person_id', 'personId', 'id')
+        return [{'person_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_group_ids() -> list[dict]:
         method = resolve_attr(api, 'groups.list')
         payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-        return _build_id_rows(payload, 'group_id', 'group_id', 'groupId', 'id')
+        return [{'group_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_location_ids() -> list[dict]:
         method = resolve_attr(api, 'locations.list')
         payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-        return _build_id_rows(payload, 'location_id', 'location_id', 'locationId', 'id')
+        return [{'location_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     async def _load_workspace_ids() -> list[dict]:
         method = resolve_attr(api, 'workspaces.list')
         payload = await asyncio.to_thread(call_with_supported_kwargs, method)
-        return _build_id_rows(payload, 'workspace_id', 'workspace_id', 'workspaceId', 'id')
+        return [{'workspace_id': model_to_dict(x).get('id')} for x in as_list(payload)]
 
     json_item_loaders = {
         'routing_groups': _load_routing_groups,
@@ -208,8 +197,7 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
             raise ValueError(f'Consulta JSON no soportada: {item}')
 
         rows = await loader()
-        if item not in {'person_ids', 'group_ids', 'location_ids', 'workspace_ids'}:
-            cached_json[item] = rows
+        cached_json[item] = rows
         return rows
 
     class Handler(BaseHTTPRequestHandler):

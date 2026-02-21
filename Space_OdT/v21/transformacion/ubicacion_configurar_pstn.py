@@ -78,7 +78,7 @@ def configurar_pstn_ubicacion(
     *,
     token: str,
     location_id: str,
-    premise_route_type: str,
+    premise_route_type: str = 'ROUTE_GROUP',
     premise_route_id: str,
     org_id: str | None = None,
     pstn_connection_type: str | None = 'LOCAL_GATEWAY',
