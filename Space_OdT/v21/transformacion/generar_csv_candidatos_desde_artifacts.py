@@ -22,7 +22,7 @@ SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
         'premise_route_type',
     ],
     'ubicacion_configurar_permisos_salientes_defecto': ['location_id'],
-    'ubicacion_configurar_pstn': ['location_id', 'premise_route_id'],
+    'ubicacion_configurar_pstn': ['location_id', 'premise_route_type', 'premise_route_id', 'pstn_connection_type'],
     'usuarios_alta_people': ['email', 'first_name', 'last_name', 'location_id', 'licenses'],
     'usuarios_alta_scim': ['org_id', 'email', 'first_name', 'last_name'],
     'usuarios_anadir_intercom_legacy': ['person_id', 'legacy_phone_number'],
