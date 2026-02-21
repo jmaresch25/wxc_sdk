@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from wxc_sdk.licenses import LicenseProperties, LicenseRequest, LicenseRequestOperation
 from wxc_sdk.telephony.jobs import MoveUser, MoveUsersList
 
 if __package__ in {None, ''}:
@@ -113,6 +114,41 @@ def _is_calling_user(person: Any) -> bool:
 def _apply_with_move_users_job(api: Any, row: dict[str, str], *, person: Any) -> dict[str, Any]:
     person_id = row['person_id'].strip()
     target_location_id = row['target_location_id'].strip()
+    source_location_id = (person.location_id or '').strip()
+
+    if source_location_id == target_location_id:
+        return {
+            'person_id': person_id,
+            'from_location_id': source_location_id,
+            'to_location_id': target_location_id,
+            'path': 'telephony.jobs.move_users.validate_or_initiate',
+            'status': 'unchanged',
+            'reason': 'already_in_target_location',
+        }
+
+    users_list = [
+        MoveUsersList(
+            location_id=target_location_id,
+            validate_only=False,
+            users=[MoveUser(user_id=person_id, extension=person.extension)],
+        )
+    ]
+    response = api.telephony.jobs.move_users.validate_or_initiate(users_list=users_list)
+    return {
+        'person_id': person_id,
+        'from_location_id': source_location_id,
+        'to_location_id': target_location_id,
+        'extension': person.extension,
+        'path': 'telephony.jobs.move_users.validate_or_initiate',
+        'status': 'updated',
+        'response': model_to_dict(response),
+    }
+
+
+def _apply_with_license_assignment(api: Any, row: dict[str, str], *, calling_license_id: str) -> dict[str, Any]:
+    """Compatibilidad con tests antiguos: asigna licencia de Calling con location objetivo."""
+    person_id = row['person_id'].strip()
+    target_location_id = row['target_location_id'].strip()
     person = api.people.details(person_id=person_id, calling_data=True)
 
     if (person.location_id or '').strip() == target_location_id:
@@ -127,10 +163,10 @@ def _apply_with_move_users_job(api: Any, row: dict[str, str], *, person: Any) ->
         }
 
     license_properties = LicenseProperties(location_id=target_location_id)
-    if person.extension:
+    if getattr(person, 'extension', None):
         license_properties.extension = person.extension
 
-    response = api.licenses.assign_licenses_to_users(
+    api.licenses.assign_licenses_to_users(
         person_id=person_id,
         licenses=[
             LicenseRequest(
@@ -140,23 +176,14 @@ def _apply_with_move_users_job(api: Any, row: dict[str, str], *, person: Any) ->
             )
         ],
     )
-
-    users_list = [
-        MoveUsersList(
-            location_id=target_location_id,
-            validate_only=False,
-            users=[MoveUser(user_id=person_id, extension=person.extension)],
-        )
-    ]
-    response = api.telephony.jobs.move_users.validate_or_initiate(users_list=users_list)
     return {
         'person_id': person_id,
+        'from_location_id': person.location_id,
         'to_location_id': target_location_id,
         'calling_license_id': calling_license_id,
-        'extension': person.extension,
+        'extension': getattr(person, 'extension', None),
         'path': 'licenses.assign_licenses_to_users',
         'status': 'updated',
-        'response': model_to_dict(response),
     }
 
 
