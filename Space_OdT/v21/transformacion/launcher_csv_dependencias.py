@@ -53,7 +53,7 @@ HANDLERS: dict[str, ActionFn] = {
     'ubicacion_actualizar_cabecera': actualizar_cabecera_ubicacion,
     'ubicacion_configurar_llamadas_internas': configurar_llamadas_internas_ubicacion,
     'ubicacion_configurar_permisos_salientes_defecto': configurar_permisos_salientes_defecto_ubicacion,
-    #'ubicacion_configurar_pstn': configurar_pstn_ubicacion,
+    'ubicacion_configurar_pstn': configurar_pstn_ubicacion,
     #'usuarios_alta_people': alta_usuario_people,
     #'usuarios_alta_scim': alta_usuario_scim,
     'usuarios_anadir_intercom_legacy': anadir_intercom_legacy_usuario,
