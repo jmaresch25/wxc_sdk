@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from Space_OdT.config import Settings
+import pytest
 from Space_OdT.modules.v1_manifest import (
     ArtifactSpec,
     ParamSource,
+    ParamSourceValidationError,
     _iter_kwargs,
+    required_source_ids_per_artifact,
     run_artifact,
+    validate_param_sources,
     V1_ARTIFACT_SPECS,
 )
 
@@ -36,6 +39,72 @@ def test_iter_kwargs_filters_by_required_field() -> None:
     kwargs = _iter_kwargs(cache, spec)
 
     assert kwargs == [{'entity_id': 'p1'}]
+
+
+def test_iter_kwargs_adds_diagnostics_for_empty_sources() -> None:
+    cache = {
+        'people': [
+            {'person_id': 'p1', 'location_id': ''},
+            {'person_id': '', 'location_id': 'l1'},
+        ]
+    }
+    spec = ArtifactSpec(
+        module='person_permissions_in',
+        method_path='person_settings.permissions_in.read',
+        static_kwargs={},
+        param_sources=(ParamSource('entity_id', 'people', 'person_id', required_field='location_id'),),
+    )
+
+    diagnostics: list[dict] = []
+    kwargs = _iter_kwargs(cache, spec, diagnostics=diagnostics)
+
+    assert kwargs == []
+    assert diagnostics == [{
+        'source_module': 'people',
+        'param_name': 'entity_id',
+        'field': 'person_id',
+        'required_field': 'location_id',
+        'min_required': 1,
+        'valid_ids_detected': 0,
+        'cache_rows': 2,
+        'sample_ids': [],
+    }]
+
+
+def test_validate_param_sources_raises_clear_message_with_requirements() -> None:
+    spec = ArtifactSpec(
+        module='group_members',
+        method_path='groups.members',
+        static_kwargs={},
+        param_sources=(ParamSource('group_id', 'groups', 'group_id'),),
+    )
+
+    with pytest.raises(ParamSourceValidationError) as exc_info:
+        validate_param_sources({'groups': [{'group_id': ''}]}, spec)
+
+    message = str(exc_info.value)
+    assert "Artifact 'group_members' no ejecutable" in message
+    assert 'groups (group_id -> group_id): 0/1 IDs válidos' in message
+    assert 'required_source_ids_per_artifact=' in message
+    assert 'source_diagnostics=' in message
+
+
+def test_required_source_ids_per_artifact_table() -> None:
+    spec = ArtifactSpec(
+        module='workspace_numbers',
+        method_path='workspace_settings.numbers.read',
+        static_kwargs={},
+        param_sources=(ParamSource('workspace_id', 'workspaces', 'id'),),
+    )
+
+    assert required_source_ids_per_artifact(spec) == [{
+        'artifact': 'workspace_numbers',
+        'source_module': 'workspaces',
+        'param_name': 'workspace_id',
+        'field': 'id',
+        'required_field': None,
+        'min_required': 1,
+    }]
 
 
 def test_run_artifact_skips_resterror_4003() -> None:

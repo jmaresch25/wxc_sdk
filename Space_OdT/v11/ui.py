@@ -16,7 +16,13 @@ from urllib.parse import parse_qs, urlparse
 from ..io.artifact_paths import ensure_dirs
 from ..modules.catalog import MODULE_SPECS, run_spec
 from ..modules.common import as_list, call_with_supported_kwargs, model_to_dict, resolve_attr
-from ..modules.v1_manifest import V1_ARTIFACT_SPECS, _iter_kwargs, _row_from_item
+from ..modules.v1_manifest import (
+    V1_ARTIFACT_SPECS,
+    ParamSourceValidationError,
+    _iter_kwargs,
+    _row_from_item,
+    validate_param_sources,
+)
 from ..sdk_client import create_api
 
 
@@ -83,6 +89,7 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
 
     async def _run_single_spec_async(*, spec, cache: dict[str, list[dict]]) -> list[dict]:
         method = resolve_attr(api, spec.method_path)
+        validate_param_sources(cache, spec)
         kwargs_list = _iter_kwargs_for_async(cache=cache, spec=spec)
         if not kwargs_list:
             return []
@@ -280,8 +287,12 @@ def launch_v11_ui(*, token: str, out_dir: Path, host: str = '127.0.0.1', port: i
                 except Exception as exc:  # noqa: BLE001
                     with lock:
                         job.status = 'error'
-                        job.error = f'{type(exc).__name__}: {exc}'
-                        job.message = 'Error generando artifact'
+                        if isinstance(exc, ParamSourceValidationError):
+                            job.error = str(exc)
+                            job.message = f'Error de validación de IDs para artifact {artifact}'
+                        else:
+                            job.error = f'{type(exc).__name__}: {exc}'
+                            job.message = 'Error generando artifact'
                         traceback.print_exc()
 
             thread = threading.Thread(target=run_job, daemon=True)
