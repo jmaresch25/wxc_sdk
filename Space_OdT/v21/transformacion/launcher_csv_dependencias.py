@@ -42,8 +42,8 @@ from .workspaces_configurar_perfil_saliente_custom import configurar_perfil_sali
 from .workspaces_validar_estado_permisos import validar_estado_permisos_workspace
 
 ActionFn = Callable[..., dict[str, Any]]
-REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_CSV = REPO_ROOT / '.artifacts' / 'report' / 'results_manual.csv'
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_CSV = PACKAGE_ROOT / '.artifacts' / 'report' / 'results_manual.csv'
 
 
 HANDLERS: dict[str, ActionFn] = {

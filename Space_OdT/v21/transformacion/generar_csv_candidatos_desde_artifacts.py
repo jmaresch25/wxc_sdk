@@ -8,8 +8,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-EXPORTS_DIR = REPO_ROOT / '.artifacts' / 'exports'
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]
+EXPORTS_DIR = PACKAGE_ROOT / '.artifacts' / 'exports'
 DEFAULT_OUTPUT = EXPORTS_DIR / 'v21_transformacion_candidatos.csv'
 
 SCRIPT_DEPENDENCIES: dict[str, list[str]] = {

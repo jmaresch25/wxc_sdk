@@ -39,7 +39,7 @@ def load_runtime_env() -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='Space_OdT deterministic Webex read-only exporter')
     parser.add_argument('command', choices=['inventory_run', 'v2_bulk_run', 'v21_softphone_bulk_run', 'v21_softphone_ui', 'v211_softphone_ui', 'v11_inventory_ui'])
-    parser.add_argument('--out-dir', default='.artifacts')
+    parser.add_argument('--out-dir', default='Space_OdT/.artifacts')
     parser.add_argument('--no-report', action='store_true')
     parser.add_argument('--no-cache', action='store_true')
     parser.add_argument('--skip-group-members', action='store_true')

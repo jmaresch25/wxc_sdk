@@ -6,7 +6,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class Settings:
-    out_dir: Path = Path('.artifacts')
+    out_dir: Path = Path('Space_OdT/.artifacts')
     include_group_members: bool = True
     write_cache: bool = True
     write_report: bool = True
