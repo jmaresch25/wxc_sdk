@@ -75,32 +75,32 @@ En modo normal, antes de cada etapa se solicita confirmación:
 - `.artifacts/v2/changes.log` (detallado técnico en JSON lines)
 - `.artifacts/v2/http.har` (only with `--debug-har`)
 
-## V2.1 base (independiente de V2): softphones + bulk provision de sedes
+## V2.1 base (independiente de V2): bulk de sedes + operación UI
 
 Se añadió una base nueva en `Space_OdT/v21/` totalmente independiente de `Space_OdT/v2/`.
 
 ### Objetivo de esta base
 
-Cubrir tareas de cierre manual/post-carga masiva para softphones, incluyendo planificación en bulk de sedes, usuarios y workspaces.
+Cubrir el alta/actualización de sedes en modo bulk con ejecución asíncrona y trazabilidad de resultados.
 
 ### Comando
 
 ```bash
-python -m Space_OdT.cli v21_softphone_bulk_run --out-dir .artifacts
+python -m Space_OdT.cli v21_softphone_bulk_run --out-dir .artifacts --token "<WEBEX_ACCESS_TOKEN>"
 ```
 
-Por defecto ejecuta **dry-run** y genera plan de acciones en:
+Por defecto ejecuta **dry-run** y genera plan en:
 
 - `.artifacts/v21/plan.csv`
 - `.artifacts/v21/run_state.json`
 
-Para modo apply (base inicial/no-op controlado):
+Para modo apply:
 
 ```bash
-python -m Space_OdT.cli v21_softphone_bulk_run --out-dir .artifacts --v21-apply
+python -m Space_OdT.cli v21_softphone_bulk_run --out-dir .artifacts --token "<WEBEX_ACCESS_TOKEN>" --v21-apply
 ```
 
-### Inputs V2.1
+### Inputs V2.1 (bootstrap automático)
 
 Si no se pasa `--token`, el CLI carga `.env` (CWD, ancestros y raíz del proyecto, con `override=True`) antes de resolver `WEBEX_ACCESS_TOKEN`.
 
@@ -110,11 +110,16 @@ La responsabilidad queda separada así:
 - **SDK client (`Space_OdT/sdk_client.py`)**: solo resuelve token ya disponible (`--token` o `WEBEX_ACCESS_TOKEN`) y crea API.
 
 - `.artifacts/v21/input_locations.csv`
-- `.artifacts/v21/input_users.csv`
-- `.artifacts/v21/input_workspaces.csv`
 - `.artifacts/v21/static_policy.json`
 
-Si faltan, el comando crea plantillas automáticamente.
+Si faltan plantillas, el comando las crea automáticamente y detiene la corrida para que completes los datos.
+
+### Alcance operativo actual
+
+- Focus principal: **Locations**.
+- Upsert determinista por nombre/external id (lookup + create/update).
+- Ejecución asíncrona por lotes con concurrencia configurable para evitar bloqueo.
+- Persistencia de artifacts por job y estado final remoto.
 
 ### Fuera de scope (gestionado por carga masiva Control Hub)
 
@@ -138,9 +143,7 @@ Si faltan, el comando crea plantillas automáticamente.
 - Agregar DDIs
 - Asignar DDIs
 
-> Nota: en ocasiones la carga masiva en Control Hub resuelve solo una parte y queda una tarea manual para cierre completo. Esta base v2.1 está pensada para soportar ese cierre manual/scriptable.
-
-
+> Nota: en ocasiones la carga masiva en Control Hub resuelve solo una parte y queda una tarea manual para cierre completo.
 
 ### V2.1 Transformación backend (SDK-first)
 
@@ -186,22 +189,47 @@ python -m Space_OdT.v21.transformacion.launcher_tester_api_remota \
 La estructura quedó así para que cada configuración sea simple de modificar:
 
 - `Space_OdT/v21/models.py`
-  - Define las entidades y etapas (`Stage`) de forma explícita.
+  - Define entidades y etapa principal de location.
 - `Space_OdT/v21/io.py`
-  - Define los contratos de entrada (cabeceras CSV) y bootstrap de plantillas.
+  - Define contratos de entrada (cabeceras CSV/JSON), campos obligatorios y bootstrap de plantillas.
   - Archivos de entrada:
     - `.artifacts/v21/input_locations.csv`
-    - `.artifacts/v21/input_users.csv`
-    - `.artifacts/v21/input_workspaces.csv`
     - `.artifacts/v21/static_policy.json`
 - `Space_OdT/v21/engine.py`
-  - Construye el plan de acciones (`load_plan_rows`) y ejecuta acción unitaria (`run_single_action`).
-  - Persistencia de estado:
+  - Construye plan de acciones (`load_plan_rows`) y procesa jobs asíncronos de locations.
+  - Persistencia de estado y resultados:
     - `.artifacts/v21/plan.csv`
     - `.artifacts/v21/run_state.json`
-    - `.artifacts/v21/action_state.json`
+    - `.artifacts/v21/jobs/<job_id>/job.json`
+    - `.artifacts/v21/jobs/<job_id>/results.csv`
+    - `.artifacts/v21/jobs/<job_id>/pending_rows.csv`
+    - `.artifacts/v21/jobs/<job_id>/rejected_rows.csv`
+    - `.artifacts/v21/jobs/<job_id>/checkpoint.json`
+    - `.artifacts/v21/jobs/<job_id>/final_state.json`
 
 Regla de diseño: **modificas CSV/política, no código**, salvo que quieras introducir una etapa nueva.
+
+### UI HTML5 v2.1 (Space_OdT.cli v21_softphone_ui)
+
+UI ligera para alta de sedes con API local:
+
+```bash
+python -m Space_OdT.cli v21_softphone_ui --out-dir .artifacts --token "<WEBEX_ACCESS_TOKEN>"
+```
+
+- Abre: `http://127.0.0.1:8765`.
+- Endpoints principales:
+  - `POST /api/location-jobs` (upload CSV/JSON)
+  - `POST /api/location-jobs/<job_id>/start`
+  - `GET /api/location-jobs/<job_id>`
+  - `GET /api/location-jobs/<job_id>/result`
+  - `GET /api/location-state/current`
+
+Incluye:
+- preview de carga,
+- campos obligatorios para alta,
+- ejecución asíncrona sin bloquear UI,
+- vista de estado final remoto post-acción.
 
 ### UI HTML5 v2.1.1 (Space_OdT.cli v211_softphone_ui)
 
@@ -243,14 +271,8 @@ python -m Space_OdT.cli v11_inventory_ui --out-dir .artifacts --v21-ui-port 8772
 - Desde la UI puedes lanzar el retrieval por secciones y revisar el resultado en `.artifacts/v11/`.
 
 
-## UI v2.1.1 operación técnica (`v211_softphone_ui`)
+## Resumen rápido de comandos UI
 
-Para arrancar la UI v2.1.1 (operación técnica experta):
-
-```bash
-python -m Space_OdT.cli v211_softphone_ui --out-dir .artifacts --v21-ui-port 8771
-```
-
-- Abre: `http://127.0.0.1:8771`.
-- Si no pasas `--token`, el comando usa `WEBEX_ACCESS_TOKEN` (por variable de entorno o `.env`).
-- La ejecución técnica de acciones queda registrada en `Space_OdT/v21/transformacion/logs/`.
+- `v21_softphone_ui`: UI v2.1 de jobs asíncronos de sedes.
+- `v211_softphone_ui`: UI v2.1.1 de operación técnica experta por acciones desacopladas.
+- `v11_inventory_ui`: UI de inventario/retrieval bajo demanda.

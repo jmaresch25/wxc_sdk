@@ -55,3 +55,11 @@ Ejemplo:
 ```bash
 python actions/run_apply_actions.py   --continue-on-error   --context-file actions/lab_context.json   --log-file actions/logs/apply_runner_latest.log   --report-file actions/logs/apply_runner_latest.json
 ```
+
+
+## Relación con las UIs/flows actuales de Space_OdT
+Para operación UI y ejecución por jobs asíncronos de sedes en v2.1, usar como referencia principal:
+
+- `Space_OdT/README.md`
+
+Este directorio `actions/` se mantiene como capa MVP de validación de endpoints y automatizaciones desacopladas.

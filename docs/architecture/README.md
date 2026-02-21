@@ -52,3 +52,11 @@ Objetivos no negociables:
 - `writers.py` ↔ `writers.md`
 - `state_store.py` ↔ `state_store.md`
 - `startup_checks.py` ↔ `startup_checks.md`
+
+
+## Estado de implementación actual
+Este paquete describe el contrato arquitectónico objetivo (v3). La implementación activa en `Space_OdT/v21` está evolucionando por incrementos,
+con foco operativo actual en alta/actualización asíncrona de **Locations** y trazabilidad por jobs.
+
+Referencia operativa:
+- `Space_OdT/README.md`
