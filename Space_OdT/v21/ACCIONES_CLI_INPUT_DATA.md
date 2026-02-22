@@ -119,11 +119,19 @@ python -m Space_OdT.v21.transformacion.ubicacion_alta_numeraciones_desactivadas 
 **Mockup textual rápido**
 ```text
 === Space_OdT Launcher V2 ===
-a) ubicacion_configurar_pstn
-b) ubicacion_alta_numeraciones_desactivadas
-c) usuarios_modificar_licencias
-...
-Selecciona script [a..n]: c
+a) ubicacion_alta_numeraciones_desactivadas
+b) ubicacion_actualizar_cabecera
+c) ubicacion_configurar_llamadas_internas
+d) ubicacion_configurar_permisos_salientes_defecto
+e) ubicacion_configurar_pstn
+f) usuarios_anadir_intercom_legacy
+g) usuarios_asignar_location_desde_csv
+h) usuarios_configurar_desvio_prefijo53
+i) usuarios_configurar_perfil_saliente_custom
+j) usuarios_modificar_licencias
+k) usuarios_remover_licencias
+l) workspaces_configurar_perfil_saliente_custom
+Selecciona script [a..l]: j
 Modo: 1) single (results_manual.csv)  2) bulk (input_data)
 Selecciona modo [1/2]: 2
 Resumen: script=usuarios_modificar_licencias, modo=bulk
@@ -196,12 +204,6 @@ CSV detectados: input_data/Global.csv, input_data/Usuarios.csv
 
 ### 5) Plan de trabajo (MVP primero)
 
-**Estimación inicial**
-- Diseño final + inventario scripts: 0.5–1 día.
-- Implementación núcleo launcher v2: 1–1.5 días.
-- Tests + hardening logging: 0.5–1 día.
-- Documentación y transición: 0.5 día.
-
 **Milestones**
 1. **M1**: inventario definitivo de scripts y matriz de compatibilidad single/bulk.
 2. **M2**: menú interactivo + selección por letra.
@@ -234,7 +236,6 @@ CSV detectados: input_data/Global.csv, input_data/Usuarios.csv
 ### 6) Ripple effects
 
 - Actualizar documentación operativa para reemplazar comandos manuales por flujo launcher v2 cuando aplique.
-- Comunicar al equipo qué scripts entran en launcher común y cuáles se mantienen como utilitarios especializados.
 - Revisar automatizaciones CI/CD o wrappers internos que invoquen el launcher antiguo.
 
 ---
@@ -246,7 +247,7 @@ CSV detectados: input_data/Global.csv, input_data/Usuarios.csv
 - Extensiones futuras:
   - perfiles de ejecución por cliente/proyecto,
   - dry-run uniforme,
-  - reintentos controlados,
+  - reintentos controlados (ya integrados en launcher actual para 429 + Retry-After; validar reutilización directa en v2),
   - panel de resultados agregado por lote.
 - Idea moonshot: pipeline declarativo de transformaciones (DAG simple) configurable por YAML para ejecutar secuencias completas con validaciones automáticas.
 
