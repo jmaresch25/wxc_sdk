@@ -280,3 +280,26 @@ def test_apply_standalone_input_arguments_merges_domain_and_global(tmp_path):
     assert resolved.first_name == 'Domain'
     assert resolved.last_name == 'User'
     assert resolved.licenses == ['lic-a', 'lic-b']
+
+
+def test_apply_csv_arguments_without_csv_uses_input_dir_rows(tmp_path):
+    input_dir = tmp_path / 'input_data'
+    input_dir.mkdir()
+    (input_dir / 'Global.csv').write_text('location_id,allow_call_type\nloc-global,INTERNAL\n', encoding='utf-8')
+
+    args = Namespace(csv=None, input_dir=str(input_dir), location_id=None, allow_call_type=None)
+    resolved = transform_common.apply_csv_arguments(args, required=['location_id'], list_fields=['allow_call_type'])
+
+    assert resolved.location_id == 'loc-global'
+    assert resolved.allow_call_type == ['INTERNAL']
+
+
+def test_apply_csv_arguments_without_csv_does_not_raise_when_required_missing(tmp_path):
+    input_dir = tmp_path / 'input_data'
+    input_dir.mkdir()
+    (input_dir / 'Global.csv').write_text('other\nvalue\n', encoding='utf-8')
+
+    args = Namespace(csv=None, input_dir=str(input_dir), location_id=None)
+    resolved = transform_common.apply_csv_arguments(args, required=['location_id'])
+
+    assert getattr(resolved, '_missing_required_args') == ['location_id']
