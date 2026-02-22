@@ -14,6 +14,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Callable, get_args, get_origin, get_type_hints
 
+from ._prechecks import run_feature_precheck
 from .common import get_token, load_runtime_env
 from .generar_csv_candidatos_desde_artifacts import SCRIPT_DEPENDENCIES
 from .ubicacion_actualizar_cabecera import actualizar_cabecera_ubicacion
@@ -79,6 +80,14 @@ LOCAL_SCRIPT_DEPENDENCIES: dict[str, list[str]] = {
 
 LOGGER = logging.getLogger(__name__)
 MAX_RETRIES_ON_RETRY_AFTER = 3
+
+
+FEATURE_PRECHECKS: dict[str, dict[str, str]] = {
+    'usuarios_configurar_perfil_saliente_custom': {'entity_param': 'person_id', 'entity_type': 'person', 'feature_name': 'outgoing_permissions'},
+    'workspaces_configurar_perfil_saliente_custom': {'entity_param': 'workspace_id', 'entity_type': 'workspace', 'feature_name': 'outgoing_permissions'},
+    'usuarios_configurar_desvio_prefijo53': {'entity_param': 'person_id', 'entity_type': 'person', 'feature_name': 'call_forwarding'},
+    'workspaces_configurar_desvio_prefijo53': {'entity_param': 'workspace_id', 'entity_type': 'workspace', 'feature_name': 'call_forwarding'},
+}
 
 
 def _retry_after_wait_seconds(retry_after_header: str | None) -> float | None:
@@ -308,6 +317,32 @@ def _run_script(
             'reason': 'missing_dependencies',
             'missing_dependencies': ';'.join(missing),
         }
+
+    precheck_cfg = FEATURE_PRECHECKS.get(script_name)
+    if precheck_cfg and not dry_run:
+        entity_id = params.get(precheck_cfg['entity_param'])
+        if _is_missing_value(entity_id):
+            return {
+                'script_name': script_name,
+                'status': 'skipped',
+                'reason': 'missing_dependencies',
+                'missing_dependencies': precheck_cfg['entity_param'],
+            }
+        precheck_result = run_feature_precheck(
+            token=token,
+            org_id=params.get('org_id'),
+            entity_id=str(entity_id),
+            entity_type=precheck_cfg['entity_type'],
+            feature_name=precheck_cfg['feature_name'],
+        )
+        if not precheck_result.get('ok'):
+            reason = precheck_result.get('reason', 'unauthorized_feature')
+            return {
+                'script_name': script_name,
+                'status': 'skipped',
+                'reason': reason,
+                'precheck': precheck_result,
+            }
 
     invocation_payload = {
         'script_name': script_name,
