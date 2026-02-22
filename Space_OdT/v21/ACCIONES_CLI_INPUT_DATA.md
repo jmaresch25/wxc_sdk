@@ -54,9 +54,9 @@ python -m Space_OdT.v21.transformacion.ubicacion_alta_numeraciones_desactivadas 
   --input-dir /ruta/a/mis_csv
 ```
 
-## launcher_V2 · Dev Spec Sheet (plan previo, sin implementación)
+## launcher_V2 · Dev Spec Sheet (implementado)
 
-> Objetivo de este apartado: definir el diseño/plan para una nueva versión `Space_OdT/v21/transformacion/v2_launcher_csv_dependencias.py` con comportamiento común para scripts de transformación, antes de escribir código.
+> Estado: la versión `Space_OdT/v21/transformacion/v2_launcher_csv_dependencias.py` ya existe con flujo interactivo y opciones no interactivas (`--script`, `--mode`, `--non-interactive`). Este bloque conserva la intención de diseño y sirve como guía operativa/técnica.
 
 ### 1) Qué estamos construyendo
 
